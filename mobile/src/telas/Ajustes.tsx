@@ -8,6 +8,7 @@ import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
 import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { usarLoja } from '../estado/loja.ts'
+import { estadoDaNuvem } from '../sync.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
@@ -177,6 +178,24 @@ function CampoHora({
 
 export function Ajustes() {
   const t = usarT()
+  // O motivo vem do módulo nativo, e não de um texto fixo: quando a conta paga
+  // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
+  // seria mandar o usuário resolver o problema errado.
+  const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
+  useEffect(() => {
+    let vivo = true
+    void estadoDaNuvem().then((r) => {
+      if (vivo) setNuvem(r)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [])
+  const textoDaNuvem = nuvem?.ligada
+    ? t('ajustes.sync_ligado')
+    : nuvem?.motivo === 'sem-conta-icloud'
+      ? t('ajustes.sync_sem_conta')
+      : t('ajustes.indisponivel_dev_pago')
   const base = usarLoja((s) => s.base)
   const ajustes = usarLoja((s) => s.ajustes)
   const mudarAjustes = usarLoja((s) => s.mudarAjustes)
@@ -275,7 +294,7 @@ export function Ajustes() {
       </Secao>
 
       <Secao titulo={t('ajustes.sincronizacao')}>
-        <Apoio>{t('ajustes.indisponivel_dev_pago')}</Apoio>
+        <Apoio>{textoDaNuvem}</Apoio>
       </Secao>
 
       <Secao titulo={t('ajustes.avisos_agendados', { n: plano.agendar.length })}>
