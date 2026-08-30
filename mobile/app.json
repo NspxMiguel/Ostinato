@@ -18,7 +18,9 @@
         "NSCameraUsageDescription": "Para ler o horário das aulas a partir de uma foto, no próprio aparelho.",
         "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem.",
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": false
+        "NSSupportsLiveActivitiesFrequentUpdates": false,
+        "NSMicrophoneUsageDescription": "Para anotar a tarefa falando, em vez de digitar.",
+        "NSSpeechRecognitionUsageDescription": "Para transformar o que você fala em tarefa. O reconhecimento roda no próprio aparelho."
       },
       "icon": "./assets/icone.png",
       "appleTeamId": "ZTJU92P9H4"
