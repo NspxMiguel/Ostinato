@@ -1,0 +1,79 @@
+import ExpoModulesCore
+import ActivityKit
+
+/**
+ Liga e desliga a Live Activity da proxima entrega.
+
+ Live Activity NAO precisa de App Group nem de conta paga: o conteudo viaja do
+ app para a extensao pelo proprio ActivityKit. Widget de tela de inicio precisaria
+ de App Group, que time pessoal da Apple nao emite — e por isso ele nao esta aqui.
+
+ Uma atividade por vez, de proposito: sao "a proxima entrega", nao uma lista. Tres
+ delas empilhadas na tela de bloqueio seriam ruido, e ruido e o que faz a pessoa
+ desligar o aviso.
+ */
+public class AtividadeModule: Module {
+  public func definition() -> ModuleDefinition {
+    Name("Atividade")
+
+    Function("disponivel") { () -> Bool in
+      if #available(iOS 16.2, *) {
+        return ActivityAuthorizationInfo().areActivitiesEnabled
+      }
+      return false
+    }
+
+    AsyncFunction("mostrar") {
+      (tipo: String, titulo: String, materia: String, venceEm: Double, cor: String,
+       promise: Promise) in
+      guard #available(iOS 16.2, *) else {
+        promise.reject("versao", "Live Activity precisa de iOS 16.2")
+        return
+      }
+      guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+        promise.reject("desligado", "o usuario desativou Atividades ao Vivo")
+        return
+      }
+
+      let estado = GizAtributos.ContentState(
+        titulo: titulo, materia: materia, venceEm: venceEm, cor: cor)
+
+      // Ja existe uma? Atualiza em vez de abrir outra: pedir uma nova a cada
+      // recalculo encheria a tela de bloqueio de copias do mesmo aviso.
+      if let atual = Activity<GizAtributos>.activities.first {
+        Task {
+          await atual.update(
+            ActivityContent(state: estado, staleDate: Date(timeIntervalSince1970: venceEm)))
+          promise.resolve(atual.id)
+        }
+        return
+      }
+
+      do {
+        let atividade = try Activity.request(
+          attributes: GizAtributos(tipo: tipo),
+          content: ActivityContent(
+            state: estado, staleDate: Date(timeIntervalSince1970: venceEm)),
+          pushType: nil // sem push remoto: conta gratuita nao assina push
+        )
+        promise.resolve(atividade.id)
+      } catch {
+        promise.reject("atividade", error.localizedDescription)
+      }
+    }
+
+    AsyncFunction("esconder") { (promise: Promise) in
+      guard #available(iOS 16.2, *) else {
+        promise.resolve(0)
+        return
+      }
+      let atividades = Activity<GizAtributos>.activities
+      Task {
+        for a in atividades {
+          await a.end(nil, dismissalPolicy: .immediate)
+        }
+        promise.resolve(atividades.count)
+      }
+    }
+  }
+}

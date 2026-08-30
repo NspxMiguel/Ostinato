@@ -23,6 +23,7 @@ import {
 } from './avisos/notificacoes.ts'
 import { pararAlarme, tocarAlarme } from './avisos/alarme.ts'
 import { registrarTarefaDeFundo } from './avisos/tarefaDeFundo.ts'
+import { atualizarAtividadeViva } from './avisos/atividadeViva.ts'
 import { Hoje } from './telas/Hoje.tsx'
 import { Agenda } from './telas/Agenda.tsx'
 import { Grade } from './telas/Grade.tsx'
@@ -60,6 +61,7 @@ export function Raiz() {
   const rearmar = useCallback(() => {
     const periodo = periodoAtivo(base, dataDe(new Date()))
     void sincronizarAvisos(base, ajustes, periodo, t)
+    void atualizarAtividadeViva(base, ajustes, periodo, t)
   }, [base, ajustes, t])
 
   const primeiraVez = useRef(true)

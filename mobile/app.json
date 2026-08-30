@@ -16,7 +16,9 @@
           "processing"
         ],
         "NSCameraUsageDescription": "Para ler o horário das aulas a partir de uma foto, no próprio aparelho.",
-        "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem."
+        "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem.",
+        "NSSupportsLiveActivities": true,
+        "NSSupportsLiveActivitiesFrequentUpdates": false
       }
     },
     "android": {
@@ -37,7 +39,8 @@
       ],
       "./plugins/ios-assinatura",
       "expo-audio",
-      "expo-background-task"
+      "expo-background-task",
+      "@bacons/apple-targets"
     ],
     "extra": {}
   }
