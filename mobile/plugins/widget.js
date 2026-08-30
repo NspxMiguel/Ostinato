@@ -1,30 +1,19 @@
 /**
  * Liga (ou nao) o alvo de extensao que desenha a Live Activity e o widget.
  *
- * MEDIDO em 30/08/2026, conta Apple gratuita, com xcodebuild -allowProvisioningUpdates
- * para `generic/platform=iOS`:
+ * A chave nasceu quando a conta era gratuita e o alvo de extensao nao
+ * provisionava. ISSO ACABOU em 30/08/2026: o app passou a assinar pelo time pago
+ * `SW36PU2B3T`, e os DOIS alvos — `Ostinato` e `OstinatoAtividade` — chegaram
+ * juntos ate a assinatura, pedindo so o registro do aparelho. Widget de tela de
+ * inicio e Live Activity rodam os dois no iPhone dele desde entao.
  *
- *   error: No Accounts: Add a new account in Accounts settings. (target 'Ostinato')
- *   error: No profiles for 'com.ostinato.app' were found       (target 'Ostinato')
- *   error: No profiles for 'com.ostinato.app.widget' were found (target 'OstinatoAtividade')
+ * Entao a chave deixou de ser uma trava da Apple e virou o que sempre deveria ter
+ * sido: conveniencia para tirar o alvo do projeto quando ele atrapalhar um build.
+ * `extra.widget = false` mais `expo prebuild --clean` remove o alvo; nenhum codigo
+ * e apagado, e o que se perde e o widget e a Live Activity.
  *
- * Repare que o alvo do APP falha igual. A explicacao nao e a Apple recusar a
- * capability: o `xcodebuild` nao CRIA nem ATUALIZA perfil, so usa o que ja esta
- * em cache — e nao ha nenhum perfil de `com.ostinato.app` em
- * ~/Library/Developer/Xcode/UserData/Provisioning Profiles/. Um archive pela
- * interface do Xcode cria o perfil, e a linha de comando volta a funcionar.
- *
- * O QUE NAO ESTA MEDIDO: se o perfil do alvo de EXTENSAO nasce pela interface.
- * Ninguem conseguiu levar esse teste ate o fim ainda. Ate alguem medir, isto
- * aqui e uma chave de conveniencia, e nao a prova de um limite da Apple.
- *
- * No SIMULADOR nada disso vale — ele nao exige perfil — e e por isso que a Live
- * Activity e a Dynamic Island ja rodam e ja foram vistas funcionando.
- *
- * O padrao e LIGADO porque e onde o app e desenvolvido e visto. Se o alvo
- * atrapalhar um build para aparelho, trocar `extra.widget` para false e rodar
- * `expo prebuild --clean`: o alvo sai do projeto e a unica coisa que se perde e
- * a Live Activity. Nenhum codigo e apagado.
+ * O App Group vive em `plugins/grupo.js`, e precisa estar nos dois alvos: o widget
+ * roda em outro processo e so le o que estiver no container compartilhado.
  */
 module.exports = (config) => {
   if (config?.extra?.widget === false) return config

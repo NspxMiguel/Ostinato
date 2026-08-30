@@ -118,9 +118,16 @@ carrying `com.apple.security.application-groups` on a free team, after an Archiv
 from the interface. The same doubt applies to iCloud below: it is stated as
 untested, not as refused.
 
-Whether an **extension** target gets a profile from the interface is also still
-unmeasured. Two attempts on a sibling project were abandoned before finishing, so
-the honest answer is "nobody knows yet", not "it cannot".
+**Measured on 30/08/2026, and it settles the extension question.** Signing moved
+to the paid team `SW36PU2B3T`, and both targets — `Ostinato` and
+`OstinatoAtividade` — reached the signing step together, each asking only for the
+device to be registered. The extension provisions. The home-screen widget and the
+Live Activity have both run on the device since.
+
+What still blocks CloudKit is narrower than an account tier: the container
+`iCloud.com.ostinato.app` has to exist, and creating one is a developer-portal
+operation. That account holds an App Store Connect role rather than a Developer
+Program one, so the portal answers `Access Unavailable`.
 
 None of this touches the Simulator, which requires no profile at all. That is why
 the Live Activity and the Dynamic Island already work and were verified running.

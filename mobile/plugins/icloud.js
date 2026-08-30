@@ -1,22 +1,22 @@
 /**
- * Liga o iCloud — entitlement e codigo — de uma vez so.
+ * Liga (ou nao) o CloudKit.
  *
- * Nada aqui roda enquanto `extra.icloud` for falso no app.json, e e assim que o
- * app funciona hoje: conta Apple gratuita nao emite o entitlement de iCloud.
+ * O motivo original desta chave era a conta gratuita, que nao emite o entitlement
+ * de iCloud. A conta paga existe desde 29/08/2026 e o app ja assina por ela — o
+ * que ainda falta e OUTRA coisa: o container `iCloud.com.ostinato.app` precisa
+ * existir, e criar container e operacao do portal de desenvolvedor, onde a conta
+ * dele responde "Access Unavailable" por ser membro de App Store Connect e nao do
+ * Developer Program.
  *
- * Por que entitlement e flag de compilacao andam juntos: `CKContainer(identifier:)`
- * NAO devolve erro quando falta o entitlement — ele derruba o processo com
- * EXC_BREAKPOINT, de dentro do CloudKit, antes de qualquer `try`. Nenhum
- * `do/catch` pega isso. E conferir o entitlement em tempo de execucao tambem
- * nao serve: o `SecTaskCreateFromSelf` que faria isso e do macOS.
+ * Por que a chave nao pode simplesmente ficar ligada: sem o entitlement, o
+ * `CKContainer(identifier:)` nao lanca erro — ele DERRUBA o processo. O app
+ * fechava sozinho ao abrir Ajustes, e a unica evidencia era um `.ips` em
+ * ~/Library/Logs/DiagnosticReports. Por isso o CloudKit e compilado para fora
+ * (`#if OSTINATO_ICLOUD`) em vez de so nao ser chamado.
  *
- * Entao a trava e de compilacao: com `extra.icloud` ligado, este plugin poe o
- * entitlement E define `OSTINATO_ICLOUD`. Os dois nascem juntos e nao tem como
- * discordar — sem conta paga, o binario nem menciona CKContainer.
- *
- * O dia de ligar: comprar a conta, criar o container iCloud.com.ostinato.app no
- * painel da Apple, criar os seis record types de docs/CLOUDKIT.md, e trocar
- * `extra.icloud` para true.
+ * O dia de ligar: criar o container no portal, `extra.icloud = true`, e
+ * `expo prebuild`. Ate la, Ajustes diz "Nao incluido nesta versao" — que e a
+ * verdade, e nao mais "precisa de conta paga", que virou mentira.
  */
 const { withEntitlementsPlist, withXcodeProject } = require('expo/config-plugins')
 
