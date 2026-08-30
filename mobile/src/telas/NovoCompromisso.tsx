@@ -274,6 +274,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                     placeholderTextColor={cores.textoFraco}
                     autoCorrect={false}
                     autoCapitalize="none"
+                    selectTextOnFocus
                   />
                 </View>
                 <View style={[e.campo, { flex: 1 }]}>
@@ -286,6 +287,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                     placeholderTextColor={cores.textoFraco}
                     autoCorrect={false}
                     autoCapitalize="none"
+                    selectTextOnFocus
                   />
                 </View>
               </Linha>
@@ -359,7 +361,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
             ) : (
               <View style={{ gap: espaco.s }}>
                 <Linha entre>
-                  <Apoio>Avisos personalizados</Apoio>
+                  <Apoio>{t('novo_compromisso.avisos_personalizados')}</Apoio>
                   <Pressable onPress={() => setAvisos(null)}>
                     <Apoio cor={cores.destaque}>
                       {t('novo_compromisso.usar_padrao_tipo', {
@@ -426,6 +428,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                               }
                               autoCorrect={false}
                               autoCapitalize="none"
+                    selectTextOnFocus
                             />
                           </View>
                           <View style={[e.campo, { flex: 1 }]}>
@@ -464,6 +467,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                             }
                             autoCorrect={false}
                             autoCapitalize="none"
+                    selectTextOnFocus
                           />
                         </View>
                       )}

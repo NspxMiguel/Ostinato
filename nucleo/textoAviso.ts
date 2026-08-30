@@ -28,20 +28,20 @@ export function textoDoAviso(
 
   const faltamMin = Math.round((aviso.vencimentoEm.getTime() - aviso.quando.getTime()) / 60_000)
 
+  // O singular tem chave propria em vez de {n}: "Em 1 horas" chega no telefone
+  // da pessoa, e e onde um app parece inacabado.
+  const corpo = (chave: 'minuto' | 'minutos' | 'hora' | 'horas' | 'dia' | 'dias', n?: number) =>
+    t(`notificacao.corpo.${chave}` as never, { n: n ?? 1, materia: sufixoMateria })
+
   if (faltamMin <= 1) return { titulo, corpo: t('notificacao.corpo.agora', { materia: sufixoMateria }) }
-  if (faltamMin < 60)
-    return { titulo, corpo: t('notificacao.corpo.minutos', { n: faltamMin, materia: sufixoMateria }) }
-  if (faltamMin < 60 * 20)
-    return {
-      titulo,
-      corpo: t('notificacao.corpo.horas', { n: Math.round(faltamMin / 60), materia: sufixoMateria }),
-    }
-  if (faltamMin < 60 * 40) return { titulo, corpo: t('notificacao.corpo.amanha', { materia: sufixoMateria }) }
-  return {
-    titulo,
-    corpo: t('notificacao.corpo.dias', {
-      n: Math.round(faltamMin / (60 * 24)),
-      materia: sufixoMateria,
-    }),
+  if (faltamMin < 60) return { titulo, corpo: corpo(faltamMin === 1 ? 'minuto' : 'minutos', faltamMin) }
+  if (faltamMin < 60 * 20) {
+    const horas = Math.round(faltamMin / 60)
+    return { titulo, corpo: corpo(horas === 1 ? 'hora' : 'horas', horas) }
   }
+  // "Amanhã" so ate 30 horas. Com a faixa larga demais, 38 horas viravam
+  // "amanhã" quando o prazo e depois de amanha — e o aviso passa a mentir.
+  if (faltamMin < 60 * 30) return { titulo, corpo: t('notificacao.corpo.amanha', { materia: sufixoMateria }) }
+  const dias = Math.round(faltamMin / (60 * 24))
+  return { titulo, corpo: corpo(dias === 1 ? 'dia' : 'dias', dias) }
 }

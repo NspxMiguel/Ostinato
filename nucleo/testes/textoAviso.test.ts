@@ -49,3 +49,16 @@ test('em inglês sai em inglês', () => {
   assert.equal(r.titulo, 'Exam: Trigonometry')
   assert.equal(r.corpo, 'In 3 days · Math')
 })
+
+test('o singular tem chave propria: nada de "Em 1 horas" no telefone', () => {
+  reiniciarIds()
+  const t = criarT('pt')
+  const c = compromisso('Redação', { tipo: 'data', data: '2026-09-10' }, { tipo: 'tarefa' })
+  assert.equal(textoDoAviso(aviso(60), c, undefined, t).corpo, 'Em 1 hora')
+  assert.equal(textoDoAviso(aviso(2), c, undefined, t).corpo, 'Em 2 minutos')
+  assert.equal(textoDoAviso(aviso(60 * 24 * 1.6), c, undefined, t).corpo, 'Em 2 dias')
+
+  const en = criarT('en')
+  assert.equal(textoDoAviso(aviso(60), c, undefined, en).corpo, 'In 1 hour')
+  assert.equal(textoDoAviso(aviso(120), c, undefined, en).corpo, 'In 2 hours')
+})
