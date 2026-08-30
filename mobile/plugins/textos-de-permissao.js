@@ -117,10 +117,18 @@ function comArquivosNoAlvo(config) {
         uuid: proj.generateUuid(),
         fileRef: proj.generateUuid(),
         basename: idioma,
-        path: `${idioma}.lproj/InfoPlist.strings`,
+        // O caminho e relativo a RAIZ do projeto (`ios/`), e nao a pasta do
+        // app: o grupo de variantes nao herda o `path` do grupo do alvo. Sem o
+        // prefixo, o Xcode procura em `ios/pt.lproj/` e falha com
+        // "Build input file cannot be found".
+        path: `${nome}/${idioma}.lproj/InfoPlist.strings`,
         // `text.plist.strings` e o que o Xcode grava; sem isso ele trata o
         // arquivo como binario e nao le a traducao.
         lastKnownFileType: 'text.plist.strings',
+        // 4 = UTF-8. Sem isto o Xcode adivinha, e adivinha errado: ele leu como
+        // "Central European (ISO Latin 2)" e recusou o arquivo por causa dos
+        // acentos — que sao justamente o motivo de o arquivo existir.
+        fileEncoding: 4,
         sourceTree: '"<group>"',
         group: 'Resources',
       }
