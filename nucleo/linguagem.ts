@@ -559,6 +559,15 @@ export function interpretar(_texto: string, _agora: Date, _idioma: Idioma): Inte
  * O critério de desempate é a confiança, e o idioma preferido ganha os empates:
  * quem escreve na língua da interface é a maioria, e não deve pagar por quem não
  * escreve.
+ *
+ * LIMITE CONHECIDO: o interpretador entende português e inglês. A interface já
+ * fala espanhol e francês, e quem usa o app nesses idiomas recebe a interface
+ * traduzida mas a frase não interpretada — ela cai no formulário com o texto
+ * inteiro como título, que funciona e é honesto, mas não é o caminho rápido.
+ *
+ * Está escrito aqui, e não escondido, porque é a diferença entre "traduzimos o
+ * app" e "o app entende quem escreve nessa língua" — e o padrão de `candidatos`
+ * abaixo é onde `es` e `fr` entram quando alguém escrever as regras deles.
  */
 export function interpretarMelhor(
   texto: string,
