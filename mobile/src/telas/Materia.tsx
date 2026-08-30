@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { StyleSheet, Text, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
-import type { Falta, Nota } from '../../../nucleo/modelo.ts'
+import type { Falta, Materia as TipoMateria, Nota } from '../../../nucleo/modelo.ts'
+import { normalizar } from '../../../nucleo/materias.ts'
 import { dataDe } from '../../../nucleo/tempo.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { mediaDaMateria, precisaTirar } from '../../../nucleo/notas.ts'
 import { situacaoDeFaltas } from '../../../nucleo/faltas.ts'
-import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
@@ -121,6 +122,11 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
         {materia.professor ? <Apoio>{`${t('materia.professor')}: ${materia.professor}`}</Apoio> : null}
         {materia.sala ? <Apoio>{`${t('materia.sala')}: ${materia.sala}`}</Apoio> : null}
       </Cartao>
+
+      <Secao titulo={t('materia.outros_nomes')}>
+        <Apoio>{t('materia.outros_nomes_dica')}</Apoio>
+        <OutrosNomes materia={materia} guardar={guardar} t={t} />
+      </Secao>
 
       <Secao titulo={t('materia.aulas_na_semana')}>
         {aulas.length === 0 ? (
@@ -313,3 +319,75 @@ const estilo = StyleSheet.create({
   },
   dot: { width: 12, height: 12, borderRadius: raio.pilula },
 })
+
+/**
+ * Os outros nomes da mesma matéria.
+ *
+ * O app já guarda sozinho o nome que a pessoa usou quando ele perguntou. Isto
+ * aqui é para quem quer adiantar — e para tirar um apelido que entrou errado,
+ * que sem esta tela ficaria preso para sempre.
+ */
+function OutrosNomes({
+  materia,
+  guardar,
+  t,
+}: {
+  materia: TipoMateria
+  guardar: ReturnType<typeof usarLoja.getState>['guardar']
+  t: ReturnType<typeof usarT>
+}) {
+  const [novo, setNovo] = useState('')
+  const apelidos = materia.apelidos ?? []
+
+  function adicionar() {
+    const nome = novo.trim()
+    if (nome === '') return
+    const jaTem = [materia.nome, ...apelidos].some(
+      (n) => normalizar(n) === normalizar(nome),
+    )
+    if (!jaTem) guardar('materias', { id: materia.id, apelidos: [...apelidos, nome] })
+    setNovo('')
+  }
+
+  return (
+    <View style={{ gap: espaco.s }}>
+      {apelidos.length === 0 ? (
+        <Apoio>{t('materia.sem_outros_nomes')}</Apoio>
+      ) : (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
+          {apelidos.map((a) => (
+            <Toque
+              key={a}
+              aoTocar={() =>
+                guardar('materias', {
+                  id: materia.id,
+                  apelidos: apelidos.filter((x) => x !== a),
+                })
+              }
+              estilo={estiloApelido}
+            >
+              <Text style={fonte.corpo}>{a}</Text>
+              <Text style={[fonte.apoio, { fontSize: 16 }]}>×</Text>
+            </Toque>
+          ))}
+        </View>
+      )}
+      <Linha>
+        <Campo rotulo={t('materia.adicionar_nome')} valor={novo} aoMudar={setNovo} />
+        <Botao texto={t('acao.adicionar')} variante="vazado" aoTocar={adicionar} />
+      </Linha>
+    </View>
+  )
+}
+
+const estiloApelido = {
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  gap: espaco.s,
+  paddingHorizontal: espaco.m,
+  paddingVertical: espaco.s,
+  borderRadius: raio.pilula,
+  borderWidth: 1,
+  borderColor: cores.borda,
+  backgroundColor: cores.cartao,
+}
