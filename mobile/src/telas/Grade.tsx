@@ -54,6 +54,27 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const remover = usarLoja((e) => e.remover)
 
   const periodo = periodoAtivo(base)
+  const [criandoPeriodo, setCriandoPeriodo] = useState(false)
+
+  /**
+   * O id do período letivo, criando um padrão se ainda não houver.
+   *
+   * Matéria precisa pertencer a um período — é o que amarra feriado e semana
+   * alternada. Mas exigir que a pessoa preencha nome e duas datas de semestre
+   * ANTES de poder anotar que tem matemática na terça é pedir a burocracia antes
+   * do valor. O padrão cobre o ano corrente e ela ajusta depois, se quiser.
+   */
+  function garantirPeriodo(): string {
+    if (periodo) return periodo.id
+    const ano = new Date().getFullYear()
+    return guardar('periodos', {
+      nome: String(ano),
+      inicio: `${ano}-01-01`,
+      fim: `${ano}-12-31`,
+      feriados: [],
+      ativo: true,
+    })
+  }
 
   // Formulário para cadastro inicial de período letivo
   // O padrao tem que ABRACAR HOJE. Um periodo que ja terminou faz "na proxima
@@ -101,8 +122,14 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   }
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
 
-  // Sem período letivo cadastrado, a tela exige a criação do período antes da grade
-  if (!periodo) {
+  // O período letivo é OPCIONAL. Ele serve para uma coisa só — saber quais dias
+  // são feriado e quando o semestre acaba — e o app funciona sem: aula na terça
+  // continua sendo aula na terça.
+  //
+  // Antes esta tela era um muro: sem período, não deixava cadastrar aula nenhuma.
+  // Quem só queria anotar o horário tinha que preencher nome, data de início e
+  // data de fim de um semestre para chegar lá.
+  if (!periodo && criandoPeriodo) {
     const handleCriarPeriodo = () => {
       if (!nomePeriodo.trim() || !inicioPeriodo.trim() || !fimPeriodo.trim()) return
       guardar('periodos', {
@@ -216,7 +243,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     if (criandoNovaMateria) {
       if (!novaMateriaNome.trim()) return
       finalMateriaId = guardar('materias', {
-        periodoId: periodo.id,
+        periodoId: garantirPeriodo(),
         nome: novaMateriaNome.trim(),
         cor: novaMateriaCor,
         limiteFaltasPct: 25,

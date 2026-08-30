@@ -51,6 +51,10 @@ export function Raiz() {
   const t = usarT()
   const margem = useSafeAreaInsets()
   const [aba, setAba] = useState<Aba>('hoje')
+  const recursos = usarLoja((s) => s.ajustes.recursos)
+  // A barra mostra só o que a pessoa usa. Aba que abre um muro é pior que aba
+  // que não existe.
+  const abasVisiveis = ABAS.filter((a) => a.id !== 'grade' || recursos.grade)
   const [compromissoAberto, setCompromissoAberto] = useState<string | null>(null)
   // O + abre a CAPTURA, não o formulário: escrever "prova de mat sexta" é o
   // caminho normal, e o formulário é o ajuste de quem quer mexer em detalhe.
@@ -190,6 +194,7 @@ export function Raiz() {
       </View>
 
       <BarraDeAbas
+        abas={abasVisiveis}
         aba={aba}
         aoTrocar={setAba}
         aoCriar={aba === 'ajustes' ? undefined : () => setCapturando(true)}
@@ -316,12 +321,14 @@ function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
 }
 
 function BarraDeAbas({
+  abas,
   aba,
   aoTrocar,
   aoCriar,
   rotulo,
   alturaSegura,
 }: {
+  abas: typeof ABAS
   aba: Aba
   aoTrocar: (a: Aba) => void
   aoCriar?: () => void
@@ -376,7 +383,7 @@ function BarraDeAbas({
         tintColor="rgba(0,0,0,0.30)"
         style={e.barra}
       >
-        {ABAS.map((item) => (
+        {abas.map((item) => (
           <Pressable
             key={item.id}
             style={e.aba}

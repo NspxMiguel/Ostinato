@@ -40,6 +40,7 @@ export function Hoje({
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
+  const recursos = ajustes.recursos
   const [agora, setAgora] = useState(() => new Date())
 
   useEffect(() => {
@@ -68,6 +69,9 @@ export function Hoje({
 
   return (
     <Tela titulo={t('abas.hoje')}>
+      {/* Sem grade ligada, a seção inteira some — e não vira um vazio pedindo
+          para cadastrar algo que a pessoa decidiu não usar. */}
+      {recursos.grade ? (
       <Secao titulo={t('hoje.aulas')}>
         {aulas.length === 0 ? (
           <Vazio
@@ -107,6 +111,7 @@ export function Hoje({
           })
         )}
       </Secao>
+      ) : null}
 
       <Secao titulo={t('hoje.chegando')}>
         {chegando.length === 0 ? (

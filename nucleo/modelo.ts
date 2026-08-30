@@ -213,6 +213,18 @@ export type Ajustes = {
    */
   papel: Papel
   /**
+   * O que a pessoa usa do app.
+   *
+   * Ninguém é obrigado a cadastrar a grade da escola para anotar uma prova. Quem
+   * quer só um lembrete de tarefa desliga o resto e o app some com ele: a aba
+   * fecha, a seção some da tela Hoje, e nada mais pede o que não vai ser usado.
+   *
+   * Os dois nascem LIGADOS: quem instala um app de agenda escolar quer a agenda
+   * escolar, e desligar é a exceção. O que não pode existir é o muro — a Grade
+   * exigia criar período letivo antes de deixar fazer qualquer coisa.
+   */
+  recursos: Recursos
+  /**
    * As séries de quem usa. Lista porque um responsável pode ter dois filhos em
    * séries diferentes, e aí as duas valem.
    *
@@ -225,6 +237,14 @@ export type Ajustes = {
 
 /** Quem está usando o app. Muda o que é relevante, não o que é verdade. */
 export type Papel = 'aluno' | 'responsavel'
+
+/** As partes opcionais. Lembrete de compromisso não está aqui: é o app. */
+export type Recursos = {
+  /** A grade de aulas, e com ela o vencimento "na próxima aula de…". */
+  grade: boolean
+  /** Notas, média e faltas. */
+  notas: boolean
+}
 
 /** Ids fixos para os padrões: o usuário edita, e a edição substitui pelo id. */
 function regra(
@@ -291,6 +311,7 @@ export function ajustesPadrao(): Ajustes {
     // caso derivado. Série vazia significa "ainda não perguntei", e a tela de
     // importação pergunta antes de filtrar qualquer coisa.
     papel: 'aluno',
+    recursos: { grade: true, notas: true },
     minhasSeries: [],
     padroesAviso: PADROES_AVISO,
     somAlarme: 'sino',

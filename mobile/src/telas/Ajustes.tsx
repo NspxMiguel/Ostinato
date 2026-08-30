@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, StyleSheet, TextInput, View } from 'react-native'
+import { Modal, StyleSheet, Switch, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import {
   IDIOMAS,
@@ -319,6 +319,46 @@ export function Ajustes() {
                 />
               ))}
             </Fileira>
+          </View>
+        </Grupo>
+      </Secao>
+
+      {/* O que a pessoa usa. Ninguém é obrigado a cadastrar a grade da escola
+          para anotar uma prova — quem quer só o lembrete desliga o resto e o app
+          some com ele: a aba fecha e a seção sai da tela Hoje. */}
+      <Secao titulo={t('ajustes.recursos')}>
+        <Grupo>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Apoio>{t('ajustes.recurso_grade')}</Apoio>
+                <Apoio cor={cores.texto3}>{t('ajustes.recurso_grade_desc')}</Apoio>
+              </View>
+              <Switch
+                value={ajustes.recursos.grade}
+                onValueChange={(v) =>
+                  mudarAjustes({ recursos: { ...ajustes.recursos, grade: v } })
+                }
+                trackColor={{ false: cores.borda, true: cores.destaque }}
+                thumbColor={cores.texto}
+              />
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Apoio>{t('ajustes.recurso_notas')}</Apoio>
+                <Apoio cor={cores.texto3}>{t('ajustes.recurso_notas_desc')}</Apoio>
+              </View>
+              <Switch
+                value={ajustes.recursos.notas}
+                onValueChange={(v) =>
+                  mudarAjustes({ recursos: { ...ajustes.recursos, notas: v } })
+                }
+                trackColor={{ false: cores.borda, true: cores.destaque }}
+                thumbColor={cores.texto}
+              />
+            </Linha>
           </View>
         </Grupo>
       </Secao>
