@@ -31,6 +31,15 @@ export type Periodo = Registro & {
 export type Materia = Registro & {
   periodoId: string
   nome: string
+  /**
+   * Os outros nomes da MESMA matéria.
+   *
+   * A escola dele chama a mesma coisa de três jeitos: "Informática",
+   * "Computação", "TI". O horário vem com um, o professor fala outro, e o
+   * estudante escreve o terceiro. Sem isto, cada nome viraria uma matéria nova,
+   * e as notas e faltas se dividiriam entre elas sem ninguém perceber.
+   */
+  apelidos: string[]
   /** hex, ex. "#E4572E". É a cor do item na agenda e na grade. */
   cor: string
   professor?: string

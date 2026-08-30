@@ -51,6 +51,7 @@ export function materia(nome: string, p: Partial<Materia> = {}): Materia {
     ...envelope(p.id ?? proximoId('materia')),
     periodoId: 'periodo-1',
     nome,
+    apelidos: [],
     cor: '#333333',
     limiteFaltasPct: 25,
     ...p,

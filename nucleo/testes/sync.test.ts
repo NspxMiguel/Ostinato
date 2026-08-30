@@ -48,6 +48,7 @@ function materia(id: string, nome: string): Materia {
     origem: 'x',
     periodoId: 'p',
     nome,
+    apelidos: [],
     cor: '#000',
     limiteFaltasPct: 25,
   }

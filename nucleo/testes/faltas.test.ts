@@ -16,6 +16,7 @@ function materia(extra: Partial<Materia> = {}): Materia {
     origem: 'teste',
     periodoId: 'p1',
     nome: 'Matemática',
+    apelidos: [],
     cor: '#E4572E',
     limiteFaltasPct: 25,
     ...extra,
