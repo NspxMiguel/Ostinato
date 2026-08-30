@@ -19,6 +19,7 @@ import { dataDe, diaSemanaDe, instante, somarDias } from '../../../nucleo/tempo.
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { criarT } from '../../../nucleo/i18n.ts'
 import { Apoio, Cartao, Etiqueta, Fileira, Linha, Pilula, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { Deslizar } from '../componentes/Deslizar.tsx'
 import { dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
@@ -156,6 +157,11 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
     )
   }
 
+  /** Apagar é remoção lógica: o registro vira tombstone e o sync leva junto. */
+  function remover(c: Compromisso) {
+    guardar('compromissos', { id: c.id, removido: true })
+  }
+
   function alternarConcluido(c: Compromisso) {
     guardar('compromissos', {
       id: c.id,
@@ -214,7 +220,15 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
               const materia = materiaViva(base, item.compromisso.materiaId)
               const c = item.compromisso
               return (
-                <View key={c.id} style={e.item}>
+                <Deslizar
+                  key={c.id}
+                  aoConcluir={() => alternarConcluido(c)}
+                  aoRemover={() => remover(c)}
+                  concluido={c.concluido}
+                  rotuloConcluir={c.concluido ? t('agenda.reabrir') : t('notificacao.acao.feito')}
+                  rotuloRemover={t('ajustes.remover')}
+                >
+                <View style={e.item}>
                   {/* Fora do cartão: o círculo marca feito, o cartão abre o compromisso. */}
                   <Circulo
                     marcado={c.concluido}
@@ -252,6 +266,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                     </Cartao>
                   </View>
                 </View>
+                </Deslizar>
               )
             })}
           </Secao>

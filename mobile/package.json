@@ -37,7 +37,8 @@
     "tailwindcss": "^3.4.19",
     "vidro": "file:./modules/vidro",
     "zustand": "^5.0.15",
-    "barra": "file:./modules/barra"
+    "barra": "file:./modules/barra",
+    "alarme-do-sistema": "file:./modules/alarme"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

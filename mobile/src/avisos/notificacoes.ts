@@ -5,6 +5,7 @@
 // sistema tem agendado e o que o plano diz que deveria ter.
 
 import * as Notifications from 'expo-notifications'
+import { agendarAlarme, cancelarAlarme, temAlarmeDeSistema } from 'alarme-do-sistema'
 import { Platform } from 'react-native'
 import type { Ajustes, Base, Periodo } from '../../../nucleo/modelo.ts'
 import type { AvisoAgendado } from '../../../nucleo/planejador.ts'
@@ -83,6 +84,23 @@ async function agendar(
   const materia = c.materiaId ? base.materias[c.materiaId] : undefined
   const texto = textoDoAviso(aviso, c, materia, t)
 
+  // Modo alarme vira ALARME DE SISTEMA, não notificação.
+  //
+  // A diferença é a que ele descreveu: notificação chama e espera você tocar;
+  // alarme toca. Com o app fechado, quem tocava o som era o app — e app fechado
+  // não toca nada, então passava da hora e só chegava um aviso mudo.
+  //
+  // O AlarmKit do iOS 26 agenda o alarme do SISTEMA: soa alto, com tela cheia,
+  // no silencioso e com Foco ligado, sem o app estar aberto e sem precisar do
+  // entitlement de Critical Alerts que ele decidiu não pedir.
+  if (aviso.modo === 'alarme' && temAlarmeDeSistema()) {
+    const ok = await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando)
+    // Só devolve se conseguiu. Falhou — permissão negada, por exemplo — cai na
+    // notificação insistente, que avisa mesmo sem acordar. Perder o aviso porque
+    // o alarme não pôde ser armado seria trocar um defeito por um pior.
+    if (ok) return
+  }
+
   await Notifications.scheduleNotificationAsync({
     identifier: aviso.chave,
     content: {
@@ -138,7 +156,12 @@ export async function sincronizarAvisos(
   const nossas = existentes.map((n) => n.identifier).filter((id) => id.includes('|'))
   const d = diferenca(nossas, plano.agendar)
 
-  for (const chave of d.cancelar) await Notifications.cancelScheduledNotificationAsync(chave)
+  for (const chave of d.cancelar) {
+    await Notifications.cancelScheduledNotificationAsync(chave)
+    // O alarme de sistema vive fora da fila de notificações: cancelar só a
+    // notificação deixaria o despertador armado para uma tarefa já feita.
+    cancelarAlarmeDoAviso(chave)
+  }
   for (const aviso of d.criar) await agendar(aviso, base, t)
 
   return {
@@ -154,7 +177,10 @@ export async function sincronizarAvisos(
 export async function calarCompromisso(compromissoId: string): Promise<number> {
   const existentes = await Notifications.getAllScheduledNotificationsAsync()
   const alvos = existentes.filter((n) => n.identifier.startsWith(`${compromissoId}|`))
-  for (const n of alvos) await Notifications.cancelScheduledNotificationAsync(n.identifier)
+  for (const n of alvos) {
+    await Notifications.cancelScheduledNotificationAsync(n.identifier)
+    cancelarAlarmeDoAviso(n.identifier)
+  }
   return alvos.length
 }
 
@@ -185,4 +211,31 @@ export async function adiar(
 
 export async function quantasAgendadas(): Promise<number> {
   return (await Notifications.getAllScheduledNotificationsAsync()).length
+}
+
+
+/**
+ * A chave do aviso como UUID.
+ *
+ * O AlarmKit exige UUID; as chaves do planejador são legíveis
+ * (`compromisso:regra:repetição`) e precisam continuar assim, porque é por elas
+ * que a diferença incremental funciona. Derivar em vez de sortear mantém a
+ * propriedade que importa: a mesma chave dá sempre o mesmo id, então recalcular
+ * o plano não duplica alarme.
+ */
+export function uuidDaChave(chave: string): string {
+  let h1 = 0x9e3779b9
+  let h2 = 0x85ebca6b
+  for (let i = 0; i < chave.length; i++) {
+    h1 = Math.imul(h1 ^ chave.charCodeAt(i), 0x01000193) >>> 0
+    h2 = Math.imul(h2 + chave.charCodeAt(i), 0x85ebca6b) >>> 0
+  }
+  const hex = (n: number) => n.toString(16).padStart(8, '0')
+  const bruto = (hex(h1) + hex(h2) + hex(h1 ^ h2) + hex((h1 + h2) >>> 0)).slice(0, 32)
+  return `${bruto.slice(0, 8)}-${bruto.slice(8, 12)}-4${bruto.slice(13, 16)}-a${bruto.slice(17, 20)}-${bruto.slice(20, 32)}`
+}
+
+/** Desarma o despertador junto com o aviso. */
+export function cancelarAlarmeDoAviso(chave: string): void {
+  cancelarAlarme(uuidDaChave(chave))
 }
