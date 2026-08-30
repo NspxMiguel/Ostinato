@@ -9,7 +9,7 @@ import { planejar } from '../../../nucleo/planejador.ts'
 import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
-import { estadoDaNuvem } from '../sync.ts'
+import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
@@ -186,8 +186,8 @@ export function Ajustes() {
   const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
   useEffect(() => {
     let vivo = true
-    void estadoDaNuvem().then((r) => {
-      if (vivo) setNuvem(r)
+    void Promise.all([estadoDaNuvem(), motivoDaNuvem()]).then(([r, motivo]) => {
+      if (vivo) setNuvem({ ligada: r.ligada, motivo })
     })
     return () => {
       vivo = false
@@ -352,7 +352,7 @@ function PeriodoEditor({
         </Linha>
         <Apoio>{t('ajustes.feriados')}</Apoio>
         {feriados.length === 0 ? (
-          <Vazio texto={t('ajustes.sem_periodo')} />
+          <Vazio texto={t('ajustes.sem_feriados')} />
         ) : (
           feriados.map((f) => (
             <Linha key={f} entre>

@@ -28,6 +28,24 @@ public class NuvemModule: Module {
   private static let identificadorDoContainer = "iCloud.dev.nspx.giz"
   private static let nomeDaZona = "giz"
 
+  /**
+   CKContainer(identifier:) NAO devolve erro quando o app nao tem o entitlement
+   de iCloud: ele DERRUBA O PROCESSO com EXC_BREAKPOINT, dentro do proprio
+   CloudKit, antes de qualquer `try` nosso ter chance.
+
+   Medido aqui em 29/08/2026, em conta Apple gratuita: tocar em Ajustes fechava o
+   app e voltava para a tela de inicio. Sem erro no console, sem nada no Metro —
+   so um .ips no DiagnosticReports. `do/catch` nao pega, `try?` nao pega, e o
+   `catch` do lado do JavaScript muito menos, porque o processo ja morreu.
+
+   Conferir o entitlement em tempo de execucao tambem nao serve: o
+   `SecTaskCreateFromSelf` que faria isso e do macOS, e nao existe no iOS.
+
+   Por isso a trava e de COMPILACAO. O mesmo plugin que adiciona o entitlement
+   (`plugins/icloud.js`, ligado por `extra.icloud` no app.json) define
+   `GIZ_ICLOUD`. Entitlement e codigo nascem juntos e nao tem como discordar:
+   sem conta paga, este arquivo nem chega a mencionar CKContainer.
+   */
   private lazy var container = CKContainer(identifier: NuvemModule.identificadorDoContainer)
   private var banco: CKDatabase { container.privateCloudDatabase }
   private var zona = CKRecordZone(zoneName: NuvemModule.nomeDaZona)
@@ -35,6 +53,18 @@ public class NuvemModule: Module {
 
   public func definition() -> ModuleDefinition {
     Name("Nuvem")
+
+#if !GIZ_ICLOUD
+    // Sem conta paga, o modulo existe e responde — mas nao encosta no CloudKit.
+    AsyncFunction("disponivel") { (promise: Promise) in promise.resolve(false) }
+    AsyncFunction("motivo") { (promise: Promise) in promise.resolve("sem-entitlement-icloud") }
+    AsyncFunction("puxar") { (_: String?, promise: Promise) in
+      promise.reject("sem-entitlement", "iCloud nao habilitado neste build")
+    }
+    AsyncFunction("empurrar") { (_: [[String: Any]], promise: Promise) in
+      promise.reject("sem-entitlement", "iCloud nao habilitado neste build")
+    }
+#else
 
     AsyncFunction("disponivel") { (promise: Promise) in
       self.container.accountStatus { estado, erro in
@@ -75,6 +105,7 @@ public class NuvemModule: Module {
         self.enviar(mudancas: mudancas, promise: promise)
       }
     }
+#endif
   }
 
   // MARK: - zona

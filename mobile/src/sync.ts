@@ -39,3 +39,9 @@ export async function estadoDaNuvem(): Promise<{ ligada: boolean; motivo: string
   if (p instanceof PortaNula) return { ligada: false, motivo: p.motivo }
   return { ligada: true, motivo: 'ok' }
 }
+
+/** O motivo detalhado, para a tela de Ajustes explicar o que falta. */
+export async function motivoDaNuvem(): Promise<string> {
+  const icloud = new PortaCloudKit()
+  return icloud.motivo()
+}

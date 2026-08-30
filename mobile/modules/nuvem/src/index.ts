@@ -12,6 +12,7 @@ const modulo = moduloOpcional<any>('Nuvem')
 export type MotivoIndisponivel =
   | 'ok'
   | 'sem-modulo'
+  | 'sem-entitlement-icloud'
   | 'sem-conta-icloud'
   | 'restrito'
   | 'indeterminado'
