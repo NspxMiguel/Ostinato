@@ -452,6 +452,27 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                             />
                           </View>
                         </Linha>
+                      ) : regra.quando.tipo === 'antesDaPrimeiraAula' ? (
+                        <View style={e.campo}>
+                          <Text style={fonte.secao}>{t('avisos.horas_antes_aula_qtd')}</Text>
+                          <TextInput
+                            style={e.input}
+                            keyboardType="numeric"
+                            value={String(regra.quando.horas)}
+                            onChangeText={(val) =>
+                              atualizarRegra(idx, {
+                                ...regra,
+                                quando: {
+                                  tipo: 'antesDaPrimeiraAula',
+                                  horas: Math.max(1, Number(val) || 2),
+                                },
+                              })
+                            }
+                            autoCorrect={false}
+                            autoCapitalize="none"
+                            selectTextOnFocus
+                          />
+                        </View>
                       ) : (
                         <View style={e.campo}>
                           <Text style={fonte.secao}>{t('novo_compromisso.minutos_antes_qtd')}</Text>

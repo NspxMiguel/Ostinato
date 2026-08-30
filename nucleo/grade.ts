@@ -141,6 +141,22 @@ function menorData(a: DataISO, b: DataISO): DataISO {
   return diasDesdeEpoca(a) <= diasDesdeEpoca(b) ? a : b
 }
 
+/**
+ * A primeira aula do dia — o começo do dia de aula, não da aula da matéria.
+ *
+ * É a âncora do alarme de última chance. Dia sem aula (fim de semana, feriado)
+ * devolve `undefined`, e o aviso simplesmente não existe: acordar às 5h de um
+ * sábado para fazer tarefa não é insistência, é defeito.
+ */
+export function primeiraAulaDoDia(
+  base: Base,
+  periodo: Periodo,
+  iso: DataISO,
+  inverterSemana = false,
+): AulaNoDia | undefined {
+  return aulasDoDia(base, periodo, iso, inverterSemana)[0]
+}
+
 /** Quantas aulas dessa matéria o período inteiro tem. Alimenta o cálculo de faltas. */
 export function totalDeAulasNoPeriodo(
   materiaId: string,

@@ -33,6 +33,7 @@ import { NovoCompromisso } from './telas/NovoCompromisso.tsx'
 import { Captura } from './telas/Captura.tsx'
 import { ouvirAtalhos } from './atalhos.ts'
 import { itensParaBusca } from '../../nucleo/busca.ts'
+import { provasJaFeitas } from '../../nucleo/autoConcluir.ts'
 import { indexar } from '../modules/busca/src/index.ts'
 import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
 
@@ -68,6 +69,13 @@ export function Raiz() {
   // mais próximos não é a mesma de ontem.
   const rearmar = useCallback(() => {
     const periodo = periodoAtivo(base, dataDe(new Date()))
+
+    // Prova que já aconteceu se conclui sozinha. Ninguém marca "fiz a prova" —
+    // fez, e acabou. Deixá-la pendente é o app cobrando o que não existe.
+    for (const p of provasJaFeitas(base, periodo, new Date(), ajustes.inverterSemanaAlternada)) {
+      guardar('compromissos', { id: p.id, concluido: true, concluidoEm: Date.now() })
+    }
+
     void sincronizarAvisos(base, ajustes, periodo, t).then((r) => {
       // Em desenvolvimento, o resultado do rearme vai para o console: e o unico
       // jeito de conferir de fora quantos avisos o iOS realmente guardou.
@@ -82,7 +90,7 @@ export function Raiz() {
     // A busca do iPhone entra no mesmo laço: quem procura "trigonometria" na
     // tela de início acha a prova, e tocar abre ela pela mesma URL da Siri.
     void indexar(itensParaBusca(base, periodo, t, ajustes.inverterSemanaAlternada))
-  }, [base, ajustes, t])
+  }, [base, ajustes, t, guardar])
 
   const primeiraVez = useRef(true)
   useEffect(() => {

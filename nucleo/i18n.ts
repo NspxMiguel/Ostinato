@@ -110,6 +110,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} dias antes, às {hora}',
+    'avisos.antes_da_aula': '{n}h antes da primeira aula do dia',
+    'avisos.antes_da_aula_1': '1h antes da primeira aula do dia',
+    'avisos.horas_antes_aula_qtd': 'Horas antes da 1ª aula',
     'avisos.dia_antes': '1 dia antes, às {hora}',
     'avisos.no_dia': 'No dia, às {hora}',
     'avisos.hora_antes': '1 hora antes',
@@ -377,6 +380,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} days before, at {hora}',
+    'avisos.antes_da_aula': '{n}h before the first class of the day',
+    'avisos.antes_da_aula_1': '1h before the first class of the day',
+    'avisos.horas_antes_aula_qtd': 'Hours before 1st class',
     'avisos.dia_antes': '1 day before, at {hora}',
     'avisos.no_dia': 'On the day, at {hora}',
     'avisos.hora_antes': '1 hour before',
@@ -644,6 +650,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} días antes, a las {hora}',
+    'avisos.antes_da_aula': '{n}h antes de la primera clase del día',
+    'avisos.antes_da_aula_1': '1h antes de la primera clase del día',
+    'avisos.horas_antes_aula_qtd': 'Horas antes de la 1.ª clase',
     'avisos.dia_antes': '1 día antes, a las {hora}',
     'avisos.no_dia': 'El mismo día, a las {hora}',
     'avisos.hora_antes': '1 hora antes',
@@ -911,6 +920,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} jours avant, à {hora}',
+    'avisos.antes_da_aula': '{n}h avant le premier cours de la journée',
+    'avisos.antes_da_aula_1': '1h avant le premier cours de la journée',
+    'avisos.horas_antes_aula_qtd': 'Heures avant le 1er cours',
     'avisos.dia_antes': '1 jour avant, à {hora}',
     'avisos.no_dia': 'Le jour même, à {hora}',
     'avisos.hora_antes': '1 heure avant',

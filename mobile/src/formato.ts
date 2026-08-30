@@ -82,6 +82,10 @@ export function quandoPorExtenso(
  * cada uma montasse o texto por conta própria.
  */
 export function rotuloDeRegra(regra: RegraAviso, t: T): string {
+  if (regra.quando.tipo === 'antesDaPrimeiraAula') {
+    const h = regra.quando.horas
+    return h === 1 ? t('avisos.antes_da_aula_1') : t('avisos.antes_da_aula', { n: h })
+  }
   if (regra.quando.tipo === 'diasAntes') {
     const n = regra.quando.dias
     if (n === 0) return t('avisos.no_dia', { hora: regra.quando.aHora })

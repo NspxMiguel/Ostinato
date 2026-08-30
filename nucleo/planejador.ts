@@ -12,6 +12,7 @@
 import type { Ajustes, Base, Compromisso, ModoAviso, Periodo, RegraAviso } from './modelo.ts'
 import { avisosDe } from './modelo.ts'
 import { resolverVencimento } from './vencimento.ts'
+import { primeiraAulaDoDia } from './grade.ts'
 import { vivos } from './sync/registro.ts'
 import { instante, somarDias } from './tempo.ts'
 
@@ -53,12 +54,32 @@ function chaveDe(compromissoId: string, regraId: string, repeticao: number): str
   return `${compromissoId}|${regraId}|${repeticao}`
 }
 
-/** Quando a regra dispara pela primeira vez, dada a data e hora do vencimento. */
-function primeiroDisparo(regra: RegraAviso, venceEm: Date, dataVencimento: string): Date {
+/**
+ * Quando a regra dispara pela primeira vez.
+ *
+ * Devolve `null` quando a regra não tem onde acontecer — hoje só o alarme de
+ * última chance num dia sem aula. Aviso que não pode existir é melhor sumir do
+ * plano do que virar uma data inventada.
+ */
+function primeiroDisparo(
+  regra: RegraAviso,
+  venceEm: Date,
+  dataVencimento: string,
+  base: Base,
+  periodo: Periodo | undefined,
+  inverterSemana: boolean,
+): Date | null {
   if (regra.quando.tipo === 'diasAntes') {
     return instante(somarDias(dataVencimento, -regra.quando.dias), regra.quando.aHora)
   }
-  return new Date(venceEm.getTime() - regra.quando.minutos * 60_000)
+  if (regra.quando.tipo === 'antesDe') {
+    return new Date(venceEm.getTime() - regra.quando.minutos * 60_000)
+  }
+  // antesDaPrimeiraAula: a âncora é o começo do dia de aula, não o vencimento.
+  if (!periodo) return null
+  const primeira = primeiraAulaDoDia(base, periodo, dataVencimento, inverterSemana)
+  if (!primeira) return null
+  return new Date(primeira.quando.getTime() - regra.quando.horas * 3_600_000)
 }
 
 /** Os disparos de uma regra: o primeiro, mais as repetições que ainda cabem antes do prazo. */
@@ -68,8 +89,12 @@ function disparosDaRegra(
   venceEm: Date,
   dataVencimento: string,
   agora: number,
+  base: Base,
+  periodo: Periodo | undefined,
+  inverterSemana: boolean,
 ): AvisoAgendado[] {
-  const inicio = primeiroDisparo(regra, venceEm, dataVencimento)
+  const inicio = primeiroDisparo(regra, venceEm, dataVencimento, base, periodo, inverterSemana)
+  if (!inicio) return []
   const cada = Math.max(0, regra.repetirCada ?? 0)
   const vezes = cada > 0 ? Math.max(0, Math.floor(regra.repeticoes ?? 0)) : 0
 
@@ -120,7 +145,18 @@ export function planejar(
 
     const doCompromisso: AvisoAgendado[] = []
     for (const regra of avisosDe(c, ajustes)) {
-      doCompromisso.push(...disparosDaRegra(c, regra, r.valor.quando, r.valor.data, agoraMs))
+      doCompromisso.push(
+        ...disparosDaRegra(
+          c,
+          regra,
+          r.valor.quando,
+          r.valor.data,
+          agoraMs,
+          base,
+          periodo,
+          ajustes.inverterSemanaAlternada,
+        ),
+      )
     }
     doCompromisso.sort(ordenar)
     if (doCompromisso.length > maxPorCompromisso) limitados.push(c.id)

@@ -34,6 +34,21 @@ Swift is used only where iOS is genuinely better at something.
 | Insistent | Time Sensitive, so it breaks through Focus and Do Not Disturb, with a custom sound and a burst that repeats until you answer. Actions on the notification itself: **Done** and **Snooze 10 min**. |
 | Alarm | Everything above, plus a looping sound and a full-screen dismiss when the app is running — including with the phone on silent. |
 
+Every kind of work except an exam also gets a **last-chance alarm**, anchored to
+the start of the school day rather than to the deadline: two hours before the
+**first class of the day**, loud and repeating, while there is still time to do
+the thing before leaving the house.
+
+The anchor matters. If maths is at 8:00 and geography at 7:30, "one hour before
+maths" rings at 7:00 — in the middle of geography, where nobody is going to do
+homework. On a day with no classes it does not fire at all: waking someone at 5am
+on a Saturday is not insistence, it is a defect.
+
+An exam does not get it. There is no doing the exam before leaving the house, and
+an exam **completes itself** once its day has passed — nobody marks "I sat the
+test". Tasks and submissions stay: those can be forgotten, and the app has no way
+to know they were handed in.
+
 With the app closed **and** the phone on silent, no iOS app plays sound without
 Apple's Critical Alerts entitlement, which this app does not request. In that case
 the alarm behaves like the insistent mode. The app says so on the screen where you

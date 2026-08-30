@@ -95,6 +95,16 @@ export type RegraAviso = {
   quando:
     | { tipo: 'diasAntes'; dias: number; aHora: Hora }
     | { tipo: 'antesDe'; minutos: number }
+    /**
+     * N horas antes do começo do DIA DE AULA em que a coisa vence — a primeira
+     * aula do dia, e não a aula da matéria.
+     *
+     * É o alarme de última chance: ainda dá para fazer a tarefa antes de sair de
+     * casa. Ancorar na aula da matéria erra o alvo — se matemática é às 8h e
+     * geografia às 7h30, "uma hora antes de matemática" toca às 7h, no meio da
+     * aula de geografia, e ninguém faz tarefa ali.
+     */
+    | { tipo: 'antesDaPrimeiraAula'; horas: number }
   modo: ModoAviso
   /** Só para insistente/alarme: de quanto em quanto tempo ele repete. */
   repetirCada?: number
@@ -218,6 +228,9 @@ function regra(
  * que ser útil antes de você abrir Ajustes.
  */
 export const PADROES_AVISO: Record<TipoCompromisso, RegraAviso[]> = {
+  // Prova nao leva o alarme de ultima chance: nao existe "fazer a prova antes de
+  // sair de casa". O que serve para prova e avisar com dias de antecedencia, para
+  // dar tempo de estudar — e e o que esta abaixo.
   prova: [
     regra('prova-7d', { tipo: 'diasAntes', dias: 7, aHora: '20:00' }, 'normal'),
     regra('prova-3d', { tipo: 'diasAntes', dias: 3, aHora: '20:00' }, 'normal'),
@@ -225,22 +238,31 @@ export const PADROES_AVISO: Record<TipoCompromisso, RegraAviso[]> = {
     regra('prova-2h', { tipo: 'antesDe', minutos: 120 }, 'alarme', { cada: 5, vezes: 5 }),
   ],
   trabalho: [
+    // Alarme de ultima chance: ainda da para fazer antes de sair de casa.
+    regra('trabalho-manha', { tipo: 'antesDaPrimeiraAula', horas: 2 }, 'alarme', { cada: 3, vezes: 4 }),
     regra('trabalho-5d', { tipo: 'diasAntes', dias: 5, aHora: '20:00' }, 'normal'),
     regra('trabalho-2d', { tipo: 'diasAntes', dias: 2, aHora: '20:00' }, 'normal'),
     regra('trabalho-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'insistente', { cada: 20, vezes: 2 }),
     regra('trabalho-3h', { tipo: 'antesDe', minutos: 180 }, 'insistente', { cada: 15, vezes: 3 }),
   ],
   entrega: [
+    // Alarme de ultima chance: ainda da para fazer antes de sair de casa.
+    regra('entrega-manha', { tipo: 'antesDaPrimeiraAula', horas: 2 }, 'alarme', { cada: 3, vezes: 4 }),
     regra('entrega-5d', { tipo: 'diasAntes', dias: 5, aHora: '20:00' }, 'normal'),
     regra('entrega-2d', { tipo: 'diasAntes', dias: 2, aHora: '20:00' }, 'normal'),
     regra('entrega-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'insistente', { cada: 20, vezes: 2 }),
     regra('entrega-3h', { tipo: 'antesDe', minutos: 180 }, 'insistente', { cada: 15, vezes: 3 }),
   ],
   tarefa: [
+    // Alarme de ultima chance: ainda da para fazer antes de sair de casa.
+    regra('tarefa-manha', { tipo: 'antesDaPrimeiraAula', horas: 2 }, 'alarme', { cada: 3, vezes: 4 }),
     regra('tarefa-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'normal'),
     regra('tarefa-2h', { tipo: 'antesDe', minutos: 120 }, 'insistente', { cada: 15, vezes: 2 }),
   ],
-  leitura: [regra('leitura-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'normal')],
+  leitura: [
+    regra('leitura-manha', { tipo: 'antesDaPrimeiraAula', horas: 2 }, 'alarme', { cada: 3, vezes: 4 }),
+    regra('leitura-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'normal'),
+  ],
   outro: [regra('outro-1d', { tipo: 'diasAntes', dias: 1, aHora: '20:00' }, 'normal')],
 }
 

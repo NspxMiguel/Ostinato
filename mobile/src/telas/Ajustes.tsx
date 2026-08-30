@@ -76,11 +76,15 @@ function RegraLinha({
   function mudarModo(modo: ModoAviso) {
     aoMudar({ ...regra, modo })
   }
-  function mudarNumero(n: number, campo: 'dias' | 'minutos') {
+  function mudarNumero(n: number, campo: 'dias' | 'minutos' | 'horas') {
     if (regra.quando.tipo === 'diasAntes' && campo === 'dias') {
       aoMudar({ ...regra, quando: { ...regra.quando, dias: Math.max(0, n) } })
     } else if (regra.quando.tipo === 'antesDe' && campo === 'minutos') {
       aoMudar({ ...regra, quando: { ...regra.quando, minutos: Math.max(0, n) } })
+    } else if (regra.quando.tipo === 'antesDaPrimeiraAula' && campo === 'horas') {
+      // Zero hora antes da primeira aula e o proprio comeco da aula, e ai nao da
+      // mais para fazer nada — o minimo util e uma hora.
+      aoMudar({ ...regra, quando: { ...regra.quando, horas: Math.max(1, n) } })
     }
   }
   function mudarHora(hora: string) {
@@ -104,6 +108,12 @@ function RegraLinha({
             />
             <CampoHora rotulo={t('ajustes.hora')} valor={regra.quando.aHora} aoMudar={mudarHora} />
           </Linha>
+        ) : regra.quando.tipo === 'antesDaPrimeiraAula' ? (
+          <CampoNumero
+            rotulo={t('avisos.horas_antes_aula_qtd')}
+            valor={regra.quando.horas}
+            aoConfirmar={(n) => mudarNumero(n, 'horas')}
+          />
         ) : (
           <CampoNumero
             rotulo={t('ajustes.minutos_antes')}
