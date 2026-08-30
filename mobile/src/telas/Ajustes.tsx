@@ -270,83 +270,97 @@ export function Ajustes() {
 
   return (
     <Tela titulo={t('abas.ajustes')}>
-      <Secao titulo={t('ajustes.idioma')}>
-        {/* Escolher idioma não é uma AÇÃO, é uma seleção — então são pílulas, e
-            não cinco botões amarelos disputando quem é o principal da tela. */}
-        <Fileira>
-          <Pilula
-            texto={`${t('ajustes.seguir_sistema')} · ${NOME_DO_IDIOMA[idiomaDoSistema()]}`}
-            ativa={ajustes.idioma === null}
-            aoTocar={() => mudarAjustes({ idioma: null })}
-          />
-          {/* Cada idioma aparece no próprio nome: quem procura "Español" não
-              está lendo a tela em português para achar "Espanhol". */}
-          {IDIOMAS.map((id) => (
-            <Pilula
-              key={id}
-              texto={NOME_DO_IDIOMA[id]}
-              ativa={ajustes.idioma === id}
-              aoTocar={() => mudarAjustes({ idioma: id })}
-            />
-          ))}
-        </Fileira>
-      </Secao>
+      {/* A ordem é o desenho desta tela, e ela não é arbitrária: primeiro QUEM é
+          a pessoa, porque isso muda o que o resto significa; depois o idioma, que
+          muda o que ela lê; então os avisos, que são o produto; a escola, que são
+          os dados; e por último o diagnóstico, que ninguém procura mas precisa
+          existir.
 
-      {/* Um tipo por linha, e as regras dele abrem numa folha. Antes esta seção
-          desenhava as regras dos SEIS tipos ao mesmo tempo, o que enchia a tela
-          de campos numéricos antes de a pessoa decidir o que queria mexer. */}
-      <Secao titulo={t('ajustes.avisos')}>
+          Todo grupo é um `Grupo`, sem exceção. Antes cada seção usava um
+          invólucro diferente — uma solta, outra em cartão, outra em grupo — e era
+          isso que fazia a tela parecer montada por três pessoas. */}
+      <Secao titulo={t('ajustes.perfil')}>
         <Grupo>
-        {IDs.map((tipo) => (
-          <LinhaDeMenu
-            key={tipo}
-            titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
-            valor={t(
-              `ajustes.nivel.${intensidadeDe(tipo, ajustes.padroesAviso[tipo] ?? [])}` as ChaveI18n,
-            )}
-            aoTocar={() => setTipoAberto(tipo)}
-          />
-        ))}
+          <View style={estilo.bloco}>
+            <Apoio>{t('ajustes.papel_pergunta')}</Apoio>
+            <Fileira>
+              <Pilula
+                texto={t('ajustes.papel.aluno')}
+                ativa={ajustes.papel === 'aluno'}
+                aoTocar={() => mudarAjustes({ papel: 'aluno' })}
+              />
+              <Pilula
+                texto={t('ajustes.papel.responsavel')}
+                ativa={ajustes.papel === 'responsavel'}
+                aoTocar={() => mudarAjustes({ papel: 'responsavel' })}
+              />
+            </Fileira>
+          </View>
+          <View style={estilo.bloco}>
+            {/* O rótulo vem ANTES do controle. Estava depois, e rótulo embaixo
+                do que ele nomeia é o tipo de erro que a pessoa não sabe apontar
+                mas que faz a tela parecer errada. */}
+            <Apoio>{t('ajustes.minhas_series')}</Apoio>
+            <Fileira>
+              {SERIES.map((s) => (
+                <Pilula
+                  key={s}
+                  texto={t(`serie.${s.replace(/ /g, '_')}` as ChaveI18n)}
+                  ativa={ajustes.minhasSeries.includes(s)}
+                  aoTocar={() =>
+                    mudarAjustes({
+                      minhasSeries: ajustes.minhasSeries.includes(s)
+                        ? ajustes.minhasSeries.filter((x) => x !== s)
+                        : [...ajustes.minhasSeries, s],
+                    })
+                  }
+                />
+              ))}
+            </Fileira>
+          </View>
         </Grupo>
       </Secao>
 
-      {/* Escola: o que descreve a escola dele, num grupo só. Antes o período
-          letivo desenhava um editor inteiro — nome, datas, lista de feriados —
-          no meio da tela de ajustes, e ele sozinho era mais alto que todo o
-          resto junto. */}
-      {/* Quem usa o app. Só o filtro do calendário olha para isto, mas ele não
-          funciona sem: reunião de pais é do responsável, e prova do 1º ano não é
-          de quem está no 3º. */}
-      <Secao titulo={t('ajustes.perfil')}>
-        <Fileira>
-          <Pilula
-            texto={t('ajustes.papel.aluno')}
-            ativa={ajustes.papel === 'aluno'}
-            aoTocar={() => mudarAjustes({ papel: 'aluno' })}
-          />
-          <Pilula
-            texto={t('ajustes.papel.responsavel')}
-            ativa={ajustes.papel === 'responsavel'}
-            aoTocar={() => mudarAjustes({ papel: 'responsavel' })}
-          />
-        </Fileira>
-        <Fileira>
-          {SERIES.map((s) => (
-            <Pilula
-              key={s}
-              texto={s}
-              ativa={ajustes.minhasSeries.includes(s)}
-              aoTocar={() =>
-                mudarAjustes({
-                  minhasSeries: ajustes.minhasSeries.includes(s)
-                    ? ajustes.minhasSeries.filter((x) => x !== s)
-                    : [...ajustes.minhasSeries, s],
-                })
-              }
+      <Secao titulo={t('ajustes.idioma')}>
+        <Grupo>
+          <View style={estilo.bloco}>
+            {/* Escolher idioma é seleção, não ação: pílulas, e não cinco botões
+                amarelos disputando qual é o principal da tela. */}
+            <Fileira>
+              <Pilula
+                texto={`${t('ajustes.seguir_sistema')} · ${NOME_DO_IDIOMA[idiomaDoSistema()]}`}
+                ativa={ajustes.idioma === null}
+                aoTocar={() => mudarAjustes({ idioma: null })}
+              />
+              {/* Cada idioma no próprio nome: quem procura "Español" não está
+                  lendo a tela em português para achar "Espanhol". */}
+              {IDIOMAS.map((id) => (
+                <Pilula
+                  key={id}
+                  texto={NOME_DO_IDIOMA[id]}
+                  ativa={ajustes.idioma === id}
+                  aoTocar={() => mudarAjustes({ idioma: id })}
+                />
+              ))}
+            </Fileira>
+          </View>
+        </Grupo>
+      </Secao>
+
+      {/* Um tipo por linha, e as regras dele abrem numa folha. */}
+      <Secao titulo={t('ajustes.avisos')}>
+        <Grupo>
+          {IDs.map((tipo) => (
+            <LinhaDeMenu
+              key={tipo}
+              titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
+              valor={t(
+                `ajustes.nivel.${intensidadeDe(tipo, ajustes.padroesAviso[tipo] ?? [])}` as ChaveI18n,
+              )}
+              aoTocar={() => setTipoAberto(tipo)}
             />
           ))}
-        </Fileira>
-        <Apoio>{t('ajustes.minhas_series')}</Apoio>
+        </Grupo>
       </Secao>
 
       <Secao titulo={t('ajustes.escola')}>
@@ -360,7 +374,7 @@ export function Ajustes() {
             valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
             aoTocar={() => setPeriodoAberto(true)}
           />
-          <View style={{ paddingHorizontal: espaco.g, paddingVertical: espaco.s }}>
+          <View style={estilo.bloco}>
             <Linha entre>
               <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
               <CampoNumero
@@ -373,32 +387,39 @@ export function Ajustes() {
         </Grupo>
       </Secao>
 
-      <Secao titulo={t('ajustes.sincronizacao')}>
-        <Cartao>
-        <Apoio>{textoDaNuvem}</Apoio>
-        {/* Diagnóstico, e não enfeite: o módulo Swift do Liquid Glass é
-            invisível quando funciona, e sem isso a única forma de saber se ele
-            está ativo é acreditar em quem escreveu o código. */}
-        <Linha entre>
-          <Apoio>{t('ajustes.vidro')}</Apoio>
-          <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.textoFraco}>
-            {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
-          </Apoio>
-        </Linha>
-        </Cartao>
-      </Secao>
-
-      <Secao titulo={t('ajustes.avisos_agendados', { n: plano.agendar.length })}>
-        {plano.cortados > 0 ? <Apoio>{t('ajustes.avisos_cortados', { n: plano.cortados })}</Apoio> : null}
-        {plano.semData.length > 0 ? (
-          <Cartao>
-            <Apoio>{t('ajustes.sem_data')}</Apoio>
-            {plano.semData.map((cid) => {
-              const c = base.compromissos[cid]
-              return <Apoio key={cid}>{c ? c.titulo : `(${cid})`}</Apoio>
-            })}
-          </Cartao>
-        ) : null}
+      {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com o
+          número no título, o que dava a um contador o mesmo peso de "Escola". */}
+      <Secao titulo={t('ajustes.sobre')}>
+        <Grupo>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.sincronizacao')}</Apoio>
+              <Apoio cor={cores.texto3}>{textoDaNuvem}</Apoio>
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.vidro')}</Apoio>
+              <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.texto3}>
+                {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
+              </Apoio>
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.avisos_armados')}</Apoio>
+              <Apoio cor={cores.texto3}>{String(plano.agendar.length)}</Apoio>
+            </Linha>
+            {plano.cortados > 0 ? (
+              <Apoio cor={cores.aviso}>{t('ajustes.avisos_cortados', { n: plano.cortados })}</Apoio>
+            ) : null}
+            {plano.semData.length > 0 ? (
+              <Apoio cor={cores.texto3}>
+                {t('ajustes.sem_data')}: {plano.semData.length}
+              </Apoio>
+            ) : null}
+          </View>
+        </Grupo>
       </Secao>
 
       <Modal
@@ -575,6 +596,9 @@ function LinhaAdicionarFeriado({ valor, aoMudar, aoAdicionar }: { valor: string;
 }
 
 const estilo = StyleSheet.create({
+  // Linha de menu já traz o próprio respiro; quem não é linha de menu precisa do
+  // mesmo, senão o conteúdo encosta na borda do grupo.
+  bloco: { paddingHorizontal: espaco.g, paddingVertical: espaco.m, gap: espaco.s },
   campo: {
     backgroundColor: cores.cartaoAlto,
     borderRadius: raio.s,
