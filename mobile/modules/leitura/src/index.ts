@@ -1,5 +1,4 @@
-import { requireNativeModule } from 'expo-modules-core'
-import { Platform } from 'react-native'
+import { moduloOpcional } from '../../../src/modulosNativos.ts'
 
 export type TextoLido = {
   /** As linhas remontadas, com TAB separando colunas — o formato de tabela. */
@@ -8,7 +7,7 @@ export type TextoLido = {
   pedacos: number
 }
 
-const modulo = Platform.OS === 'ios' ? requireNativeModule('Leitura') : null
+const modulo = moduloOpcional<any>('Leitura')
 
 export function temLeitura(): boolean {
   try {

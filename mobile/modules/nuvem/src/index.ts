@@ -4,11 +4,10 @@
 // que a `PortaNula` de hoje. É essa igualdade que faz a bateria de sync valer
 // como prova: o que muda aqui é só de onde os bytes vêm.
 
-import { requireNativeModule } from 'expo-modules-core'
-import { Platform } from 'react-native'
+import { moduloOpcional } from '../../../src/modulosNativos.ts'
 import type { Lote, Mudanca, PortaDeNuvem, ResultadoEnvio } from '../../../../nucleo/sync/porta.ts'
 
-const modulo = Platform.OS === 'ios' ? requireNativeModule('Nuvem') : null
+const modulo = moduloOpcional<any>('Nuvem')
 
 export type MotivoIndisponivel =
   | 'ok'

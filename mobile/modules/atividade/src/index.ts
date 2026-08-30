@@ -1,7 +1,6 @@
-import { requireNativeModule } from 'expo-modules-core'
-import { Platform } from 'react-native'
+import { moduloOpcional } from '../../../src/modulosNativos.ts'
 
-const modulo = Platform.OS === 'ios' ? requireNativeModule('Atividade') : null
+const modulo = moduloOpcional<any>('Atividade')
 
 export function temAtividade(): boolean {
   try {

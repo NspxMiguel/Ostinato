@@ -15,8 +15,19 @@ interface VidroProps extends ViewProps {
 
 const disponivel = Platform.OS === 'ios'
 
-const modulo = disponivel ? requireNativeModule('Vidro') : null
-const VistaNativa = disponivel ? requireNativeViewManager<VidroProps>('Vidro') : null
+// `requireNativeModule` lanca no import quando o modulo nao esta no binario, e
+// import que lanca da tela branca antes de qualquer codigo nosso rodar.
+function pegar<T>(buscar: () => T): T | null {
+  if (!disponivel) return null
+  try {
+    return buscar()
+  } catch {
+    return null
+  }
+}
+
+const modulo = pegar(() => requireNativeModule('Vidro'))
+const VistaNativa = pegar(() => requireNativeViewManager<VidroProps>('Vidro'))
 
 /** true quando o material Liquid Glass do sistema existe (iOS 26+). */
 export function temLiquidGlass(): boolean {
