@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { StyleSheet, TextInput, View } from 'react-native'
+import { Modal, StyleSheet, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import {
   IDIOMAS,
@@ -13,7 +13,19 @@ import { dataDe } from '../../../nucleo/tempo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
-import { Apoio, Botao, Cartao, Fileira, Linha, Pilula, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import {
+  Apoio,
+  Botao,
+  Cartao,
+  Fileira,
+  Linha,
+  LinhaDeMenu,
+  Pilula,
+  Secao,
+  Tela,
+  Titulo,
+  Vazio,
+} from '../componentes/ui.tsx'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
@@ -202,6 +214,8 @@ export function Ajustes() {
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
   // seria mandar o usuário resolver o problema errado.
   const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
+  /** Qual tipo de compromisso está com as regras abertas na folha. */
+  const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   useEffect(() => {
     let vivo = true
     void Promise.all([estadoDaNuvem(), motivoDaNuvem()]).then(([r, motivo]) => {
@@ -265,24 +279,19 @@ export function Ajustes() {
         </Fileira>
       </Secao>
 
+      {/* Um tipo por linha, e as regras dele abrem numa folha. Antes esta seção
+          desenhava as regras dos SEIS tipos ao mesmo tempo, o que enchia a tela
+          de campos numéricos antes de a pessoa decidir o que queria mexer. */}
       <Secao titulo={t('ajustes.padroes_aviso_tipo')}>
         {IDs.map((tipo) => (
-          <Cartao key={tipo}>
-            <View style={{ gap: espaco.s }}>
-              <Linha entre>
-                <Titulo>{t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}</Titulo>
-                <Botao texto={t('ajustes.adicionar_regra')} variante="discreto" aoTocar={() => adicionarRegra(tipo)} />
-              </Linha>
-              {(ajustes.padroesAviso[tipo] ?? []).map((regra) => (
-                <RegraLinha
-                  key={regra.id}
-                  regra={regra}
-                  aoMudar={(r) => mudarModoRegra(tipo, regra.id, r)}
-                  aoRemover={() => removerRegra(tipo, regra.id)}
-                />
-              ))}
-            </View>
-          </Cartao>
+          <LinhaDeMenu
+            key={tipo}
+            titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
+            valor={t('ajustes.avisos_agendados', {
+              n: (ajustes.padroesAviso[tipo] ?? []).length,
+            })}
+            aoTocar={() => setTipoAberto(tipo)}
+          />
         ))}
       </Secao>
 
@@ -331,6 +340,38 @@ export function Ajustes() {
           </Cartao>
         ) : null}
       </Secao>
+
+      <Modal
+        visible={tipoAberto !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setTipoAberto(null)}
+      >
+        {tipoAberto ? (
+          <Tela titulo={t(`compromisso.tipo.singular.${tipoAberto}` as ChaveI18n)}>
+            <Secao titulo={t('ajustes.padroes_aviso_tipo')}>
+              {(ajustes.padroesAviso[tipoAberto] ?? []).length === 0 ? (
+                <Vazio texto={t('ajustes.sem_regras')} />
+              ) : (
+                (ajustes.padroesAviso[tipoAberto] ?? []).map((regra) => (
+                  <RegraLinha
+                    key={regra.id}
+                    regra={regra}
+                    aoMudar={(r) => mudarModoRegra(tipoAberto, regra.id, r)}
+                    aoRemover={() => removerRegra(tipoAberto, regra.id)}
+                  />
+                ))
+              )}
+              <Botao
+                texto={t('ajustes.adicionar_regra')}
+                variante="vazado"
+                aoTocar={() => adicionarRegra(tipoAberto)}
+              />
+            </Secao>
+            <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setTipoAberto(null)} />
+          </Tela>
+        ) : null}
+      </Modal>
     </Tela>
   )
 }

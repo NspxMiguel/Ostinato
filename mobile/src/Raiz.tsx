@@ -330,7 +330,7 @@ function BarraDeAbas({
   // de fundo abaixo é que aparece.
   const vidro = temLiquidGlass()
   return (
-    <View style={[e.ancora, { paddingBottom: alturaSegura + espaco.s }]} pointerEvents="box-none">
+    <View style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.s) }]} pointerEvents="box-none">
       {aoCriar ? (
         <Pressable style={e.mais} onPress={aoCriar} accessibilityRole="button">
           <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
@@ -339,11 +339,15 @@ function BarraDeAbas({
         </Pressable>
       ) : null}
 
+      {/* A base cinza vai SEMPRE, não só no fallback. Liquid Glass refrata o
+          que está atrás dele: sobre preto puro, com a lista vazia, não há nada
+          para refratar e a barra some. A Apple dá uma base ao material pelo
+          mesmo motivo — o vidro é o acabamento, não o corpo. */}
       <Vidro
         raio={raio.pilula}
         variante="regular"
         interativo
-        style={[e.barra, vidro ? null : { backgroundColor: cores.vidro }]}
+        style={[e.barra, { backgroundColor: cores.vidro }]}
       >
         {ABAS.map((item) => (
           <Pressable
@@ -380,7 +384,7 @@ const e = StyleSheet.create({
     right: 0,
     bottom: 0,
     alignItems: 'center',
-    gap: espaco.m,
+    gap: espaco.s,
   },
   barra: {
     flexDirection: 'row',
@@ -395,6 +399,10 @@ const e = StyleSheet.create({
     paddingHorizontal: espaco.s,
     borderRadius: raio.pilula,
     overflow: 'hidden',
+    // Um fio de contorno: sem ele a barra não tem onde terminar quando o
+    // conteúdo atrás dela também é preto.
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: cores.borda,
   },
   aba: {
     alignItems: 'center',
@@ -417,5 +425,6 @@ const e = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'flex-end',
     marginRight: espaco.g,
+    marginBottom: espaco.xs,
   },
 })

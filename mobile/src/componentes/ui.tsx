@@ -204,7 +204,7 @@ export function Pilula({
         variante="regular"
         interativo
         tonalidade={ativa ? 'rgba(255,255,255,0.14)' : undefined}
-        style={e.pilulaVidro}
+        style={[e.pilulaVidro, { backgroundColor: ativa ? cores.cartaoAlto : cores.cartao }]}
       >
         {conteudo}
       </Vidro>
@@ -275,7 +275,10 @@ export function Botao({
         variante="regular"
         interativo
         tonalidade={variante === 'cheio' ? 'rgba(255,214,10,0.34)' : undefined}
-        style={e.botaoVidro}
+        style={[
+          e.botaoVidro,
+          { backgroundColor: variante === 'cheio' ? 'rgba(255,214,10,0.22)' : cores.cartao },
+        ]}
       >
         {rotulo}
       </Vidro>
@@ -303,6 +306,35 @@ export function Linha({ children, entre }: { children: ReactNode; entre?: boolea
     >
       {children}
     </View>
+  )
+}
+
+/**
+ * Linha de menu: título, um resumo à direita, e a seta.
+ *
+ * É o que troca o Ajustes de "tudo aberto ao mesmo tempo" por "escolha o que
+ * abrir". Uma tela de ajustes que mostra as regras dos seis tipos de compromisso
+ * de uma vez não é completa, é ilegível.
+ */
+export function LinhaDeMenu({
+  titulo,
+  valor,
+  aoTocar,
+}: {
+  titulo: string
+  valor?: string
+  aoTocar: () => void
+}) {
+  return (
+    <Toque aoTocar={aoTocar} estilo={e.linhaDeMenu}>
+      <Text style={[fonte.corpo, { flex: 1 }]}>{titulo}</Text>
+      {valor ? (
+        <Text style={[fonte.apoio, { color: cores.texto3 }]} numberOfLines={1}>
+          {valor}
+        </Text>
+      ) : null}
+      <Text style={{ color: cores.texto4, fontSize: 20, marginTop: -2 }}>›</Text>
+    </Toque>
   )
 }
 
@@ -366,5 +398,14 @@ const e = StyleSheet.create({
   botaoCheio: { backgroundColor: cores.destaque },
   botaoVazado: { borderWidth: 1, borderColor: cores.borda },
   botaoDiscreto: { backgroundColor: 'transparent' },
+  linhaDeMenu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.m,
+    // 44pt é o alvo mínimo da Apple, e linha de menu é o alvo mais tocado de
+    // uma tela de ajustes.
+    minHeight: 44,
+    paddingVertical: espaco.s,
+  },
   vazio: { paddingVertical: espaco.ggg, alignItems: 'center' },
 })
