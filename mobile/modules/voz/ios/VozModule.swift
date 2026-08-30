@@ -21,6 +21,7 @@ import AVFoundation
 public class VozModule: Module {
   private var reconhecedor: SFSpeechRecognizer?
   private var pedido: SFSpeechAudioBufferRecognitionRequest?
+  private var corte: Timer?
   private var tarefa: SFSpeechRecognitionTask?
   private let motor = AVAudioEngine()
   private var ultimoTexto = ""
@@ -103,6 +104,7 @@ public class VozModule: Module {
           "texto": self.ultimoTexto,
           "final": resultado.isFinal,
         ])
+        self.adiarCorte()
         if resultado.isFinal {
           self.parar()
           self.sendEvent("aoTerminar", ["texto": self.ultimoTexto])
@@ -123,7 +125,26 @@ public class VozModule: Module {
     }
   }
 
+  /**
+   Encerra o ditado quando a fala para sozinha.
+
+   O `SFSpeechRecognizer` só entrega `isFinal` quando ELE decide que acabou, e
+   silêncio nem sempre basta. Sem este relógio, quem falava e parava ficava com
+   o microfone ligado e o ponto laranja aceso — foi o que aconteceu no iPhone
+   dele. Cada trecho reconhecido adia o corte; o silêncio o deixa vencer.
+   */
+  private func adiarCorte() {
+    corte?.invalidate()
+    corte = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false) { [weak self] _ in
+      guard let self, self.tarefa != nil else { return }
+      self.parar()
+      self.sendEvent("aoTerminar", ["texto": self.ultimoTexto])
+    }
+  }
+
   private func parar() {
+    corte?.invalidate()
+    corte = nil
     if motor.isRunning {
       motor.stop()
       motor.inputNode.removeTap(onBus: 0)

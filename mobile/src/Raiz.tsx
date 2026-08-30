@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Animated, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { GlassContainer, GlassView, isLiquidGlassAvailable } from 'expo-glass-effect'
+import { BarraNativa } from 'barra'
 import { dataDe } from '../../nucleo/tempo.ts'
 import { periodoAtivo } from '../../nucleo/grade.ts'
 import { usarLoja } from './estado/loja.ts'
@@ -344,176 +344,47 @@ function BarraDeAbas({
 }) {
   // No iOS 26 a barra é vidro de verdade; nos outros o `Vidro` vira View e a cor
   // de fundo abaixo é que aparece.
-  const vidro = isLiquidGlassAvailable()
-  const [larguraDaBarra, setLarguraDaBarra] = useState(0)
-  const indice = Math.max(0, abas.findIndex((a) => a.id === aba))
-  const deslize = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    if (larguraDaBarra === 0) return
-    Animated.spring(deslize, {
-      toValue: (larguraDaBarra / abas.length) * indice + espaco.xs / 2,
-      useNativeDriver: true,
-      damping: 20,
-      stiffness: 180,
-      mass: 0.9,
-    }).start()
-  }, [indice, larguraDaBarra, abas.length, deslize])
+  // A barra inteira é nativa. Montar Liquid Glass do lado do JavaScript não
+  // funciona: o `UIGlassContainerEffect` exige as peças de vidro como IRMÃS no
+  // `contentView` dele, e uma árvore React aninha — arranjo em que o `spacing`
+  // não funde nada e o arrasto não existe. Ver `modules/barra/ios`.
   return (
-    <GlassContainer
-      spacing={20}
-      style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.s) }]}
-      pointerEvents="box-none"
-    >
-      {/* O FAB e a barra moram no MESMO GlassContainer de propósito: é o
-          container que faz duas peças de vidro se enxergarem — elas ganham o
-          brilho especular na borda e se fundem quando chegam perto. Cada uma
-          no seu container seria vidro sem conversa, que era o que eu tinha. */}
+    <View style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.m) }]} pointerEvents="box-none">
       {aoCriar ? (
-        <GlassView
-          glassEffectStyle="regular"
-          isInteractive
-          tintColor={cores.destaque}
-          style={e.mais}
-        >
-          <Pressable
-            onPress={aoCriar}
-            accessibilityRole="button"
-            style={e.alvoDoMais}
-          >
-            <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
-              +
-            </Text>
-          </Pressable>
-        </GlassView>
+        <Pressable style={e.mais} onPress={aoCriar} accessibilityRole="button">
+          <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
+            +
+          </Text>
+        </Pressable>
       ) : null}
 
-      {/* `clear` com uma tinta ESCURA de baixa opacidade.
-          
-          A regular é a variante densa, feita para conteúdo claro atrás: sobre
-          preto ela vira cinza chapado, que era o "opaco demais". A clear sozinha
-          vai longe demais na outra direção — o texto que passa por baixo compete
-          com os rótulos das abas e não dá para separar botão de fundo.
-          
-          Preto a 30% resolve os dois: escurece o que passa atrás sem tapar, e é
-          o que o próprio iOS faz numa barra sobre conteúdo escuro. Tinta não é
-          preenchimento — o material continua refratando. */}
-      <GlassView
-        glassEffectStyle="clear"
-        isInteractive
-        tintColor="rgba(0,0,0,0.30)"
+      <BarraNativa
         style={e.barra}
-        onLayout={(ev) => setLarguraDaBarra(ev.nativeEvent.layout.width)}
-      >
-        {/* A pílula que DESLIZA entre as abas.
-        
-            É o movimento que faz o Liquid Glass parecer líquido: a seleção não
-            pisca de um lugar para o outro, ela escorrega. A mola é de propósito
-            mais lenta na saída que na entrada (`damping` alto, `stiffness`
-            médio) — rápido demais vira teletransporte e o efeito se perde.
-            
-            Ela mora DENTRO do mesmo GlassView da barra, então o container faz as
-            duas peças de vidro se enxergarem e a borda ganha o brilho especular
-            no encontro. */}
-        {larguraDaBarra > 0 ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              e.indicador,
-              {
-                width: larguraDaBarra / abas.length - espaco.xs,
-                transform: [{ translateX: deslize }],
-              },
-            ]}
-          >
-            <GlassView
-              glassEffectStyle="regular"
-              tintColor="rgba(255,255,255,0.16)"
-              style={e.indicadorVidro}
-            />
-          </Animated.View>
-        ) : null}
-
-        {abas.map((item) => (
-          <Pressable
-            key={item.id}
-            style={e.aba}
-            onPress={() => aoTrocar(item.id)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: aba === item.id }}
-          >
-            <IconeDaAba id={item.id} ativo={aba === item.id} />
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: aba === item.id ? '600' : '400',
-                color: aba === item.id ? cores.texto : cores.texto3,
-              }}
-              numberOfLines={1}
-            >
-              {rotulo(item.chave)}
-            </Text>
-          </Pressable>
-        ))}
-      </GlassView>
-    </GlassContainer>
+        rotulos={abas.map((a) => rotulo(a.chave))}
+        ativa={Math.max(0, abas.findIndex((a) => a.id === aba))}
+        aoTrocar={(ev: { nativeEvent: { indice: number } }) => {
+          const alvo = abas[ev.nativeEvent.indice]
+          if (alvo) aoTrocar(alvo.id)
+        }}
+      />
+    </View>
   )
 }
 
 const e = StyleSheet.create({
-  // A âncora não intercepta toque (`box-none`): a lista continua rolável por
-  // baixo da barra flutuante, e só a barra e o FAB recebem o dedo.
-  ancora: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    gap: espaco.s,
-  },
-  barra: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    // Ocupa a largura da tela menos uma margem: barra de navegação é o alvo de
-    // toque mais usado do app, e pílula estreita no meio da tela transforma
-    // trocar de aba em mira.
-    alignSelf: 'stretch',
-    marginHorizontal: espaco.m,
-    justifyContent: 'space-around',
-    paddingVertical: espaco.m,
-    paddingHorizontal: espaco.s,
-    borderRadius: raio.pilula,
-    overflow: 'hidden',
-  },
-  indicador: {
-    position: 'absolute',
-    left: 0,
-    top: espaco.s,
-    bottom: espaco.s,
-    borderRadius: raio.pilula,
-    overflow: 'hidden',
-  },
-  indicadorVidro: { flex: 1, borderRadius: raio.pilula },
-  aba: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    // 44pt é o alvo mínimo de toque da Apple, e aqui ele é o piso, não a meta.
-    minHeight: 44,
-    paddingVertical: espaco.xs,
-    // Sem largura fixa: "Ajustes" em francês é "Réglages" e em espanhol
-    // "Ajustes" — nenhum deles cabe numa medida decidida em inglês.
-    paddingHorizontal: espaco.s,
-    flex: 1,
-  },
+  // O FAB fica ACIMA da barra e alinhado à direita dela, não solto no canto: o
+  // botão flutuando sozinho passava por cima do texto da lista.
+  ancora: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: espaco.m },
+  barra: { height: 60, marginHorizontal: espaco.m },
   mais: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    overflow: 'hidden',
+    backgroundColor: cores.destaque,
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'flex-end',
-    marginRight: espaco.g,
-    marginBottom: espaco.xs,
+    marginRight: espaco.m,
   },
-  alvoDoMais: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 })
+

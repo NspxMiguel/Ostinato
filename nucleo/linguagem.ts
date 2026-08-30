@@ -507,6 +507,20 @@ function limitesSemEspacoOuPontuacao(texto: string, de: number, ate: number): Tr
 const RECIPIENTES_PT =
   /^(?:lista|listas|exercicio|exercicios|atividade|atividades|resumo|resumos|ficha|fichas|apostila|apostilas|capitulo|capitulos|pagina|paginas|questao|questoes|revisao|revisoes|caderno|relatorio|relatorios|projeto|projetos|slide|slides)\s+(?:de|da|do)\s+(.+)$/i
 
+/**
+ * Onde o nome da matéria termina.
+ *
+ * São preposições de LUGAR e de complemento: "no caderno", "na folha", "para
+ * segunda", "sobre a Revolução". Nenhuma delas aparece dentro do nome de uma
+ * matéria, ao contrário de "de/da/do" — que ficam de fora desta lista porque
+ * "história da arte" é o nome inteiro.
+ */
+const COMPLEMENTO: Partial<Record<Idioma, RegExp>> = {
+  pt: /\b(?:no|na|nos|nas|em|pra|pro|para|sobre|com|ate|usando|paginas?|pagina)\b/g,
+  es: /\b(?:en|para|sobre|con|hasta|paginas?)\b/g,
+  fr: /\b(?:dans|sur|pour|avec|jusqu)\b/g,
+}
+
 /** Descasca "lista de exercicios de fisica" até sobrar "fisica". */
 function tirarRecipiente(nome: string): string {
   let atual = nome.trim()
@@ -549,6 +563,23 @@ function reconhecerMateria(
     let fimNome = original.length
     for (const limite of [data?.trecho, hora]) {
       if (limite && limite.de >= inicioNome && limite.de < fimNome) fimNome = limite.de
+    }
+
+    // O nome da matéria termina onde começa um COMPLEMENTO.
+    //
+    // Sem isto o nome ia até o fim da frase, e "tarefa de química no caderno"
+    // criava uma matéria chamada "química no caderno" — aconteceu no iPhone dele
+    // em 30/08/2026, e o estrago é permanente: a matéria fica na lista.
+    //
+    // `de`, `da` e `do` NÃO cortam, de propósito: eles aparecem dentro de nomes
+    // de matéria de verdade — "história da arte", "língua portuguesa do Brasil".
+    // Quem corta é o locativo e o complemento, que nunca fazem parte do nome.
+    const corte = COMPLEMENTO[idioma]
+    if (corte) {
+      corte.lastIndex = 0
+      const busca = normalizarBusca(original.slice(inicioNome, fimNome))
+      const achou = corte.exec(busca)
+      if (achou && achou.index > 0) fimNome = inicioNome + achou.index
     }
 
     const trecho = limitesSemEspacoOuPontuacao(original, inicioNome, fimNome)

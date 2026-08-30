@@ -182,3 +182,23 @@ test('entrada estranha nunca lança nem devolve título vazio', () => {
   assert.doesNotThrow(() => interpretar('!!! 999/99 às 99h ???', AGORA, 'pt'))
   assert.notEqual(interpretar('!!! 999/99 às 99h ???', AGORA, 'pt').titulo, '')
 })
+
+test('o nome da matéria termina onde começa o complemento', () => {
+  // Aconteceu no iPhone dele em 30/08/2026: ditou "tarefa de química no
+  // caderno" e o app criou uma MATÉRIA chamada "química no caderno". O estrago
+  // é permanente — a matéria fica na lista para sempre.
+  const r = interpretar('tarefa de química no caderno', new Date('2026-08-31T08:00:00'), 'pt')
+  assert.equal(r.materiaNome, 'química')
+
+  const f = interpretar('tarefa de física na folha', new Date('2026-08-31T08:00:00'), 'pt')
+  assert.equal(f.materiaNome, 'física')
+
+  const p = interpretar('leitura de biologia páginas 40 a 60', new Date('2026-08-31T08:00:00'), 'pt')
+  assert.equal(p.materiaNome, 'biologia')
+})
+
+test('"de/da/do" continuam dentro do nome da matéria', () => {
+  // O corte não pode comer nome legítimo: "história da arte" é uma matéria.
+  const r = interpretar('prova de história da arte', new Date('2026-08-31T08:00:00'), 'pt')
+  assert.equal(r.materiaNome, 'história da arte')
+})

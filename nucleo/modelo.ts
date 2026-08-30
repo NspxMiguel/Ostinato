@@ -244,6 +244,14 @@ export type Recursos = {
   grade: boolean
   /** Notas, média e faltas. */
   notas: boolean
+  /**
+   * Escola com semana A/B, em que a grade muda de uma semana para a outra.
+   *
+   * Nasce DESLIGADO: quase toda escola tem a mesma grade toda semana, e ele
+   * olhou o controle na tela e perguntou o que era. Controle que a pessoa não
+   * entende é pior que controle que não existe.
+   */
+  semanaAlternada: boolean
 }
 
 /** Ids fixos para os padrões: o usuário edita, e a edição substitui pelo id. */
@@ -311,7 +319,7 @@ export function ajustesPadrao(): Ajustes {
     // caso derivado. Série vazia significa "ainda não perguntei", e a tela de
     // importação pergunta antes de filtrar qualquer coisa.
     papel: 'aluno',
-    recursos: { grade: true, notas: true },
+    recursos: { grade: true, notas: true, semanaAlternada: false },
     minhasSeries: [],
     padroesAviso: PADROES_AVISO,
     somAlarme: 'sino',

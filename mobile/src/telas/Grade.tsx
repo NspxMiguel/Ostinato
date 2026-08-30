@@ -48,6 +48,7 @@ function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string
 
 export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void }) {
   const t = usarT()
+  const ajustes = usarLoja((s) => s.ajustes)
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
@@ -517,6 +518,11 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
             </View>
 
             {/* Semana alternada */}
+            {/* Semana alternada só aparece para quem tem escola com semana
+                A/B. Ele olhou a tela e perguntou o que era — controle que a
+                pessoa não entende é pior que controle que não existe, e a
+                imensa maioria das escolas tem a mesma grade toda semana. */}
+            {ajustes.recursos.semanaAlternada ? (
             <Secao titulo={t('grade.semana')}>
               <Fileira>
                 {(['toda', 'par', 'impar'] as SemanaAlternada[]).map((s: SemanaAlternada) => (
@@ -529,6 +535,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                 ))}
               </Fileira>
             </Secao>
+            ) : null}
 
             {/* Ações */}
             <View style={{ gap: espaco.s, marginTop: espaco.m }}>

@@ -78,6 +78,17 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
     setMateriaEscolhida(null)
   }, [lido?.materiaNome])
 
+  // Fechar a tela DESLIGA o microfone. Sem isto, sair da captura ditando
+  // deixava o reconhecedor vivo e o ponto laranja aceso no iPhone — o app
+  // continuava ouvindo depois de a pessoa ter ido embora.
+  useEffect(() => {
+    return () => {
+      const parar = pararDitado.current
+      pararDitado.current = null
+      void parar?.()
+    }
+  }, [])
+
   const vencimento = lido?.vencimento
   const quando =
     vencimento?.tipo === 'data'
