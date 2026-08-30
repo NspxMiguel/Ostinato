@@ -8,7 +8,18 @@ import { vivos } from '../../../nucleo/sync/registro.ts'
 import { dataDe, diaSemanaDe, horaDe, instante, somarDias } from '../../../nucleo/tempo.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { criarT } from '../../../nucleo/i18n.ts'
-import { Apoio, Bolinha, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import {
+  Apoio,
+  Bolinha,
+  Cartao,
+  Entrada,
+  Etiqueta,
+  Linha,
+  Secao,
+  Tela,
+  Titulo,
+  Vazio,
+} from '../componentes/ui.tsx'
 import { comInicialMinuscula, dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
@@ -59,7 +70,7 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
             }
           />
         ) : (
-          aulas.map((item) => {
+          aulas.map((item, i) => {
             const inicio = instante(item.data, item.aula.inicio)
             const fim = instante(item.data, item.aula.fim)
             const ms = agora.getTime()
@@ -67,8 +78,8 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
             const passou = ms >= fim.getTime()
             const sala = item.aula.sala ?? item.materia?.sala
             return (
-              <View key={item.aula.id} style={passou ? e.passou : undefined}>
-                <View style={e.aula}>
+              <Entrada key={item.aula.id} indice={i}>
+                <View style={[e.aula, passou ? e.passou : null]}>
                   {/* O horário vira coluna à esquerda: a pessoa lê a régua do dia
                       de cima a baixo, sem caçar a hora dentro de cada linha. */}
                   <View style={e.hora}>
@@ -84,7 +95,7 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                     {sala ? <Apoio>{sala}</Apoio> : null}
                   </View>
                 </View>
-              </View>
+              </Entrada>
             )
           })
         )}
@@ -96,12 +107,12 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
             texto={semCompromisso ? t('hoje.vazio_compromissos') : t('hoje.nada_entregar')}
           />
         ) : (
-          chegando.map((item) => {
+          chegando.map((item, i) => {
             const materia = materiaViva(base, item.compromisso.materiaId)
             const aviso = item.proximoAviso
             return (
+              <Entrada key={item.compromisso.id} indice={i}>
               <Cartao
-                key={item.compromisso.id}
                 faixa={materia?.cor}
                 aoTocar={() => aoAbrirCompromisso(item.compromisso.id)}
               >
@@ -148,6 +159,7 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                   </>
                 ) : null}
               </Cartao>
+              </Entrada>
             )
           })
         )}

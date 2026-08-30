@@ -15,8 +15,10 @@
 // Sombra em caixa não existe aqui. Elevação, quando precisa existir, é feita com
 // branco em alfa (`cartao`, `cartaoAlto`), que é o que o iOS faz.
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import {
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -81,17 +83,61 @@ export function Toque({
   aoTocar?: () => void
   estilo?: StyleProp<ViewStyle>
 }) {
-  const [pressionado, setPressionado] = useState(false)
+  // A escala usa `Animated` do próprio React Native, e não Reanimated: este é o
+  // componente mais usado do app inteiro, e o custo de ele depender do plugin de
+  // babel é alto demais para o ganho.
+  const escala = useRef(new Animated.Value(1)).current
+
+  const animar = (para: number) =>
+    Animated.spring(escala, {
+      toValue: para,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 0,
+    }).start()
+
   if (!aoTocar) return <View style={estilo}>{children}</View>
   return (
     <Pressable
       onPress={aoTocar}
-      onPressIn={() => setPressionado(true)}
-      onPressOut={() => setPressionado(false)}
-      style={[estilo, pressionado ? e.pressionado : null]}
+      onPressIn={() => animar(0.96)}
+      onPressOut={() => animar(1)}
+    >
+      <Animated.View style={[estilo, { transform: [{ scale: escala }] }]}>
+        {children}
+      </Animated.View>
+    </Pressable>
+  )
+}
+
+/**
+ * Entrada de item de lista: sobe um pouco e aparece.
+ *
+ * O `atraso` escalona os itens, e é ele que faz a lista parecer que se monta em
+ * vez de piscar pronta. Acima de ~8 itens o escalonamento para de crescer: uma
+ * lista de trinta tarefas levaria quase um segundo para terminar de aparecer, e
+ * aí a animação vira espera.
+ */
+export function Entrada({ children, indice = 0 }: { children: ReactNode; indice?: number }) {
+  const p = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    Animated.timing(p, {
+      toValue: 1,
+      duration: 260,
+      delay: Math.min(indice, 8) * 35,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start()
+  }, [indice, p])
+  return (
+    <Animated.View
+      style={{
+        opacity: p,
+        transform: [{ translateY: p.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+      }}
     >
       {children}
-    </Pressable>
+    </Animated.View>
   )
 }
 
@@ -349,7 +395,6 @@ const e = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
   tituloTela: { paddingHorizontal: espaco.g, paddingTop: espaco.s, paddingBottom: espaco.xs },
   linhaDeLista: { flexDirection: 'row', gap: espaco.m, alignItems: 'flex-start' },
-  pressionado: { opacity: 0.55 },
   etiqueta: {
     paddingHorizontal: espaco.s,
     paddingVertical: 2,

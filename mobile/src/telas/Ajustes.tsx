@@ -216,6 +216,8 @@ export function Ajustes() {
   const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
+  /** O editor de período letivo abre em folha: ele é uma tela inteira. */
+  const [periodoAberto, setPeriodoAberto] = useState(false)
   useEffect(() => {
     let vivo = true
     void Promise.all([estadoDaNuvem(), motivoDaNuvem()]).then(([r, motivo]) => {
@@ -282,7 +284,7 @@ export function Ajustes() {
       {/* Um tipo por linha, e as regras dele abrem numa folha. Antes esta seção
           desenhava as regras dos SEIS tipos ao mesmo tempo, o que enchia a tela
           de campos numéricos antes de a pessoa decidir o que queria mexer. */}
-      <Secao titulo={t('ajustes.padroes_aviso_tipo')}>
+      <Secao titulo={t('ajustes.avisos')}>
         {IDs.map((tipo) => (
           <LinhaDeMenu
             key={tipo}
@@ -295,33 +297,24 @@ export function Ajustes() {
         ))}
       </Secao>
 
-      <Secao titulo={t('ajustes.periodo_letivo')}>
-        {periodo ? (
-          <PeriodoEditor
-            key={periodo.id}
-            nome={periodo.nome}
-            inicio={periodo.inicio}
-            fim={periodo.fim}
-            feriados={periodo.feriados}
-            aoSalvar={(parcial) => guardar('periodos', { id: periodo.id, ...parcial })}
-            aoAdicionarFeriado={(data) =>
-              guardar('periodos', { id: periodo.id, feriados: [...periodo.feriados, data] })
-            }
-            aoRemoverFeriado={(data) =>
-              guardar('periodos', { id: periodo.id, feriados: periodo.feriados.filter((f) => f !== data) })
-            }
-          />
-        ) : (
-          <Vazio texto={t('ajustes.sem_periodo')} />
-        )}
-      </Secao>
-
-      <Secao titulo={t('ajustes.limite_faltas_padrao')}>
-        <CampoNumero
-          rotulo={t('ajustes.porcentagem')}
-          valor={ajustes.limiteFaltasPadrao}
-          aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+      {/* Escola: o que descreve a escola dele, num grupo só. Antes o período
+          letivo desenhava um editor inteiro — nome, datas, lista de feriados —
+          no meio da tela de ajustes, e ele sozinho era mais alto que todo o
+          resto junto. */}
+      <Secao titulo={t('ajustes.escola')}>
+        <LinhaDeMenu
+          titulo={t('ajustes.periodo_letivo')}
+          valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
+          aoTocar={() => setPeriodoAberto(true)}
         />
+        <Linha entre>
+          <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
+          <CampoNumero
+            rotulo={t('ajustes.porcentagem')}
+            valor={ajustes.limiteFaltasPadrao}
+            aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+          />
+        </Linha>
       </Secao>
 
       <Secao titulo={t('ajustes.sincronizacao')}>
@@ -371,6 +364,38 @@ export function Ajustes() {
             <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setTipoAberto(null)} />
           </Tela>
         ) : null}
+      </Modal>
+
+      <Modal
+        visible={periodoAberto}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setPeriodoAberto(false)}
+      >
+        <Tela titulo={t('ajustes.periodo_letivo')}>
+          {periodo ? (
+            <PeriodoEditor
+              key={periodo.id}
+              nome={periodo.nome}
+              inicio={periodo.inicio}
+              fim={periodo.fim}
+              feriados={periodo.feriados}
+              aoSalvar={(parcial) => guardar('periodos', { id: periodo.id, ...parcial })}
+              aoAdicionarFeriado={(data) =>
+                guardar('periodos', { id: periodo.id, feriados: [...periodo.feriados, data] })
+              }
+              aoRemoverFeriado={(data) =>
+                guardar('periodos', {
+                  id: periodo.id,
+                  feriados: periodo.feriados.filter((f) => f !== data),
+                })
+              }
+            />
+          ) : (
+            <Vazio texto={t('ajustes.sem_periodo')} />
+          )}
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
+        </Tela>
       </Modal>
     </Tela>
   )

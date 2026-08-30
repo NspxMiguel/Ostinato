@@ -180,7 +180,9 @@ export function Raiz() {
 
   return (
     <View style={{ flex: 1, backgroundColor: cores.fundo }}>
-      <View style={{ flex: 1 }}>
+      {/* A aba inteira reaparece a cada troca; a chave faz o React remontar e a
+          `Entrada` de cada item rodar de novo, o que dá a transição. */}
+      <View style={{ flex: 1 }} key={aba}>
         {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} /> : null}
         {aba === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
         {aba === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
