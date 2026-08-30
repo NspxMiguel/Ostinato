@@ -269,7 +269,7 @@ export function Botao({
   }
 
   return (
-    <Toque aoTocar={aoTocar} estilo={{ flex: 1 }}>
+    <Toque aoTocar={aoTocar}>
       <Vidro
         raio={raio.pilula}
         variante="regular"

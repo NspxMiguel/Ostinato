@@ -7,7 +7,7 @@ import { dataDe } from '../../../nucleo/tempo.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { mediaDaMateria, precisaTirar } from '../../../nucleo/notas.ts'
 import { situacaoDeFaltas } from '../../../nucleo/faltas.ts'
-import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
+import { Apoio, Botao, Cartao, Linha, Pilula, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
@@ -294,9 +294,9 @@ function FormFalta({
       </Linha>
       <Linha entre>
         <Apoio>{t('materia.justificada')}</Apoio>
-        <Botao
+        <Pilula
           texto={justificada ? t('materia.sim') : t('materia.nao')}
-          variante={justificada ? 'cheio' : 'vazado'}
+          ativa={justificada}
           aoTocar={() => setJustificada(!justificada)}
         />
       </Linha>

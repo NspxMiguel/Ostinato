@@ -13,7 +13,7 @@ import { dataDe } from '../../../nucleo/tempo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
-import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { Apoio, Botao, Cartao, Fileira, Linha, Pilula, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
@@ -124,16 +124,16 @@ function RegraLinha({
       </View>
       <View style={{ gap: espaco.xs, marginTop: espaco.s }}>
         <Apoio>{t('ajustes.modo')}</Apoio>
-        <Linha>
+        <Fileira>
           {modos.map((m) => (
-            <Botao
+            <Pilula
               key={m}
               texto={t(`avisos.modo.${m}` as ChaveI18n)}
-              variante={m === regra.modo ? 'cheio' : 'vazado'}
+              ativa={m === regra.modo}
               aoTocar={() => mudarModo(m)}
             />
           ))}
-        </Linha>
+        </Fileira>
         {/* A explicação do alarme é longa e não pode ser cortada: é onde o app
             diz o que consegue e o que não consegue com o telefone no silencioso. */}
         <Apoio>{t(`avisos.expl.${regra.modo}` as ChaveI18n)}</Apoio>
@@ -244,23 +244,25 @@ export function Ajustes() {
   return (
     <Tela titulo={t('abas.ajustes')}>
       <Secao titulo={t('ajustes.idioma')}>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
-          <Botao
+        {/* Escolher idioma não é uma AÇÃO, é uma seleção — então são pílulas, e
+            não cinco botões amarelos disputando quem é o principal da tela. */}
+        <Fileira>
+          <Pilula
             texto={t('ajustes.seguir_sistema')}
-            variante={ajustes.idioma === null ? 'cheio' : 'vazado'}
+            ativa={ajustes.idioma === null}
             aoTocar={() => mudarAjustes({ idioma: null })}
           />
           {/* Cada idioma aparece no próprio nome: quem procura "Español" não
               está lendo a tela em português para achar "Espanhol". */}
           {IDIOMAS.map((id) => (
-            <Botao
+            <Pilula
               key={id}
               texto={NOME_DO_IDIOMA[id]}
-              variante={ajustes.idioma === id ? 'cheio' : 'vazado'}
+              ativa={ajustes.idioma === id}
               aoTocar={() => mudarAjustes({ idioma: id })}
             />
           ))}
-        </View>
+        </Fileira>
       </Secao>
 
       <Secao titulo={t('ajustes.padroes_aviso_tipo')}>
