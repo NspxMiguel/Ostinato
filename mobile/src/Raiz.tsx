@@ -55,6 +55,13 @@ export function Raiz() {
   // A barra mostra só o que a pessoa usa. Aba que abre um muro é pior que aba
   // que não existe.
   const abasVisiveis = ABAS.filter((a) => a.id !== 'grade' || recursos.grade)
+
+  // Desligar a grade estando NELA deixava a tela aberta sem aba correspondente:
+  // a barra some com o botão e o indicador volta para a primeira, mas o conteúdo
+  // continuava sendo a grade. Quem perde a aba volta para o começo.
+  useEffect(() => {
+    if (!abasVisiveis.some((a) => a.id === aba)) setAba('hoje')
+  }, [abasVisiveis, aba])
   const [compromissoAberto, setCompromissoAberto] = useState<string | null>(null)
   // O + abre a CAPTURA, não o formulário: escrever "prova de mat sexta" é o
   // caminho normal, e o formulário é o ajuste de quem quer mexer em detalhe.
