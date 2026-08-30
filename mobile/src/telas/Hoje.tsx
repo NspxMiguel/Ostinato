@@ -232,7 +232,16 @@ function montarChegando(
   }
 
   resolvidos.sort((a, b) => (a.resolvido?.quando.getTime() ?? 0) - (b.resolvido?.quando.getTime() ?? 0))
-  return [...semDataItens, ...resolvidos.slice(0, LIMITE_CHEGANDO)]
+
+  // HOJE é hoje. Uma tarefa que vence quarta não é coisa para fazer hoje, e
+  // misturar as duas transforma esta tela numa segunda Agenda — que é a aba do
+  // lado, e essa sim mostra tudo.
+  //
+  // Atrasado FICA: já passou da hora, então é a coisa mais de hoje que existe.
+  const deHoje = resolvidos.filter(
+    (i) => i.atrasado || (i.resolvido && dataDe(i.resolvido.quando) === dataDe(agora)),
+  )
+  return [...semDataItens, ...deHoje.slice(0, LIMITE_CHEGANDO)]
 }
 
 const CHAVE_TIPO: Record<TipoCompromisso, ChaveI18n> = {

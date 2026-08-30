@@ -15,6 +15,8 @@ import { resolverMateria, comApelido } from '../../../nucleo/materias.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { instante, dataDe } from '../../../nucleo/tempo.ts'
 import { previaDeVencimento } from '../../../nucleo/vencimento.ts'
+import { vivos } from '../../../nucleo/sync/registro.ts'
+import type { Aula } from '../../../nucleo/modelo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import {
   Apoio,
@@ -89,7 +91,19 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
     }
   }, [])
 
-  const vencimento = lido?.vencimento
+  // Sem dia dito, mas com matéria reconhecida e aula cadastrada: o prazo é a
+  // PRÓXIMA AULA dessa matéria.
+  //
+  // É a razão de o app existir — "tarefa de física" quer dizer "para a próxima
+  // aula de física", e é isso que a pessoa quer dizer quando não fala data. Sem
+  // isto ela ficava com "falta a data" e tinha que abrir o formulário.
+  const temAulaDaMateria =
+    !!materiaId && vivos(base.aulas).some((a: Aula) => a.materiaId === materiaId)
+  const vencimento =
+    lido?.vencimento ??
+    (temAulaDaMateria && materiaId
+      ? ({ tipo: 'aula', materiaId, ocorrencia: 1 } as const)
+      : undefined)
   const quando =
     vencimento?.tipo === 'data'
       ? instante(vencimento.data, vencimento.hora ?? '23:59')

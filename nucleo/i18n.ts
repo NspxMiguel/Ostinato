@@ -11,7 +11,7 @@ const traducoes = {
   pt: {
     // 1. Abas
     'captura.titulo': 'Anotar',
-    'captura.dica': 'Escreva do seu jeito. Ex: prova de matemática sexta que vem',
+    'captura.dica': 'Diga a matéria e o dia. Ex.: "tarefa de física para quarta" ou "prova de biologia sexta 14h". Sem dia, ele usa a próxima aula da matéria.',
     'captura.falar': 'Falar',
     'captura.ouvindo': 'Ouvindo… solte para parar',
     'captura.foto': 'Foto do papel',
@@ -337,7 +337,7 @@ const traducoes = {
   en: {
     // 1. Abas
     'captura.titulo': 'Jot down',
-    'captura.dica': 'Write it your way. E.g. math test next friday',
+    'captura.dica': 'Say the subject and the day. E.g. "physics homework for wednesday" or "biology exam friday 2pm". With no day, it uses the subject\'s next class.',
     'captura.falar': 'Speak',
     'captura.ouvindo': 'Listening… release to stop',
     'captura.foto': 'Photo of the paper',
@@ -663,7 +663,7 @@ const traducoes = {
   es: {
     // 1. Abas
     'captura.titulo': 'Apuntar',
-    'captura.dica': 'Escríbelo a tu manera. Ej.: examen de mates el viernes que viene',
+    'captura.dica': 'Di la asignatura y el día. Ej.: "tarea de física para el miércoles". Sin día, usa la próxima clase de esa asignatura.',
     'captura.falar': 'Hablar',
     'captura.ouvindo': 'Escuchando… suelta para parar',
     'captura.foto': 'Foto del papel',
@@ -989,7 +989,7 @@ const traducoes = {
   fr: {
     // 1. Abas
     'captura.titulo': 'Noter',
-    'captura.dica': 'Écrivez à votre façon. Ex. : contrôle de maths vendredi prochain',
+    'captura.dica': 'Dites la matière et le jour. Ex. : "devoir de physique pour mercredi". Sans jour, il prend le prochain cours.',
     'captura.falar': 'Parler',
     'captura.ouvindo': 'Écoute… relâchez pour arrêter',
     'captura.foto': 'Photo du papier',
