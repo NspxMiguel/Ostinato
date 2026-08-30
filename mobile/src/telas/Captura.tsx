@@ -177,7 +177,13 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         placeholderTextColor={cores.textoFraco}
         multiline
         autoFocus
-        autoCorrect
+        // Corretor DESLIGADO: este texto não é lido só por gente, é lido pelo
+        // app. Com o teclado num idioma e a pessoa escrevendo em outro — comum
+        // em app global — "prova de biologia" vira "Probably de biologist", e a
+        // interpretação erra sem ninguém entender por quê. Aqui é melhor
+        // registrar exatamente o que foi digitado.
+        autoCorrect={false}
+        spellCheck={false}
       />
 
       <Linha>
