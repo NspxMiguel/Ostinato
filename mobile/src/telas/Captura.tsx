@@ -74,20 +74,27 @@ export function Captura({ aoFechar, aoAjustar }: {
 
   const podeSalvar = lido !== null && quando !== null
 
-  const salvar = useCallback(() => {
-    if (!lido || !vencimento) return
-    let idFinal = materiaId
-    if (!idFinal && lido.materiaNome && materiaLida?.tipo === 'nova') {
-      // Matéria nova: cria com o nome que a pessoa usou e uma cor livre.
+  /** Cria a matéria com o nome que a pessoa usou e a primeira cor livre. */
+  const criarMateria = useCallback(
+    (nome: string): string => {
       const usadas = Object.values(base.materias).map((m) => m.cor)
       const cor = CORES_DE_MATERIA.find((c) => !usadas.includes(c)) ?? CORES_DE_MATERIA[0]!
-      idFinal = guardar('materias', {
-        nome: lido.materiaNome,
+      return guardar('materias', {
+        nome,
         apelidos: [],
         cor,
         periodoId: periodo?.id ?? '',
         limiteFaltasPct: 25,
       })
+    },
+    [base.materias, guardar, periodo],
+  )
+
+  const salvar = useCallback(() => {
+    if (!lido || !vencimento) return
+    let idFinal = materiaId
+    if (!idFinal && lido.materiaNome && materiaLida?.tipo === 'nova') {
+      idFinal = criarMateria(lido.materiaNome)
     }
     guardar('compromissos', {
       criadoEm: Date.now(),
@@ -102,7 +109,7 @@ export function Captura({ aoFechar, aoAjustar }: {
       concluido: false,
     })
     aoFechar()
-  }, [lido, vencimento, materiaId, materiaLida, base, guardar, periodo, aoFechar])
+  }, [lido, vencimento, materiaId, materiaLida, guardar, criarMateria, aoFechar])
 
   const comecarDitado = useCallback(async () => {
     if (!temVoz(idioma)) {
@@ -215,6 +222,7 @@ export function Captura({ aoFechar, aoAjustar }: {
                 guardar('materias', comApelido(m, lido.materiaNome!))
                 setMateriaEscolhida(m.id)
               }}
+              aoCriar={() => setMateriaEscolhida(criarMateria(lido.materiaNome!))}
               t={t}
             />
           ) : null}
@@ -247,11 +255,13 @@ function EscolherMateria({
   nome,
   candidatos,
   aoEscolher,
+  aoCriar,
   t,
 }: {
   nome: string
   candidatos: Materia[]
   aoEscolher: (m: Materia) => void
+  aoCriar: () => void
   t: ReturnType<typeof usarT>
 }) {
   return (
@@ -264,9 +274,9 @@ function EscolherMateria({
             <Text style={fonte.corpo}>{m.nome}</Text>
           </Toque>
         ))}
-        <View style={[e.pilula, { borderStyle: 'dashed' }]}>
+        <Toque aoTocar={aoCriar} estilo={[e.pilula, { borderStyle: 'dashed' }]}>
           <Text style={fonte.apoio}>{t('captura.criar_materia', { nome })}</Text>
-        </View>
+        </Toque>
       </View>
     </View>
   )

@@ -95,12 +95,17 @@ export function rotuloDeRegra(regra: RegraAviso, t: T): string {
 }
 
 /**
- * "Amanhã às 20:00" -> "amanhã às 20:00".
+ * "Amanhã às 20:00" -> "amanhã às 20:00", mas só em português.
  *
  * A mesma string começa uma linha ("Amanhã") e aparece no meio de outra
- * ("Avisa você Amanhã às 20:00"). Duplicar a chave por causa de uma letra seria
- * pior: sobra uma para esquecer de traduzir.
+ * ("Avisa você amanhã às 20:00"). Duplicar a chave por causa de uma letra seria
+ * pior: sobraria uma para esquecer de traduzir.
+ *
+ * Em inglês NÃO se faz isso: "Friday" é nome próprio e continua maiúsculo no
+ * meio da frase. Baixar a inicial ali deixaria "Alerts you friday", que é erro
+ * de português aplicado ao inglês.
  */
-export function comInicialMinuscula(texto: string): string {
-  return texto.length === 0 ? texto : texto[0]!.toLocaleLowerCase() + texto.slice(1)
+export function comInicialMinuscula(texto: string, idioma: 'pt' | 'en'): string {
+  if (idioma !== 'pt' || texto.length === 0) return texto
+  return texto[0]!.toLocaleLowerCase('pt-BR') + texto.slice(1)
 }

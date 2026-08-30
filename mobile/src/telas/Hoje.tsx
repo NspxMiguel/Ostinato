@@ -123,6 +123,7 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                         {t('hoje.aviso_quando', {
                           quando: comInicialMinuscula(
                             quandoPorExtenso(dataDe(aviso.quando), horaDe(aviso.quando), hojeISO, t, idioma),
+                            idioma,
                           ),
                         })}
                       </Apoio>
