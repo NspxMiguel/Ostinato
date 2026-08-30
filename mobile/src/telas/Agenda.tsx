@@ -135,12 +135,14 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
   ])
 
   const filtrosAtivos = materiasFiltro.length > 0 || tiposFiltro.length > 0
+  // Título e texto separados: o título diz o ESTADO, o texto diz o que fazer.
+  // Uma frase só tem que ser as duas coisas e não é bem nenhuma.
   const vazio =
     compromissos.length === 0
-      ? t('agenda.vazio')
+      ? { titulo: t('hoje.vazio_compromissos_titulo'), texto: t('agenda.vazio') }
       : filtrosAtivos
-        ? t('agenda.vazio_filtro')
-        : t('hoje.nada_entregar')
+        ? { titulo: t('agenda.vazio_filtro_titulo'), texto: t('agenda.vazio_filtro') }
+        : { titulo: t('hoje.nada_entregar'), texto: '' }
 
   function alternarMateria(id: string) {
     setMateriasFiltro((atual) =>
@@ -204,7 +206,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
       ) : null}
 
       {grupos.length === 0 ? (
-        <Vazio texto={vazio} />
+        <Vazio titulo={vazio.titulo} texto={vazio.texto} />
       ) : (
         grupos.map((grupo) => (
           <Secao key={grupo.id} titulo={grupo.titulo}>

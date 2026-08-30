@@ -537,7 +537,14 @@ const e = StyleSheet.create({
     minHeight: 44,
     paddingVertical: espaco.s,
   },
-  vazio: { paddingVertical: espaco.ggg, alignItems: 'center', gap: espaco.m },
+  vazio: {
+    // Altura mínima com centralização: encostado no topo, o estado vazio deixa
+    // um vazio enorme embaixo e a tela parece que não terminou de carregar.
+    minHeight: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: espaco.m,
+  },
   anelVazio: {
     width: 44,
     height: 44,
