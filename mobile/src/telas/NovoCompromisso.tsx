@@ -292,6 +292,8 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                     onChangeText={(val) => setVencimento({ ...vencimento, data: val })}
                     placeholder="AAAA-MM-DD"
                     placeholderTextColor={cores.textoFraco}
+                    autoCorrect={false}
+                    autoCapitalize="none"
                   />
                 </View>
                 <View style={[e.campo, { flex: 1 }]}>
@@ -302,6 +304,8 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                     onChangeText={(val) => setVencimento({ ...vencimento, hora: val })}
                     placeholder="HH:MM"
                     placeholderTextColor={cores.textoFraco}
+                    autoCorrect={false}
+                    autoCapitalize="none"
                   />
                 </View>
               </Linha>
@@ -444,6 +448,8 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                                   },
                                 })
                               }
+                              autoCorrect={false}
+                              autoCapitalize="none"
                             />
                           </View>
                           <View style={[e.campo, { flex: 1 }]}>
@@ -480,6 +486,8 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                                 quando: { tipo: 'antesDe', minutos: Number(val) || 60 },
                               })
                             }
+                            autoCorrect={false}
+                            autoCapitalize="none"
                           />
                         </View>
                       )}

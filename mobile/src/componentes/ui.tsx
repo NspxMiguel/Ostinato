@@ -4,8 +4,16 @@
 // três apps dentro de um. Tela nova compõe estas peças; se faltar alguma, ela
 // nasce AQUI, não solta dentro de uma tela.
 
-import type { ReactNode } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useState, type ReactNode } from 'react'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
@@ -33,6 +41,40 @@ export function Secao({ titulo, children }: { titulo: string; children: ReactNod
   )
 }
 
+/**
+ * Toque com retorno visual, SEM `style` como função.
+ *
+ * O `Pressable` aceita `style={({ pressed }) => ...}`, e é assim que a
+ * documentação do React Native ensina — mas com o transform de JSX do NativeWind
+ * ligado esse formato faz o componente renderizar NADA. Sem erro, sem aviso: o
+ * botão simplesmente não aparece na tela, e o resto da tela continua perfeito.
+ *
+ * Foi assim que o botão de criar período sumiu. Todo toque do app passa por
+ * aqui para o defeito não voltar por outra porta.
+ */
+export function Toque({
+  children,
+  aoTocar,
+  estilo,
+}: {
+  children: ReactNode
+  aoTocar?: () => void
+  estilo?: StyleProp<ViewStyle>
+}) {
+  const [pressionado, setPressionado] = useState(false)
+  if (!aoTocar) return <View style={estilo}>{children}</View>
+  return (
+    <Pressable
+      onPress={aoTocar}
+      onPressIn={() => setPressionado(true)}
+      onPressOut={() => setPressionado(false)}
+      style={[estilo, pressionado ? e.pressionado : null]}
+    >
+      {children}
+    </Pressable>
+  )
+}
+
 export function Cartao({
   children,
   aoTocar,
@@ -49,12 +91,7 @@ export function Cartao({
       <View style={{ flex: 1, gap: espaco.xs }}>{children}</View>
     </View>
   )
-  if (!aoTocar) return conteudo
-  return (
-    <Pressable onPress={aoTocar} style={({ pressed }) => (pressed ? e.pressionado : undefined)}>
-      {conteudo}
-    </Pressable>
-  )
+  return <Toque aoTocar={aoTocar}>{conteudo}</Toque>
 }
 
 export function Titulo({ children }: { children: ReactNode }) {
@@ -86,12 +123,9 @@ export function Botao({
     variante === 'cheio' ? e.botaoCheio : variante === 'vazado' ? e.botaoVazado : e.botaoDiscreto
   const corTexto = variante === 'cheio' ? cores.fundo : cores.texto
   return (
-    <Pressable
-      onPress={aoTocar}
-      style={({ pressed }) => [e.botao, estilo, pressed ? e.pressionado : undefined]}
-    >
-      <Text style={{ fontWeight: '700', color: corTexto }}>{texto}</Text>
-    </Pressable>
+    <Toque aoTocar={aoTocar} estilo={[e.botao, estilo]}>
+      <Text style={{ fontWeight: '700', color: corTexto, textAlign: 'center' }}>{texto}</Text>
+    </Toque>
   )
 }
 

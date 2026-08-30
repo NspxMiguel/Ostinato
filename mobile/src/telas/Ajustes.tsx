@@ -36,6 +36,10 @@ function Campo({
         onChangeText={aoMudar}
         onBlur={aoBlur}
         keyboardType={teclado ?? 'default'}
+        // Campo numerico e de data nao aceitam correcao do teclado: ela troca
+        // o valor por outra palavra e o usuario so descobre depois de salvar.
+        autoCorrect={teclado !== 'numeric'}
+        autoCapitalize={teclado === 'numeric' ? 'none' : 'sentences'}
         placeholder={placeholder}
         placeholderTextColor={cores.textoFraco}
       />

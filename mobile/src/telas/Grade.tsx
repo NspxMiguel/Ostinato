@@ -29,6 +29,15 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 
+/** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
+function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
+  const ano = agora.getFullYear()
+  const primeiro = agora.getMonth() < 6
+  return primeiro
+    ? { nome: `${ano}.1`, inicio: `${ano}-02-01`, fim: `${ano}-07-15` }
+    : { nome: `${ano}.2`, inicio: `${ano}-08-01`, fim: `${ano}-12-20` }
+}
+
 export function Grade() {
   const t = usarT()
   const base = usarLoja((e) => e.base)
@@ -38,9 +47,12 @@ export function Grade() {
   const periodo = periodoAtivo(base)
 
   // Formulário para cadastro inicial de período letivo
-  const [nomePeriodo, setNomePeriodo] = useState('2026.1')
-  const [inicioPeriodo, setInicioPeriodo] = useState('2026-02-01')
-  const [fimPeriodo, setFimPeriodo] = useState('2026-07-15')
+  // O padrao tem que ABRACAR HOJE. Um periodo que ja terminou faz "na proxima
+  // aula de X" nao resolver nada, e a tela nao teria como explicar por que.
+  const padrao = periodoPadrao(new Date())
+  const [nomePeriodo, setNomePeriodo] = useState(padrao.nome)
+  const [inicioPeriodo, setInicioPeriodo] = useState(padrao.inicio)
+  const [fimPeriodo, setFimPeriodo] = useState(padrao.fim)
 
   // Modal de edição / criação de aula
   const [modalAulaVisivel, setModalAulaVisivel] = useState(false)
@@ -94,6 +106,8 @@ export function Grade() {
               onChangeText={setInicioPeriodo}
               placeholder="AAAA-MM-DD"
               placeholderTextColor={cores.textoFraco}
+              autoCorrect={false}
+              autoCapitalize="none"
             />
           </View>
           <View style={e.campo}>
@@ -104,6 +118,8 @@ export function Grade() {
               onChangeText={setFimPeriodo}
               placeholder="AAAA-MM-DD"
               placeholderTextColor={cores.textoFraco}
+              autoCorrect={false}
+              autoCapitalize="none"
             />
           </View>
           <Botao texto={t('grade.criar_periodo')} aoTocar={handleCriarPeriodo} />
@@ -491,6 +507,13 @@ export function Grade() {
                   numberOfLines={8}
                   value={textoColado}
                   onChangeText={setTextoColado}
+                  // O corretor do teclado destroi horario: "Seg" vira "Set",
+                  // "Ter" vira "Tee" e "Fisica" vira outra palavra. Nome de
+                  // materia e abreviacao de dia nao sao portugues nem ingles —
+                  // sao codigo da escola, e corrigir isso e sempre errado.
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  spellCheck={false}
                   placeholder="Ex: Segunda 08:00 - 10:00 Cálculo 1..."
                   placeholderTextColor={cores.textoFraco}
                 />

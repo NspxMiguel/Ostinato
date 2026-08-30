@@ -31,8 +31,14 @@ TaskManager.defineTask(TAREFA, async () => {
   }
 })
 
-export async function registrarTarefaDeFundo(): Promise<void> {
-  const jaRegistrada = await TaskManager.isTaskRegisteredAsync(TAREFA)
-  if (jaRegistrada) return
+export async function registrarTarefaDeFundo(): Promise<boolean> {
+  // O simulador nao tem BGTaskScheduler, e tentar registrar ali so enche o
+  // console de aviso a cada abertura. Perguntar antes tambem cobre o aparelho
+  // com Atualizacao em Segundo Plano desligada nos Ajustes do iOS.
+  const estado = await BackgroundTask.getStatusAsync()
+  if (estado !== BackgroundTask.BackgroundTaskStatus.Available) return false
+
+  if (await TaskManager.isTaskRegisteredAsync(TAREFA)) return true
   await BackgroundTask.registerTaskAsync(TAREFA, { minimumInterval: 60 * 12 })
+  return true
 }
