@@ -360,6 +360,26 @@ export function Ajustes() {
               />
             </Linha>
           </View>
+          {/* Só aparece com a grade ligada: semana alternada é uma propriedade
+              da grade, e oferecer a chave sem ela é oferecer nada. */}
+          {ajustes.recursos.grade ? (
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Apoio>{t('ajustes.recurso_semana')}</Apoio>
+                  <Apoio cor={cores.texto3}>{t('ajustes.recurso_semana_desc')}</Apoio>
+                </View>
+                <Switch
+                  value={ajustes.recursos.semanaAlternada}
+                  onValueChange={(v) =>
+                    mudarAjustes({ recursos: { ...ajustes.recursos, semanaAlternada: v } })
+                  }
+                  trackColor={{ false: cores.borda, true: cores.destaque }}
+                  thumbColor={cores.texto}
+                />
+              </Linha>
+            </View>
+          ) : null}
         </Grupo>
       </Secao>
 
