@@ -341,15 +341,15 @@ function BarraDeAbas({
         </Pressable>
       ) : null}
 
-      {/* A base cinza vai SEMPRE, não só no fallback. Liquid Glass refrata o
-          que está atrás dele: sobre preto puro, com a lista vazia, não há nada
-          para refratar e a barra some. A Apple dá uma base ao material pelo
-          mesmo motivo — o vidro é o acabamento, não o corpo. */}
+      {/* NADA de cor de fundo quando há vidro de verdade: um cinza opaco atrás
+          do material tapa exatamente o que ele deveria refratar, e o resultado
+          parece vidro falso. Só o fallback (abaixo do iOS 26) recebe cor, porque
+          lá o `Vidro` vira uma View que não desenha nada sozinha. */}
       <Vidro
         raio={raio.pilula}
         variante="regular"
         interativo
-        style={[e.barra, { backgroundColor: cores.vidro }]}
+        style={[e.barra, vidro ? null : { backgroundColor: cores.vidro }]}
       >
         {ABAS.map((item) => (
           <Pressable

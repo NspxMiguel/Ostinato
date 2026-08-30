@@ -250,7 +250,7 @@ export function Pilula({
         variante="regular"
         interativo
         tonalidade={ativa ? 'rgba(255,255,255,0.14)' : undefined}
-        style={[e.pilulaVidro, { backgroundColor: ativa ? cores.cartaoAlto : cores.cartao }]}
+        style={e.pilulaVidro}
       >
         {conteudo}
       </Vidro>
@@ -321,10 +321,7 @@ export function Botao({
         variante="regular"
         interativo
         tonalidade={variante === 'cheio' ? 'rgba(255,214,10,0.34)' : undefined}
-        style={[
-          e.botaoVidro,
-          { backgroundColor: variante === 'cheio' ? 'rgba(255,214,10,0.22)' : cores.cartao },
-        ]}
+        style={e.botaoVidro}
       >
         {rotulo}
       </Vidro>
