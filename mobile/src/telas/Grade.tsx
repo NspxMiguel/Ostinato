@@ -385,36 +385,24 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
             {/* Seleção de Matéria */}
             <Secao titulo={t('grade.selecionar_materia')}>
               {materiasVivas.length > 0 && !criandoNovaMateria ? (
-                <View style={e.listaPilulas}>
+                <Fileira>
                   {materiasVivas.map((m: Materia) => (
-                    <Pressable
+                    <Pilula
                       key={m.id}
-                      style={[
-                        e.pilula,
-                        materiaId === m.id && { backgroundColor: m.cor },
-                      ]}
-                      onPress={() => setMateriaId(m.id)}
-                    >
-                      <Text
-                        style={[
-                          e.textoPilula,
-                          materiaId === m.id && { color: cores.fundo, fontWeight: '700' },
-                        ]}
-                      >
-                        {m.nome}
-                      </Text>
-                    </Pressable>
+                      texto={m.nome}
+                      cor={m.cor}
+                      ativa={materiaId === m.id}
+                      aoTocar={() => setMateriaId(m.id)}
+                    />
                   ))}
-                  <Pressable
-                    style={[e.pilula, e.pilulaAdicionar]}
-                    onPress={() => {
+                  <Pilula
+                    texto={`+ ${t('grade.nova_materia')}`}
+                    aoTocar={() => {
                       setCriandoNovaMateria(true)
                       setMateriaId('')
                     }}
-                  >
-                    <Text style={e.textoPilula}>+ {t('grade.nova_materia')}</Text>
-                  </Pressable>
-                </View>
+                  />
+                </Fileira>
               ) : (
                 <View style={{ gap: espaco.s }}>
                   {materiasVivas.length > 0 ? (
@@ -449,24 +437,16 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
             {/* Dia da semana */}
             <Secao titulo={t('grade.dia_semana')}>
-              <View style={e.listaPilulas}>
+              <Fileira>
                 {([0, 1, 2, 3, 4, 5, 6] as DiaSemana[]).map((d: DiaSemana) => (
-                  <Pressable
+                  <Pilula
                     key={d}
-                    style={[e.pilula, diaSemana === d && e.pilulaSelecionada]}
-                    onPress={() => setDiaSemana(d)}
-                  >
-                    <Text
-                      style={[
-                        e.textoPilula,
-                        diaSemana === d && { color: cores.fundo, fontWeight: '700' },
-                      ]}
-                    >
-                      {t(`dia.abrev.${d}` as ChaveI18n)}
-                    </Text>
-                  </Pressable>
+                    texto={t(`dia.abrev.${d}` as ChaveI18n)}
+                    ativa={diaSemana === d}
+                    aoTocar={() => setDiaSemana(d)}
+                  />
                 ))}
-              </View>
+              </Fileira>
             </Secao>
 
             {/* Horários */}
@@ -506,24 +486,16 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
             {/* Semana alternada */}
             <Secao titulo={t('grade.semana')}>
-              <View style={e.listaPilulas}>
+              <Fileira>
                 {(['toda', 'par', 'impar'] as SemanaAlternada[]).map((s: SemanaAlternada) => (
-                  <Pressable
+                  <Pilula
                     key={s}
-                    style={[e.pilula, semana === s && e.pilulaSelecionada]}
-                    onPress={() => setSemana(s)}
-                  >
-                    <Text
-                      style={[
-                        e.textoPilula,
-                        semana === s && { color: cores.fundo, fontWeight: '700' },
-                      ]}
-                    >
-                      {t(`grade.semana_${s}` as ChaveI18n)}
-                    </Text>
-                  </Pressable>
+                    texto={t(`grade.semana_${s}` as ChaveI18n)}
+                    ativa={semana === s}
+                    aoTocar={() => setSemana(s)}
+                  />
                 ))}
-              </View>
+              </Fileira>
             </Secao>
 
             {/* Ações */}
@@ -657,18 +629,6 @@ const e = StyleSheet.create({
     fontSize: 15,
   },
   inputMultilinha: { height: 160, textAlignVertical: 'top' },
-  listaPilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
-  pilula: {
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.s,
-    borderRadius: raio.pilula,
-    backgroundColor: cores.cartaoAlto,
-    borderWidth: 1,
-    borderColor: cores.borda,
-  },
-  pilulaSelecionada: { backgroundColor: cores.marfim },
-  pilulaAdicionar: { borderStyle: 'dashed' },
-  textoPilula: { fontSize: 13, color: cores.texto },
   linhaCores: { flexDirection: 'row', gap: espaco.s, paddingVertical: espaco.xs },
   circuloCor: { width: 32, height: 32, borderRadius: 16 },
   circuloCorSelecionado: { borderWidth: 3, borderColor: cores.texto },

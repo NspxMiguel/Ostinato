@@ -37,7 +37,6 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
   const margem = useSafeAreaInsets()
   return (
     <View style={[e.tela, { paddingTop: margem.top }]}>
-      {titulo ? <Text style={[fonte.titulo, e.tituloTela]}>{titulo}</Text> : null}
       <ScrollView
         contentContainerStyle={{
           padding: espaco.g,
@@ -48,6 +47,10 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* O título rola COM o conteúdo, como o título grande do iOS.
+            Fixo — que era como estava — ele ficava por cima do primeiro item e
+            cortava o texto pela metade, porque não há fundo por baixo dele. */}
+        {titulo ? <Text style={[fonte.titulo, e.tituloTela]}>{titulo}</Text> : null}
         {children}
       </ScrollView>
     </View>
@@ -470,7 +473,7 @@ export function Fileira({ children }: { children: ReactNode }) {
 
 const e = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  tituloTela: { paddingHorizontal: espaco.g, paddingTop: espaco.s, paddingBottom: espaco.xs },
+  tituloTela: { paddingTop: espaco.xs, marginBottom: -espaco.s },
   cartao: {
     borderRadius: raio.cartao,
     borderWidth: StyleSheet.hairlineWidth,
