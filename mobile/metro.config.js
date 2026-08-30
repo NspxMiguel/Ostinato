@@ -5,10 +5,9 @@ const path = require('path')
 const raizDoRepo = path.resolve(__dirname, '..')
 const config = getDefaultConfig(__dirname)
 
-// A logica do LootFlow vive em ../src e e COMPARTILHADA com a versao web —
-// nao e copia. O Metro precisa vigiar a raiz do repositorio para enxergar
-// aqueles arquivos, e precisa saber resolver os pacotes de ../node_modules,
-// porque a web e o app dividem dependencias como zustand e date-fns.
+// A logica do Giz vive em ../nucleo, fora de mobile/, e e TypeScript puro —
+// e ela que o Android e a web vao reaproveitar sem copia. O Metro precisa
+// vigiar a raiz do repositorio para enxergar aqueles arquivos.
 config.watchFolders = [raizDoRepo]
 config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, 'node_modules'),
@@ -18,10 +17,10 @@ config.resolver.disableHierarchicalLookup = false
 
 // Um React so, sempre.
 //
-// A logica compartilhada mora em ../src e, resolvida a partir dali, o Metro
-// acha o React da RAIZ (o da versao web). Duas copias do React no mesmo bundle
-// dao "Invalid hook call" e derrubam o app na abertura. Estes pacotes passam a
-// resolver sempre para a copia do app, venha o import de onde vier.
+// A logica compartilhada mora em ../nucleo e, resolvida a partir dali, o Metro
+// pode achar um React da raiz do repositorio. Duas copias do React no mesmo
+// bundle dao "Invalid hook call" e derrubam o app na abertura. Estes pacotes
+// passam a resolver sempre para a copia do app, venha o import de onde vier.
 const UNICOS = ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'zustand', 'scheduler']
 
 config.resolver.resolveRequest = (contexto, nome, plataforma) => {

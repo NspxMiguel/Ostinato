@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
-  s.name           = 'Vidro'
+  s.name           = 'Leitura'
   s.version        = '1.0.0'
-  s.summary        = 'Liquid Glass do sistema para o Giz'
+  s.summary        = 'OCR do horario escolar, no proprio aparelho'
   s.author         = ''
   s.homepage       = 'https://www.nspx.dev'
   s.platforms      = { :ios => '15.1' }
