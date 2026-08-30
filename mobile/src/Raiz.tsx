@@ -30,6 +30,7 @@ import { Grade } from './telas/Grade.tsx'
 import { Ajustes } from './telas/Ajustes.tsx'
 import { Materia } from './telas/Materia.tsx'
 import { NovoCompromisso } from './telas/NovoCompromisso.tsx'
+import { Captura } from './telas/Captura.tsx'
 import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
 
 type Aba = 'hoje' | 'agenda' | 'grade' | 'ajustes'
@@ -46,6 +47,9 @@ export function Raiz() {
   const margem = useSafeAreaInsets()
   const [aba, setAba] = useState<Aba>('hoje')
   const [compromissoAberto, setCompromissoAberto] = useState<string | null>(null)
+  // O + abre a CAPTURA, não o formulário: escrever "prova de mat sexta" é o
+  // caminho normal, e o formulário é o ajuste de quem quer mexer em detalhe.
+  const [capturando, setCapturando] = useState(false)
   const [criando, setCriando] = useState(false)
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null)
   const [alarmeDe, setAlarmeDe] = useState<string | null>(null)
@@ -152,10 +156,25 @@ export function Raiz() {
       <BarraDeAbas
         aba={aba}
         aoTrocar={setAba}
-        aoCriar={() => setCriando(true)}
+        aoCriar={() => setCapturando(true)}
         rotulo={(chave) => t(chave)}
         alturaSegura={margem.bottom}
       />
+
+      <Modal
+        visible={capturando}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCapturando(false)}
+      >
+        <Captura
+          aoFechar={() => setCapturando(false)}
+          aoAjustar={() => {
+            setCapturando(false)
+            setCriando(true)
+          }}
+        />
+      </Modal>
 
       <Modal
         visible={criando || compromissoAberto !== null}
