@@ -1,0 +1,45 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  nucleo:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The date logic is the part that breaks quietly, so it runs under a DST
+        # zone, a half-hour offset and UTC+14 — not just the author's timezone.
+        tz: [America/Sao_Paulo, America/New_York, Asia/Kolkata, Pacific/Kiritimati]
+    env:
+      TZ: ${{ matrix.tz }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test "nucleo/testes/*.test.ts"
+
+  traducao:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      # A missing key is a raw string on screen, not a crash — so it has to fail
+      # the build instead of waiting to be noticed.
+      - run: node scripts/teste-chaves-i18n.mjs
+
+  tipos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: ./node_modules/.bin/tsc --noEmit -p tsconfig.json
