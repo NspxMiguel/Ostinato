@@ -26,6 +26,7 @@
       "edgeToEdgeEnabled": true
     },
     "plugins": [
+      "./plugins/ios-assinatura",
       "expo-localization",
       "expo-font",
       [
@@ -37,7 +38,6 @@
           ]
         }
       ],
-      "./plugins/ios-assinatura",
       "expo-audio",
       "expo-background-task",
       "@bacons/apple-targets"

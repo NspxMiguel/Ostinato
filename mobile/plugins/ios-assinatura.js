@@ -35,6 +35,12 @@ function comTime(config) {
  * `aps-environment` que o expo-notifications adiciona faz o Xcode recusar a
  * criacao do perfil e o archive falha inteiro. A notificacao LOCAL, que e a
  * que o app usa, nao depende desse entitlement — so o push remoto depende.
+ *
+ * ESTE PLUGIN PRECISA SER O PRIMEIRO DA LISTA em app.json. No Expo, cada mod
+ * novo ENVOLVE os anteriores e roda ANTES deles: quem foi registrado primeiro
+ * executa por ultimo, e e o ultimo a escrever que vence. Com este plugin depois
+ * do expo-notifications, o `aps-environment` era apagado e reposto em seguida —
+ * e o arquivo saia com a chave, sem erro nenhum para denunciar.
  */
 function semPushRemoto(config) {
   return withEntitlementsPlist(config, (cfg) => {
