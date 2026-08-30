@@ -29,6 +29,7 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { isLiquidGlassAvailable } from 'expo-glass-effect'
+import { ImportarCalendario } from './ImportarCalendario.tsx'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
@@ -221,6 +222,7 @@ export function Ajustes() {
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   /** O editor de período letivo abre em folha: ele é uma tela inteira. */
   const [periodoAberto, setPeriodoAberto] = useState(false)
+  const [importando, setImportando] = useState(false)
   useEffect(() => {
     let vivo = true
     void Promise.all([estadoDaNuvem(), motivoDaNuvem()]).then(([r, motivo]) => {
@@ -312,8 +314,47 @@ export function Ajustes() {
           letivo desenhava um editor inteiro — nome, datas, lista de feriados —
           no meio da tela de ajustes, e ele sozinho era mais alto que todo o
           resto junto. */}
+      {/* Quem usa o app. Só o filtro do calendário olha para isto, mas ele não
+          funciona sem: reunião de pais é do responsável, e prova do 1º ano não é
+          de quem está no 3º. */}
+      <Secao titulo={t('ajustes.perfil')}>
+        <Fileira>
+          <Pilula
+            texto={t('ajustes.papel.aluno')}
+            ativa={ajustes.papel === 'aluno'}
+            aoTocar={() => mudarAjustes({ papel: 'aluno' })}
+          />
+          <Pilula
+            texto={t('ajustes.papel.responsavel')}
+            ativa={ajustes.papel === 'responsavel'}
+            aoTocar={() => mudarAjustes({ papel: 'responsavel' })}
+          />
+        </Fileira>
+        <Fileira>
+          {SERIES.map((s) => (
+            <Pilula
+              key={s}
+              texto={s}
+              ativa={ajustes.minhasSeries.includes(s)}
+              aoTocar={() =>
+                mudarAjustes({
+                  minhasSeries: ajustes.minhasSeries.includes(s)
+                    ? ajustes.minhasSeries.filter((x) => x !== s)
+                    : [...ajustes.minhasSeries, s],
+                })
+              }
+            />
+          ))}
+        </Fileira>
+        <Apoio>{t('ajustes.minhas_series')}</Apoio>
+      </Secao>
+
       <Secao titulo={t('ajustes.escola')}>
         <Grupo>
+          <LinhaDeMenu
+            titulo={t('ajustes.importar_calendario')}
+            aoTocar={() => setImportando(true)}
+          />
           <LinhaDeMenu
             titulo={t('ajustes.periodo_letivo')}
             valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
@@ -453,6 +494,15 @@ export function Ajustes() {
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
         </Tela>
       </Modal>
+
+      <Modal
+        visible={importando}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setImportando(false)}
+      >
+        <ImportarCalendario aoFechar={() => setImportando(false)} />
+      </Modal>
     </Tela>
   )
 }
@@ -534,3 +584,20 @@ const estilo = StyleSheet.create({
     fontSize: fonte.corpo.fontSize,
   },
 })
+
+/**
+ * As séries que a pessoa pode marcar.
+ *
+ * Na forma normalizada que `seriesCitadas` devolve, e não como se escreve na
+ * tela: a comparação com o calendário acontece nesta forma, e traduzir aqui
+ * faria a mesma escola casar em português e falhar em inglês.
+ */
+const SERIES = [
+  '1a serie',
+  '2a serie',
+  '3a serie',
+  'ensino medio',
+  'fundamental',
+  'educacao infantil',
+  'contraturno',
+] as const

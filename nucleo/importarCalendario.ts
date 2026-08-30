@@ -76,13 +76,13 @@ export function lerCalendario(texto: string, ano: number): EventoLido[] {
     const diaFim = m[2] ? Number(m[2]) : dia
     // "19/02": o segundo número é o mês, e ele manda no estado corrente.
     const mesDaPropriaLinha = m[3] ? Number(m[3]) : null
-    const mesValendo = mesDaPropriaLinha ?? mes
+    const mesValendo: number | null = mesDaPropriaLinha ?? mes
     if (!mesValendo || dia < 1 || dia > 31 || diaFim < dia || diaFim > 31) continue
     // Linha com data própria também move o estado: numa folha que mistura
     // "19/02" com dias soltos, o que vem depois pertence a fevereiro.
     mes = mesValendo
 
-    const descricao = m[4].trim()
+    const descricao = (m[4] ?? '').trim()
     eventos.push({
       ...classificar(descricao),
       inicio: iso(ano, mesValendo, dia),
@@ -96,8 +96,8 @@ export function lerCalendario(texto: string, ano: number): EventoLido[] {
 /** Todos os dias que um evento ocupa. É o que vira feriado no período letivo. */
 export function diasDoEvento(e: EventoLido): DataISO[] {
   const dias: DataISO[] = []
-  const [a, m, d1] = e.inicio.split('-').map(Number)
-  const d2 = Number(e.fim.split('-')[2])
+  const [a = 0, m = 1, d1 = 1] = e.inicio.split('-').map(Number)
+  const d2 = Number(e.fim.split('-')[2] ?? d1)
   for (let d = d1; d <= d2; d++) dias.push(iso(a, m, d))
   return dias
 }
