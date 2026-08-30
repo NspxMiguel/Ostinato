@@ -1,6 +1,6 @@
 // Datas e distâncias como uma pessoa fala.
 
-import type { DataISO } from '../../nucleo/modelo.ts'
+import type { DataISO, RegraAviso } from '../../nucleo/modelo.ts'
 import { criarT } from '../../nucleo/i18n.ts'
 import { dataDe, diferencaEmDias, instante, somarDias } from '../../nucleo/tempo.ts'
 
@@ -71,4 +71,25 @@ export function quandoPorExtenso(
   idioma: 'pt' | 'en',
 ): string {
   return t('data.com_hora', { data: dataPorExtenso(iso, hojeISO, t, idioma), hora })
+}
+
+/**
+ * "3 dias antes, às 20:00" / "2 horas antes".
+ *
+ * O plural é decidido aqui, e não na chave: "1 dias antes" é o tipo de detalhe
+ * que faz um app parecer inacabado, e ele apareceria em três telas diferentes se
+ * cada uma montasse o texto por conta própria.
+ */
+export function rotuloDeRegra(regra: RegraAviso, t: T): string {
+  if (regra.quando.tipo === 'diasAntes') {
+    const n = regra.quando.dias
+    if (n === 0) return t('avisos.no_dia', { hora: regra.quando.aHora })
+    return n === 1
+      ? t('avisos.dia_antes', { hora: regra.quando.aHora })
+      : t('avisos.dias_antes', { n, hora: regra.quando.aHora })
+  }
+  const min = regra.quando.minutos
+  if (min < 60) return t('avisos.minutos_antes', { n: min })
+  const horas = Math.round(min / 60)
+  return horas === 1 ? t('avisos.hora_antes') : t('avisos.horas_antes', { n: horas })
 }

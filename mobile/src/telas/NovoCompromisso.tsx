@@ -18,8 +18,9 @@ import type {
 } from '../../../nucleo/modelo.ts'
 import { TIPOS_COMPROMISSO, avisosDe } from '../../../nucleo/modelo.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
+import { momentoPorExtenso, rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
-import { usarT } from '../i18n.ts'
+import { usarIdioma, usarT } from '../i18n.ts'
 import type { ChaveI18n, criarT } from '../../../nucleo/i18n.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
@@ -36,31 +37,10 @@ import {
   Titulo,
 } from '../componentes/ui.tsx'
 
-function formatarDataExtenso(d: Date, t: ReturnType<typeof criarT>): string {
-  const diaSemana = t(`dia.completo.${d.getDay()}` as ChaveI18n)
-  const dia = d.getDate()
-  const mesNomesPt = [
-    'janeiro',
-    'fevereiro',
-    'março',
-    'abril',
-    'maio',
-    'junho',
-    'julho',
-    'agosto',
-    'setembro',
-    'outubro',
-    'novembro',
-    'dezembro',
-  ]
-  const mes = mesNomesPt[d.getMonth()] ?? ''
-  const h = String(d.getHours()).padStart(2, '0')
-  const m = String(d.getMinutes()).padStart(2, '0')
-  return `${diaSemana}, ${dia} de ${mes}, ${h}:${m}`
-}
 
 export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () => void }) {
   const t = usarT()
+  const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
   const guardar = usarLoja((e) => e.guardar)
@@ -340,7 +320,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                   <Cartao>
                     <Titulo>
                       {t('novo_compromisso.vence_em', {
-                        dataPorExtenso: formatarDataExtenso(previa.quando, t),
+                        dataPorExtenso: momentoPorExtenso(previa.quando, idioma),
                       })}
                     </Titulo>
                   </Cartao>
@@ -365,11 +345,7 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                 {regrasEfetivas.map((r: RegraAviso) => (
                   <Cartao key={r.id}>
                     <Linha entre>
-                      <Titulo>
-                        {r.quando.tipo === 'diasAntes'
-                          ? t('avisos.dias_antes', { n: r.quando.dias, hora: r.quando.aHora })
-                          : t('avisos.horas_antes', { n: Math.floor(r.quando.minutos / 60) })}
-                      </Titulo>
+                      <Titulo>{rotuloDeRegra(r, t)}</Titulo>
                       <Etiqueta texto={t(`avisos.modo.${r.modo}` as ChaveI18n)} />
                     </Linha>
                   </Cartao>

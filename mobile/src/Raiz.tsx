@@ -31,7 +31,6 @@ import { Ajustes } from './telas/Ajustes.tsx'
 import { Materia } from './telas/Materia.tsx'
 import { NovoCompromisso } from './telas/NovoCompromisso.tsx'
 import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
-import { TiraDeMaterias } from './componentes/TiraDeMaterias.tsx'
 
 type Aba = 'hoje' | 'agenda' | 'grade' | 'ajustes'
 
@@ -60,7 +59,16 @@ export function Raiz() {
   // mais próximos não é a mesma de ontem.
   const rearmar = useCallback(() => {
     const periodo = periodoAtivo(base, dataDe(new Date()))
-    void sincronizarAvisos(base, ajustes, periodo, t)
+    void sincronizarAvisos(base, ajustes, periodo, t).then((r) => {
+      // Em desenvolvimento, o resultado do rearme vai para o console: e o unico
+      // jeito de conferir de fora quantos avisos o iOS realmente guardou.
+      if (__DEV__) {
+        console.log(
+          `[giz] avisos: ${r.agendadas} armados (+${r.criadas} -${r.canceladas}), ` +
+            `${r.cortados} fora da janela, ${r.semData.length} sem data`,
+        )
+      }
+    })
     void atualizarAtividadeViva(base, ajustes, periodo, t)
   }, [base, ajustes, t])
 
@@ -137,12 +145,7 @@ export function Raiz() {
       <View style={{ flex: 1 }}>
         {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} /> : null}
         {aba === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
-        {aba === 'grade' ? (
-          <View style={{ flex: 1 }}>
-            <TiraDeMaterias aoAbrir={setMateriaAberta} />
-            <Grade />
-          </View>
-        ) : null}
+        {aba === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
         {aba === 'ajustes' ? <Ajustes /> : null}
       </View>
 

@@ -7,6 +7,7 @@ import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
 import { Apoio, Botao, Cartao, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem } from '../sync.ts'
 import { usarT } from '../i18n.ts'
@@ -124,10 +125,7 @@ function RegraLinha({
 }
 
 function descricaoDaRegra(regra: RegraAviso, t: ReturnType<typeof usarT>): string {
-  if (regra.quando.tipo === 'diasAntes') {
-    return t('avisos.dias_antes', { n: regra.quando.dias, hora: regra.quando.aHora })
-  }
-  return t('avisos.minutos_antes', { n: regra.quando.minutos })
+  return rotuloDeRegra(regra, t)
 }
 
 function CampoNumero({

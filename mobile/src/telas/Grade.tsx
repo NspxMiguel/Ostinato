@@ -28,6 +28,7 @@ import {
   Titulo,
   Vazio,
 } from '../componentes/ui.tsx'
+import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -38,7 +39,7 @@ function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string
     : { nome: `${ano}.2`, inicio: `${ano}-08-01`, fim: `${ano}-12-20` }
 }
 
-export function Grade() {
+export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void }) {
   const t = usarT()
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
@@ -258,6 +259,7 @@ export function Grade() {
 
   return (
     <Tela titulo={t('abas.grade')}>
+      <TiraDeMaterias aoAbrir={aoAbrirMateria} />
       <Linha entre>
         <Botao
           texto={t('grade.colar_horario')}

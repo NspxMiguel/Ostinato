@@ -17,7 +17,7 @@ export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   if (materias.length === 0) return null
 
   return (
-    <View style={{ gap: espaco.s, paddingTop: espaco.s }}>
+    <View style={{ gap: espaco.s, marginHorizontal: -espaco.g }}>
       <Text style={[fonte.secao, { paddingHorizontal: espaco.g }]}>
         {t('materias.titulo').toUpperCase()}
       </Text>

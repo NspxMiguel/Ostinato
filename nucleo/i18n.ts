@@ -90,6 +90,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} dias antes, às {hora}',
+    'avisos.dia_antes': '1 dia antes, às {hora}',
+    'avisos.no_dia': 'No dia, às {hora}',
+    'avisos.hora_antes': '1 hora antes',
     'avisos.horas_antes': '{n} horas antes',
     'avisos.minutos_antes': '{n} minutos antes',
     'avisos.modo.normal': 'Normal',
@@ -327,6 +330,9 @@ const traducoes = {
 
     // 5. Avisos
     'avisos.dias_antes': '{n} days before, at {hora}',
+    'avisos.dia_antes': '1 day before, at {hora}',
+    'avisos.no_dia': 'On the day, at {hora}',
+    'avisos.hora_antes': '1 hour before',
     'avisos.horas_antes': '{n} hours before',
     'avisos.minutos_antes': '{n} minutes before',
     'avisos.modo.normal': 'Normal',

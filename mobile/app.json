@@ -19,14 +19,29 @@
         "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem.",
         "NSSupportsLiveActivities": true,
         "NSSupportsLiveActivitiesFrequentUpdates": false
-      }
+      },
+      "icon": "./assets/icone.png",
+      "appleTeamId": "ZTJU92P9H4"
     },
     "android": {
       "package": "dev.nspx.giz",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icone.png",
+        "backgroundColor": "#14110F"
+      }
     },
     "plugins": [
       "./plugins/ios-assinatura",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icone.png",
+          "imageWidth": 180,
+          "backgroundColor": "#14110F",
+          "resizeMode": "contain"
+        }
+      ],
       "expo-localization",
       "expo-font",
       [
@@ -42,6 +57,8 @@
       "expo-background-task",
       "@bacons/apple-targets"
     ],
-    "extra": {}
+    "extra": {},
+    "icon": "./assets/icone.png",
+    "backgroundColor": "#14110F"
   }
 }
