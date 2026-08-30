@@ -16,7 +16,20 @@ import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { instante, dataDe } from '../../../nucleo/tempo.ts'
 import { previaDeVencimento } from '../../../nucleo/vencimento.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
-import { Apoio, Botao, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
+import {
+  Apoio,
+  Botao,
+  Cartao,
+  Etiqueta,
+  Fileira,
+  Linha,
+  Pilula,
+  Secao,
+  Tela,
+  Titulo,
+  Toque,
+  Vazio,
+} from '../componentes/ui.tsx'
 import { momentoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
@@ -162,6 +175,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
 
   return (
     <Tela titulo={t('captura.titulo')}>
+      <Cartao padding={espaco.g}>
       <TextInput
         style={e.campo}
         value={texto}
@@ -178,6 +192,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         autoCorrect={false}
         spellCheck={false}
       />
+      </Cartao>
 
       <Linha>
         <Toque
@@ -273,28 +288,20 @@ function EscolherMateria({
   return (
     <View style={{ gap: espaco.s }}>
       <Apoio>{t('captura.qual_materia', { nome })}</Apoio>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
+      <Fileira>
         {candidatos.map((m) => (
-          <Toque key={m.id} aoTocar={() => aoEscolher(m)} estilo={e.pilula}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: m.cor }} />
-            <Text style={fonte.corpo}>{m.nome}</Text>
-          </Toque>
+          <Pilula key={m.id} texto={m.nome} cor={m.cor} aoTocar={() => aoEscolher(m)} />
         ))}
-        <Toque aoTocar={aoCriar} estilo={[e.pilula, { borderStyle: 'dashed' }]}>
-          <Text style={fonte.apoio}>{t('captura.criar_materia', { nome })}</Text>
-        </Toque>
-      </View>
+        <Pilula texto={t('captura.criar_materia', { nome })} aoTocar={aoCriar} />
+      </Fileira>
     </View>
   )
 }
 
 const e = StyleSheet.create({
+  // Sem fundo nem contorno próprios: o cartão em volta já é a superfície, e
+  // caixa dentro de caixa é o que fazia esta tela parecer formulário.
   campo: {
-    backgroundColor: cores.cartao,
-    borderColor: cores.borda,
-    borderWidth: 1,
-    borderRadius: raio.m,
-    padding: espaco.m,
     color: cores.texto,
     fontSize: 18,
     minHeight: 120,
@@ -304,20 +311,9 @@ const e = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: espaco.m,
-    borderRadius: raio.m,
+    borderRadius: raio.pilula,
     borderWidth: 1,
     borderColor: cores.borda,
   },
   acaoAtiva: { backgroundColor: cores.marfim, borderColor: cores.marfim },
-  pilula: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espaco.s,
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.s,
-    borderRadius: raio.pilula,
-    borderWidth: 1,
-    borderColor: cores.borda,
-    backgroundColor: cores.cartao,
-  },
 })
