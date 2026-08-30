@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Vidro, temLiquidGlass } from 'vidro'
+import { GlassContainer, GlassView, isLiquidGlassAvailable } from 'expo-glass-effect'
 import { dataDe } from '../../nucleo/tempo.ts'
 import { periodoAtivo } from '../../nucleo/grade.ts'
 import { usarLoja } from './estado/loja.ts'
@@ -330,27 +330,37 @@ function BarraDeAbas({
 }) {
   // No iOS 26 a barra é vidro de verdade; nos outros o `Vidro` vira View e a cor
   // de fundo abaixo é que aparece.
-  const vidro = temLiquidGlass()
+  const vidro = isLiquidGlassAvailable()
   return (
-    <View style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.s) }]} pointerEvents="box-none">
+    <GlassContainer
+      spacing={20}
+      style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.s) }]}
+      pointerEvents="box-none"
+    >
+      {/* O FAB e a barra moram no MESMO GlassContainer de propósito: é o
+          container que faz duas peças de vidro se enxergarem — elas ganham o
+          brilho especular na borda e se fundem quando chegam perto. Cada uma
+          no seu container seria vidro sem conversa, que era o que eu tinha. */}
       {aoCriar ? (
-        <Pressable style={e.mais} onPress={aoCriar} accessibilityRole="button">
-          <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
-            +
-          </Text>
-        </Pressable>
+        <GlassView
+          glassEffectStyle="regular"
+          isInteractive
+          tintColor={cores.destaque}
+          style={e.mais}
+        >
+          <Pressable
+            onPress={aoCriar}
+            accessibilityRole="button"
+            style={e.alvoDoMais}
+          >
+            <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
+              +
+            </Text>
+          </Pressable>
+        </GlassView>
       ) : null}
 
-      {/* NADA de cor de fundo quando há vidro de verdade: um cinza opaco atrás
-          do material tapa exatamente o que ele deveria refratar, e o resultado
-          parece vidro falso. Só o fallback (abaixo do iOS 26) recebe cor, porque
-          lá o `Vidro` vira uma View que não desenha nada sozinha. */}
-      <Vidro
-        raio={raio.pilula}
-        variante="regular"
-        interativo
-        style={[e.barra, vidro ? null : { backgroundColor: cores.vidro }]}
-      >
+      <GlassView glassEffectStyle="regular" isInteractive style={e.barra}>
         {ABAS.map((item) => (
           <Pressable
             key={item.id}
@@ -372,8 +382,8 @@ function BarraDeAbas({
             </Text>
           </Pressable>
         ))}
-      </Vidro>
-    </View>
+      </GlassView>
+    </GlassContainer>
   )
 }
 
@@ -401,10 +411,6 @@ const e = StyleSheet.create({
     paddingHorizontal: espaco.s,
     borderRadius: raio.pilula,
     overflow: 'hidden',
-    // Um fio de contorno: sem ele a barra não tem onde terminar quando o
-    // conteúdo atrás dela também é preto.
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: cores.borda,
   },
   aba: {
     alignItems: 'center',
@@ -422,11 +428,10 @@ const e = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: cores.destaque,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
     alignSelf: 'flex-end',
     marginRight: espaco.g,
     marginBottom: espaco.xs,
   },
+  alvoDoMais: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 })

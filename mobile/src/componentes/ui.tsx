@@ -15,7 +15,7 @@
 // Sombra em caixa não existe aqui. Elevação, quando precisa existir, é feita com
 // branco em alfa (`cartao`, `cartaoAlto`), que é o que o iOS faz.
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { Children, useEffect, useRef, type ReactNode } from 'react'
 import {
   Animated,
   Easing,
@@ -28,7 +28,9 @@ import {
   type ViewStyle,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Vidro, temLiquidGlass } from 'vidro'
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect'
+import { LinearGradient } from 'expo-linear-gradient'
+import * as Haptics from 'expo-haptics'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
 export function Tela({ children, titulo }: { children: ReactNode; titulo?: string }) {
@@ -100,7 +102,10 @@ export function Toque({
   return (
     <Pressable
       onPress={aoTocar}
-      onPressIn={() => animar(0.96)}
+      onPressIn={() => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        animar(0.96)
+      }}
       onPressOut={() => animar(1)}
     >
       <Animated.View style={[estilo, { transform: [{ scale: escala }] }]}>
@@ -156,26 +161,72 @@ export function Bolinha({ cor, tamanho = 9 }: { cor: string; tamanho?: number })
 }
 
 /**
- * Uma linha de lista. Sem fundo, sem contorno, sem sombra.
+ * Um cartão. Raio grande, um fio de borda, e um degradê de branco quase
+ * invisível por dentro.
  *
- * Mantém o nome `Cartao` porque as sete telas já o chamam assim — mas ele deixou
- * de desenhar um cartão em 30/08/2026, e o nome é o único resto disso.
+ * É a forma do LootFlow, e ela existe por um motivo que eu tinha ignorado:
+ * cartão CHAPADO sobre preto puro vira mancha cinza, e lista SEM cartão nenhum
+ * vira texto solto no vazio. O degradê dá volume sem virar cinza — o topo tem
+ * 5,5% de branco e a base 1,2%, e a diferença entre os dois é o que o olho lê
+ * como superfície.
+ *
+ * O padding mora DENTRO do degradê, então ele é propriedade e não estilo de
+ * fora: um `padding` no invólucro deixaria uma moldura sem preenchimento.
  */
 export function Cartao({
   children,
   aoTocar,
   faixa,
+  padding = 16,
 }: {
   children: ReactNode
   aoTocar?: () => void
-  /** Cor da matéria. Vira bolinha, não mais tarja lateral. */
+  /** Cor da matéria. Vira bolinha, não tarja lateral. */
   faixa?: string
+  padding?: number
 }) {
   return (
-    <Toque aoTocar={aoTocar} estilo={e.linhaDeLista}>
-      {faixa ? <View style={{ paddingTop: 6 }}><Bolinha cor={faixa} /></View> : null}
-      <View style={{ flex: 1, gap: 3 }}>{children}</View>
+    <Toque aoTocar={aoTocar} estilo={e.cartao}>
+      <LinearGradient
+        colors={[cores.cartaoDe, cores.cartaoAte]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.6, y: 1 }}
+        style={{ padding, flexDirection: 'row', gap: espaco.m }}
+      >
+        {faixa ? (
+          <View style={{ paddingTop: 5 }}>
+            <Bolinha cor={faixa} />
+          </View>
+        ) : null}
+        <View style={{ flex: 1, gap: 3 }}>{children}</View>
+      </LinearGradient>
     </Toque>
+  )
+}
+
+/**
+ * Um grupo: um cartão que guarda linhas separadas por fio.
+ *
+ * É o que dá ordem a uma tela de ajustes. Seis seções soltas sobre preto não
+ * têm onde começar nem terminar; dentro de um grupo, o fio entre as linhas faz
+ * o trabalho que o espaço sozinho não faz.
+ */
+export function Grupo({ children }: { children: ReactNode }) {
+  const filhos = Children.toArray(children)
+  return (
+    <View style={e.cartao}>
+      <LinearGradient
+        colors={[cores.cartaoDe, cores.cartaoAte]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.6, y: 1 }}
+      >
+        {filhos.map((filho, i) => (
+          <View key={i} style={i === 0 ? undefined : e.comFio}>
+            {filho}
+          </View>
+        ))}
+      </LinearGradient>
+    </View>
   )
 }
 
@@ -219,7 +270,7 @@ export function Pilula({
   /** Bolinha à esquerda — usada quando a pílula representa uma matéria. */
   cor?: string
 }) {
-  const comVidro = temLiquidGlass()
+  const comVidro = isLiquidGlassAvailable()
   const conteudo = (
     <>
       {cor ? <Bolinha cor={cor} tamanho={7} /> : null}
@@ -245,15 +296,14 @@ export function Pilula({
 
   return (
     <Toque aoTocar={aoTocar}>
-      <Vidro
-        raio={raio.pilula}
-        variante="regular"
-        interativo
-        tonalidade={ativa ? 'rgba(255,255,255,0.14)' : undefined}
+      <GlassView
+        glassEffectStyle="regular"
+        isInteractive
+        tintColor={ativa ? cores.texto : undefined}
         style={e.pilulaVidro}
       >
         {conteudo}
-      </Vidro>
+      </GlassView>
     </Toque>
   )
 }
@@ -275,7 +325,7 @@ export function Botao({
   aoTocar: () => void
   variante?: 'cheio' | 'vazado' | 'discreto'
 }) {
-  const comVidro = temLiquidGlass()
+  const comVidro = isLiquidGlassAvailable()
   const corTexto =
     variante === 'cheio' ? cores.texto : variante === 'vazado' ? cores.texto : cores.textoFraco
   const rotulo = (
@@ -316,15 +366,14 @@ export function Botao({
 
   return (
     <Toque aoTocar={aoTocar}>
-      <Vidro
-        raio={raio.pilula}
-        variante="regular"
-        interativo
-        tonalidade={variante === 'cheio' ? 'rgba(255,214,10,0.34)' : undefined}
+      <GlassView
+        glassEffectStyle="regular"
+        isInteractive
+        tintColor={variante === 'cheio' ? cores.destaque : undefined}
         style={e.botaoVidro}
       >
         {rotulo}
-      </Vidro>
+      </GlassView>
     </Toque>
   )
 }
@@ -391,7 +440,13 @@ export function Fileira({ children }: { children: ReactNode }) {
 const e = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
   tituloTela: { paddingHorizontal: espaco.g, paddingTop: espaco.s, paddingBottom: espaco.xs },
-  linhaDeLista: { flexDirection: 'row', gap: espaco.m, alignItems: 'flex-start' },
+  cartao: {
+    borderRadius: raio.cartao,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: cores.borda,
+    overflow: 'hidden',
+  },
+  comFio: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: cores.borda },
   etiqueta: {
     paddingHorizontal: espaco.s,
     paddingVertical: 2,
@@ -423,8 +478,6 @@ const e = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: cores.borda,
   },
   pilulaVidro: {
     flexDirection: 'row',
@@ -444,6 +497,7 @@ const e = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: espaco.m,
+    paddingHorizontal: espaco.g,
     // 44pt é o alvo mínimo da Apple, e linha de menu é o alvo mais tocado de
     // uma tela de ajustes.
     minHeight: 44,

@@ -37,6 +37,11 @@ export const paletaEscura = {
   atrasado: '#FF453A',
   ok: '#32D74B',
   vidro: 'rgba(30,30,30,0.6)',
+  /** As duas pontas do degradê do cartão. Copiado do LootFlow, que é o app dele
+      que ficou bonito: cartão chapado sobre preto vira mancha; o degradê de
+      branco quase invisível dá volume sem virar cinza. */
+  cartaoDe: 'rgba(255,255,255,0.055)',
+  cartaoAte: 'rgba(255,255,255,0.012)',
   /** Alias antigo: era um marfim quebrado, hoje é o branco do tema. */
   marfim: '#FFFFFF',
 } as const
@@ -67,6 +72,8 @@ export const paletaClara = {
   atrasado: '#FF3B30',
   ok: '#248A3D',
   vidro: 'rgba(255,255,255,0.6)',
+  cartaoDe: 'rgba(0,0,0,0.03)',
+  cartaoAte: 'rgba(0,0,0,0.008)',
   marfim: '#000000',
 } as const
 
@@ -74,7 +81,7 @@ export const cores = paletaEscura
 
 export const espaco = { xs: 4, s: 8, m: 12, g: 16, gg: 24, ggg: 32 } as const
 
-export const raio = { s: 8, m: 12, g: 16, gg: 22, pilula: 999 } as const
+export const raio = { s: 8, m: 12, g: 16, gg: 22, cartao: 26, pilula: 999 } as const
 
 /**
  * A escala de tipo. Sem fonte customizada: o app usa a do sistema (SF Pro).

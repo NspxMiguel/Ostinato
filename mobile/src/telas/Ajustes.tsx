@@ -18,6 +18,7 @@ import {
   Botao,
   Cartao,
   Fileira,
+  Grupo,
   Linha,
   LinhaDeMenu,
   Pilula,
@@ -26,7 +27,7 @@ import {
   Titulo,
   Vazio,
 } from '../componentes/ui.tsx'
-import { temLiquidGlass } from 'vidro'
+import { isLiquidGlassAvailable } from 'expo-glass-effect'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
@@ -286,6 +287,7 @@ export function Ajustes() {
           desenhava as regras dos SEIS tipos ao mesmo tempo, o que enchia a tela
           de campos numéricos antes de a pessoa decidir o que queria mexer. */}
       <Secao titulo={t('ajustes.avisos')}>
+        <Grupo>
         {IDs.map((tipo) => (
           <LinhaDeMenu
             key={tipo}
@@ -296,6 +298,7 @@ export function Ajustes() {
             aoTocar={() => setTipoAberto(tipo)}
           />
         ))}
+        </Grupo>
       </Secao>
 
       {/* Escola: o que descreve a escola dele, num grupo só. Antes o período
@@ -303,32 +306,38 @@ export function Ajustes() {
           no meio da tela de ajustes, e ele sozinho era mais alto que todo o
           resto junto. */}
       <Secao titulo={t('ajustes.escola')}>
-        <LinhaDeMenu
-          titulo={t('ajustes.periodo_letivo')}
-          valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
-          aoTocar={() => setPeriodoAberto(true)}
-        />
-        <Linha entre>
-          <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
-          <CampoNumero
-            rotulo={t('ajustes.porcentagem')}
-            valor={ajustes.limiteFaltasPadrao}
-            aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+        <Grupo>
+          <LinhaDeMenu
+            titulo={t('ajustes.periodo_letivo')}
+            valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
+            aoTocar={() => setPeriodoAberto(true)}
           />
-        </Linha>
+          <View style={{ paddingHorizontal: espaco.g, paddingVertical: espaco.s }}>
+            <Linha entre>
+              <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
+              <CampoNumero
+                rotulo={t('ajustes.porcentagem')}
+                valor={ajustes.limiteFaltasPadrao}
+                aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+              />
+            </Linha>
+          </View>
+        </Grupo>
       </Secao>
 
       <Secao titulo={t('ajustes.sincronizacao')}>
+        <Cartao>
         <Apoio>{textoDaNuvem}</Apoio>
         {/* Diagnóstico, e não enfeite: o módulo Swift do Liquid Glass é
             invisível quando funciona, e sem isso a única forma de saber se ele
             está ativo é acreditar em quem escreveu o código. */}
         <Linha entre>
           <Apoio>{t('ajustes.vidro')}</Apoio>
-          <Apoio cor={temLiquidGlass() ? cores.ok : cores.textoFraco}>
-            {temLiquidGlass() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
+          <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.textoFraco}>
+            {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
           </Apoio>
         </Linha>
+        </Cartao>
       </Secao>
 
       <Secao titulo={t('ajustes.avisos_agendados', { n: plano.agendar.length })}>
