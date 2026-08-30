@@ -21,6 +21,7 @@ import {
   Apoio,
   Bolinha,
   Botao,
+  Fileira,
   Cartao,
   Pilula,
   Toque,
@@ -288,7 +289,17 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   return (
     <Tela titulo={t('abas.grade')}>
       <TiraDeMaterias aoAbrir={aoAbrirMateria} />
-      <Linha entre>
+      {/* Escanear é a primeira opção, e é um botão próprio: fotografar o horário
+          que a escola entregou é o caminho mais rápido de todos, e ele estava
+          escondido dentro do modal de colar texto — onde ninguém ia achar. */}
+      <Fileira>
+        {temLeitura() ? (
+          <Botao
+            texto={t('grade.escanear')}
+            variante="cheio"
+            aoTocar={() => void fotografarHorario('camera')}
+          />
+        ) : null}
         <Botao
           texto={t('grade.colar_horario')}
           variante="vazado"
@@ -300,10 +311,10 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         />
         <Botao
           texto={t('grade.adicionar_aula')}
-          variante="cheio"
+          variante="vazado"
           aoTocar={() => abrirCriacaoAula(diaVisivel)}
         />
-      </Linha>
+      </Fileira>
 
       {aulasVivas.length === 0 ? (
         <Vazio texto={t('grade.sem_aulas')} />

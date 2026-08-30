@@ -32,7 +32,7 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
-import { usarT } from '../i18n.ts'
+import { idiomaDoSistema, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
 function Campo({
@@ -273,7 +273,7 @@ export function Ajustes() {
             não cinco botões amarelos disputando quem é o principal da tela. */}
         <Fileira>
           <Pilula
-            texto={t('ajustes.seguir_sistema')}
+            texto={`${t('ajustes.seguir_sistema')} · ${NOME_DO_IDIOMA[idiomaDoSistema()]}`}
             ativa={ajustes.idioma === null}
             aoTocar={() => mudarAjustes({ idioma: null })}
           />
