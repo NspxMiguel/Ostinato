@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import type { Base, Compromisso, DataISO, DiaSemana, Hora, Materia, TipoCompromisso } from '../../../nucleo/modelo.ts'
 import { aulasDoDia, periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar, type AvisoAgendado } from '../../../nucleo/planejador.ts'
@@ -8,11 +8,11 @@ import { vivos } from '../../../nucleo/sync/registro.ts'
 import { dataDe, diaSemanaDe, horaDe, instante, somarDias } from '../../../nucleo/tempo.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { criarT } from '../../../nucleo/i18n.ts'
-import { Apoio, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { Apoio, Bolinha, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { comInicialMinuscula, dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
-import { cores } from '../tema.ts'
+import { cores, espaco } from '../tema.ts'
 
 type TFn = ReturnType<typeof criarT>
 
@@ -68,16 +68,22 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
             const sala = item.aula.sala ?? item.materia?.sala
             return (
               <View key={item.aula.id} style={passou ? e.passou : undefined}>
-                <Cartao faixa={item.materia?.cor}>
-                  <Linha entre>
-                    <Apoio>
-                      {item.aula.inicio} – {item.aula.fim}
-                    </Apoio>
-                    {acontecendo ? <Etiqueta texto={t('hoje.agora')} cor={cores.destaque} /> : null}
-                  </Linha>
-                  <Titulo>{item.materia?.nome ?? ''}</Titulo>
-                  {sala ? <Apoio>{sala}</Apoio> : null}
-                </Cartao>
+                <View style={e.aula}>
+                  {/* O horário vira coluna à esquerda: a pessoa lê a régua do dia
+                      de cima a baixo, sem caçar a hora dentro de cada linha. */}
+                  <View style={e.hora}>
+                    <Text style={e.horaInicio}>{item.aula.inicio}</Text>
+                    <Text style={e.horaFim}>{item.aula.fim}</Text>
+                  </View>
+                  <Bolinha cor={item.materia?.cor ?? cores.texto3} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Linha entre>
+                      <Titulo>{item.materia?.nome ?? ''}</Titulo>
+                      {acontecendo ? <Etiqueta texto={t('hoje.agora')} cor={cores.destaque} /> : null}
+                    </Linha>
+                    {sala ? <Apoio>{sala}</Apoio> : null}
+                  </View>
+                </View>
               </View>
             )
           })
@@ -108,7 +114,15 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                   <Apoio cor={cores.aviso}>{t('hoje.sem_horario')}</Apoio>
                 ) : item.resolvido ? (
                   <>
-                    <Apoio cor={item.atrasado ? cores.atrasado : undefined}>
+                    <Apoio
+                      cor={
+                        item.atrasado
+                          ? cores.atrasado
+                          : item.resolvido.data === hojeISO
+                            ? cores.aviso
+                            : undefined
+                      }
+                    >
                       {quandoPorExtenso(item.resolvido.data, item.resolvido.hora, hojeISO, t, idioma)}
                     </Apoio>
                     {item.atrasado ? (
@@ -119,14 +133,17 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                       </Apoio>
                     ) : null}
                     {aviso ? (
-                      <Apoio>
-                        {t('hoje.aviso_quando', {
+                      <View style={e.aviso}>
+                        <View style={e.marcaDeAviso} />
+                        <Apoio cor={cores.texto3}>
+                          {t('hoje.aviso_quando', {
                           quando: comInicialMinuscula(
                             quandoPorExtenso(dataDe(aviso.quando), horaDe(aviso.quando), hojeISO, t, idioma),
                             idioma,
-                          ),
-                        })}
-                      </Apoio>
+                            ),
+                          })}
+                        </Apoio>
+                      </View>
                     ) : null}
                   </>
                 ) : null}
@@ -222,5 +239,15 @@ function duracaoPorExtenso(ms: number, t: TFn): string {
 }
 
 const e = StyleSheet.create({
-  passou: { opacity: 0.42 },
+  passou: { opacity: 0.4 },
+  aula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
+  // Largura mínima, não fixa: horário é numérico e não cresce com o idioma, mas
+  // 24h ("13:30") e 12h ("1:30 PM") têm larguras diferentes.
+  hora: { minWidth: 46, paddingTop: 1 },
+  horaInicio: { fontSize: 15, fontWeight: '600', color: cores.texto, fontVariant: ['tabular-nums'] },
+  horaFim: { fontSize: 13, color: cores.texto3, fontVariant: ['tabular-nums'] },
+  aviso: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  // Um traço curto na cor de destaque: é o único lugar da lista onde o amarelo
+  // aparece, e ele marca justamente a frase que nenhum concorrente tem.
+  marcaDeAviso: { width: 10, height: 2, borderRadius: 1, backgroundColor: cores.destaque },
 })
