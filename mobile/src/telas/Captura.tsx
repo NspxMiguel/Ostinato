@@ -7,7 +7,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
 import type { Compromisso, Materia, TipoCompromisso } from '../../../nucleo/modelo.ts'
 import { TIPOS_COMPROMISSO } from '../../../nucleo/modelo.ts'
 import type { Interpretacao } from '../../../nucleo/linguagem.ts'
@@ -22,7 +21,7 @@ import { momentoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio, CORES_DE_MATERIA } from '../tema.ts'
-import { lerTexto, temLeitura } from '../../modules/leitura/src/index.ts'
+import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
 export function Captura({ textoInicial, aoFechar, aoAjustar }: {
@@ -148,20 +147,14 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
     }
   }, [])
 
-  const fotografar = useCallback(async () => {
-    if (!temLeitura()) return
-    const permissao = await ImagePicker.requestCameraPermissionsAsync()
-    if (!permissao.granted) return
-    const foto = await ImagePicker.launchCameraAsync({ quality: 0.8, allowsEditing: false })
-    const uri = foto.assets?.[0]?.uri
-    if (foto.canceled || !uri) return
+  const fotografar = useCallback(async (de: 'camera' | 'galeria' = 'camera') => {
     setLendoFoto(true)
     try {
-      const r = await lerTexto(uri)
-      // A foto de um papel costuma trazer VÁRIAS tarefas. Por enquanto entra a
-      // primeira linha que o interpretador entende, e o resto fica no campo para
-      // a pessoa ver e editar — melhor do que gravar cinco coisas que ela não leu.
-      setTexto(r.texto.split('\n').filter((l) => l.trim() !== '').join('\n'))
+      const r = await lerPapel(de)
+      // A foto de um papel costuma trazer várias tarefas. O texto inteiro entra
+      // no campo para a pessoa ver e editar — melhor do que gravar cinco coisas
+      // que ela não leu.
+      if (r.tipo === 'lido') setTexto(r.texto.split('\n').filter((l) => l.trim() !== '').join('\n'))
     } finally {
       setLendoFoto(false)
     }
@@ -196,11 +189,16 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
           </Text>
         </Toque>
         {temLeitura() ? (
-          <Toque aoTocar={fotografar} estilo={e.acao}>
+          <Toque aoTocar={() => void fotografar('camera')} estilo={e.acao}>
             <Text style={fonte.corpo}>{lendoFoto ? t('captura.lendo') : t('captura.foto')}</Text>
           </Toque>
         ) : null}
       </Linha>
+      {temLeitura() ? (
+        <Toque aoTocar={() => void fotografar('galeria')} estilo={e.acao}>
+          <Text style={fonte.apoio}>{t('papel.da_galeria')}</Text>
+        </Toque>
+      ) : null}
       {lendoFoto ? <ActivityIndicator color={cores.marfim} /> : null}
       {avisoDeVoz ? <Apoio cor={cores.aviso}>{avisoDeVoz}</Apoio> : null}
 

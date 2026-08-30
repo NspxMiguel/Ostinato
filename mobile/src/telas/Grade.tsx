@@ -29,6 +29,7 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
+import { lerPapel, temLeitura } from '../lerPapel.ts'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -71,6 +72,24 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   // Modal de colar horário
   const [modalColarVisivel, setModalColarVisivel] = useState(false)
   const [textoColado, setTextoColado] = useState('')
+  const [lendoFoto, setLendoFoto] = useState(false)
+
+  /**
+   * Fotografar o horário e cair no MESMO campo do texto colado.
+   *
+   * O texto lido não vira grade sozinho: ele entra no campo, e a pessoa toca em
+   * prévia como se tivesse colado. O OCR acerta muito e não sempre, e o estrago
+   * de gravar errado é uma grade inteira bagunçada.
+   */
+  const fotografarHorario = async (de: 'camera' | 'galeria' = 'camera') => {
+    setLendoFoto(true)
+    try {
+      const r = await lerPapel(de)
+      if (r.tipo === 'lido') setTextoColado(r.texto)
+    } finally {
+      setLendoFoto(false)
+    }
+  }
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
 
   // Sem período letivo cadastrado, a tela exige a criação do período antes da grade
@@ -519,6 +538,20 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   placeholder="Ex: Segunda 08:00 - 10:00 Cálculo 1..."
                   placeholderTextColor={cores.textoFraco}
                 />
+                {temLeitura() ? (
+                  <Botao
+                    texto={lendoFoto ? t('captura.lendo') : t('grade.tirar_foto')}
+                    variante="vazado"
+                    aoTocar={() => void fotografarHorario('camera')}
+                  />
+                ) : null}
+                {temLeitura() ? (
+                  <Botao
+                    texto={t('papel.da_galeria')}
+                    variante="vazado"
+                    aoTocar={() => void fotografarHorario('galeria')}
+                  />
+                ) : null}
                 <Botao texto={t('grade.previa_titulo')} aoTocar={analisarTextoColado} />
                 <Botao
                   texto={t('acao.cancelar')}

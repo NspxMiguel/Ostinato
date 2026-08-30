@@ -144,6 +144,7 @@ const traducoes = {
 
     'grade.adicionar_aula': 'Adicionar aula',
     'grade.colar_horario': 'Colar horário',
+    'papel.da_galeria': 'Escolher da galeria',
     'grade.tirar_foto': 'Tirar foto do horário',
     'grade.aulas_encontradas': '{n} aulas encontradas',
     'grade.linhas_nao_entendidas': 'Não entendi {n} linhas',
@@ -414,6 +415,7 @@ const traducoes = {
 
     'grade.adicionar_aula': 'Add class',
     'grade.colar_horario': 'Paste schedule',
+    'papel.da_galeria': 'Choose from photos',
     'grade.tirar_foto': 'Take a photo of the schedule',
     'grade.aulas_encontradas': '{n} classes found',
     'grade.linhas_nao_entendidas': 'Could not understand {n} lines',
@@ -684,6 +686,7 @@ const traducoes = {
 
     'grade.adicionar_aula': 'Añadir clase',
     'grade.colar_horario': 'Pegar horario',
+    'papel.da_galeria': 'Elegir de la galería',
     'grade.tirar_foto': 'Sacar foto del horario',
     'grade.aulas_encontradas': '{n} clases encontradas',
     'grade.linhas_nao_entendidas': 'No entendí {n} líneas',
@@ -954,6 +957,7 @@ const traducoes = {
 
     'grade.adicionar_aula': 'Ajouter un cours',
     'grade.colar_horario': 'Coller l\u2019emploi du temps',
+    'papel.da_galeria': 'Choisir dans les photos',
     'grade.tirar_foto': 'Prendre en photo l\u2019emploi du temps',
     'grade.aulas_encontradas': '{n} cours trouvés',
     'grade.linhas_nao_entendidas': 'Je n\u2019ai pas compris {n} lignes',
