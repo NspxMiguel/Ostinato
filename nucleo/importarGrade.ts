@@ -34,53 +34,50 @@ type HorarioEncontrado = Faixa & {
   fimInformado: boolean
 }
 
+/**
+ * Os nomes de dia que um horário de escola pode trazer.
+ *
+ * O app não é só do Brasil, e horário de escola é o documento mais local que
+ * existe: cada país abrevia do seu jeito, e mais de um usa a mesma letra para
+ * dias diferentes. Por isso a tabela é escrita à mão, por idioma, em vez de sair
+ * do `Intl` — o `Intl` não conhece "2a feira" nem "mié.", e é isso que aparece
+ * no PDF que a secretaria manda.
+ *
+ * Colisões conhecidas e resolvidas de propósito:
+ * - "mar" é terça em espanhol (martes) e março em português. Aqui vale terça,
+ *   porque quem escreve mês num horário semanal escreve por extenso.
+ * - "do" é domingo em italiano e preposição em português. Fora, curto demais.
+ * - "sab"/"sáb" é sábado em pt, es e it — mesmo dia, sem conflito.
+ */
 const DIAS: Record<string, DiaSemana> = {
-  dom: 0,
-  domingo: 0,
-  sun: 0,
-  sunday: 0,
-  seg: 1,
-  segunda: 1,
-  'segunda-feira': 1,
-  '2a': 1,
-  '2o': 1,
-  mon: 1,
-  monday: 1,
-  ter: 2,
-  terca: 2,
-  'terca-feira': 2,
-  '3a': 2,
-  '3o': 2,
-  tue: 2,
-  tues: 2,
-  tuesday: 2,
-  qua: 3,
-  quarta: 3,
-  'quarta-feira': 3,
-  '4a': 3,
-  '4o': 3,
-  wed: 3,
-  wednesday: 3,
-  qui: 4,
-  quinta: 4,
-  'quinta-feira': 4,
-  '5a': 4,
-  '5o': 4,
-  thu: 4,
-  thur: 4,
-  thurs: 4,
-  thursday: 4,
-  sex: 5,
-  sexta: 5,
-  'sexta-feira': 5,
-  '6a': 5,
-  '6o': 5,
-  fri: 5,
-  friday: 5,
-  sab: 6,
-  sabado: 6,
-  sat: 6,
-  saturday: 6,
+  // ─ domingo ─
+  dom: 0, domingo: 0, domingos: 0,
+  sun: 0, sunday: 0,
+  domenica: 0, dimanche: 0, sonntag: 0,
+  // ─ segunda ─
+  seg: 1, segunda: 1, 'segunda-feira': 1, '2a': 1, '2o': 1,
+  mon: 1, monday: 1,
+  lun: 1, lunes: 1, lunedi: 1, lundi: 1, montag: 1,
+  // ─ terça ─
+  ter: 2, terca: 2, 'terca-feira': 2, '3a': 2, '3o': 2,
+  tue: 2, tues: 2, tuesday: 2,
+  mar: 2, martes: 2, martedi: 2, mardi: 2, dienstag: 2,
+  // ─ quarta ─
+  qua: 3, quarta: 3, 'quarta-feira': 3, '4a': 3, '4o': 3,
+  wed: 3, wednesday: 3,
+  mie: 3, miercoles: 3, mercoledi: 3, mercredi: 3, mittwoch: 3,
+  // ─ quinta ─
+  qui: 4, quinta: 4, 'quinta-feira': 4, '5a': 4, '5o': 4,
+  thu: 4, thur: 4, thurs: 4, thursday: 4,
+  jue: 4, jueves: 4, giovedi: 4, jeudi: 4, donnerstag: 4,
+  // ─ sexta ─
+  sex: 5, sexta: 5, 'sexta-feira': 5, '6a': 5, '6o': 5,
+  fri: 5, friday: 5,
+  vie: 5, viernes: 5, venerdi: 5, vendredi: 5, freitag: 5,
+  // ─ sábado ─
+  sab: 6, sabado: 6, sabados: 6,
+  sat: 6, saturday: 6,
+  sabato: 6, samedi: 6, samstag: 6,
 }
 
 function escaparExpressao(valor: string): string {
