@@ -147,13 +147,11 @@ decides the default, the choice is changeable in settings, and
 falls back to Portuguese silently, and `npm run teste:i18n` fails the build on
 any language block that is present but incomplete.
 
-The **sentence interpreter** understands Portuguese and English. It tries the
-interface language first and the others after, so someone with an English phone
-writing *"prova de historia sexta que vem"* is still understood. Someone using the
-app in Spanish or French gets the translated interface but not the interpreted
-sentence — the text lands in the form as the title, which works and is honest, but
-is not the fast path. Adding a language means writing its date and type words in
-`nucleo/linguagem.ts`.
+The **sentence interpreter** understands all four. It tries the interface language
+first and the others after, so someone with an English phone writing *"prova de
+historia sexta que vem"* is still understood, and so is *"contrôle de maths
+vendredi"* on a Portuguese one. Adding a fifth language means writing its date and
+type words in `nucleo/linguagem.ts`.
 
 ## License
 

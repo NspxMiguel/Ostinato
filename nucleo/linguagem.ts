@@ -82,6 +82,26 @@ const DIAS_EN: Record<string, number> = {
   saturday: 6,
 }
 
+const DIAS_ES: Record<string, number> = {
+  domingo: 0,
+  lunes: 1,
+  martes: 2,
+  miercoles: 3,
+  jueves: 4,
+  viernes: 5,
+  sabado: 6,
+}
+
+const DIAS_FR: Record<string, number> = {
+  dimanche: 0,
+  lundi: 1,
+  mardi: 2,
+  mercredi: 3,
+  jeudi: 4,
+  vendredi: 5,
+  samedi: 6,
+}
+
 const MESES_EN: Record<string, number> = {
   jan: 1,
   january: 1,
@@ -134,21 +154,40 @@ function reconhecerTipo(texto: string, idioma: Idioma): TipoEncontrado | undefin
     }
   }
 
-  const regras: { expressao: RegExp; tipo: TipoCompromisso }[] = idioma === 'pt'
-    ? [
-        { expressao: /\b(?:prova|teste|avaliacao|avaliacoes)\b/, tipo: 'prova' },
-        { expressao: /\b(?:trabalho|seminario|apresentacao)\b/, tipo: 'trabalho' },
-        { expressao: /\b(?:tarefa|exercicio|exercicios|licao|dever)\b/, tipo: 'tarefa' },
-        { expressao: /\b(?:ler|leitura|livro|capitulo|paginas)\b/, tipo: 'leitura' },
-        { expressao: /\b(?:entregar|entrega|enviar)\b/, tipo: 'entrega' },
-      ]
-    : [
-        { expressao: /\b(?:test|tests|exam|exams|quiz|quizzes)\b/, tipo: 'prova' },
-        { expressao: /\b(?:essay|essays|project|projects|presentation|presentations)\b/, tipo: 'trabalho' },
-        { expressao: /\b(?:homework|assignment|assignments|exercise|exercises)\b/, tipo: 'tarefa' },
-        { expressao: /\b(?:read|reading|pages|chapter|chapters)\b/, tipo: 'leitura' },
-        { expressao: /\b(?:submit|turn\s+in|hand\s+in|due)\b/, tipo: 'entrega' },
-      ]
+  let regras: { expressao: RegExp; tipo: TipoCompromisso }[]
+  if (idioma === 'pt') {
+    regras = [
+      { expressao: /\b(?:prova|teste|avaliacao|avaliacoes)\b/, tipo: 'prova' },
+      { expressao: /\b(?:trabalho|seminario|apresentacao)\b/, tipo: 'trabalho' },
+      { expressao: /\b(?:tarefa|exercicio|exercicios|licao|dever)\b/, tipo: 'tarefa' },
+      { expressao: /\b(?:ler|leitura|livro|capitulo|paginas)\b/, tipo: 'leitura' },
+      { expressao: /\b(?:entregar|entrega|enviar)\b/, tipo: 'entrega' },
+    ]
+  } else if (idioma === 'en') {
+    regras = [
+      { expressao: /\b(?:test|tests|exam|exams|quiz|quizzes)\b/, tipo: 'prova' },
+      { expressao: /\b(?:essay|essays|project|projects|presentation|presentations)\b/, tipo: 'trabalho' },
+      { expressao: /\b(?:homework|assignment|assignments|exercise|exercises)\b/, tipo: 'tarefa' },
+      { expressao: /\b(?:read|reading|pages|chapter|chapters)\b/, tipo: 'leitura' },
+      { expressao: /\b(?:submit|turn\s+in|hand\s+in|due)\b/, tipo: 'entrega' },
+    ]
+  } else if (idioma === 'es') {
+    regras = [
+      { expressao: /\b(?:examen|prueba|control)\b/, tipo: 'prova' },
+      { expressao: /\b(?:trabajo|proyecto|presentacion)\b/, tipo: 'trabalho' },
+      { expressao: /\b(?:tarea|deberes|ejercicio)\b/, tipo: 'tarefa' },
+      { expressao: /\b(?:leer|lectura|paginas|capitulo)\b/, tipo: 'leitura' },
+      { expressao: /\b(?:entregar|entrega)\b/, tipo: 'entrega' },
+    ]
+  } else {
+    regras = [
+      { expressao: /\b(?:controle|examen|interro)\b/, tipo: 'prova' },
+      { expressao: /\b(?:devoir|projet|expose)\b/, tipo: 'trabalho' },
+      { expressao: /\b(?:exercice|devoirs)\b/, tipo: 'tarefa' },
+      { expressao: /\b(?:lire|lecture|pages|chapitre)\b/, tipo: 'leitura' },
+      { expressao: /\b(?:rendre|remettre)\b/, tipo: 'entrega' },
+    ]
+  }
 
   const encontrados: TipoEncontrado[] = []
   for (const regra of regras) {
@@ -270,7 +309,7 @@ function reconhecerData(texto: string, hoje: DataISO, idioma: Idioma): DataEncon
 
     resultado = executar(texto, /\bdia\s+(\d{1,2})\b/)
     if (resultado) adicionar(resultado, porData(dataNoProximoMesPossivel(hoje, Number(resultado[1]))))
-  } else {
+  } else if (idioma === 'en') {
     let resultado = executar(texto, /\b(?:(?:due|by|for)\s+)?next\s+class\b/)
     adicionar(resultado, resultado ? { tipo: 'aula', ocorrencia: 1 } : undefined)
 
@@ -315,6 +354,95 @@ function reconhecerData(texto: string, hoje: DataISO, idioma: Idioma): DataEncon
             : undefined
       adicionar(resultado, porData(data))
     }
+  } else if (idioma === 'es') {
+    let resultado = executar(texto, /\b(?:para\s+)?(?:la\s+)?proxima\s+clase\b/)
+    adicionar(resultado, resultado ? { tipo: 'aula', ocorrencia: 1 } : undefined)
+
+    resultado = executar(texto, /\b(?:(?:para|hasta)\s+)?pasado\s+manana\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 2) : undefined))
+
+    resultado = executar(texto, /\b(?:(?:para|hasta)\s+)?manana\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 1) : undefined))
+
+    resultado = executar(texto, /\b(?:(?:para|hasta)\s+)?hoy\b/)
+    adicionar(resultado, porData(resultado ? hoje : undefined))
+
+    resultado = executar(texto, /\ben\s+(\d+)\s+dias?\b/)
+    adicionar(resultado, porData(resultado ? somarQuantidadeDias(hoje, resultado[1]) : undefined))
+
+    resultado = executar(texto, /\b(?:para\s+)?(?:la\s+)?proxima\s+semana\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 7) : undefined))
+
+    resultado = executar(
+      texto,
+      /\b(?:(?:para|hasta)\s+)?(?:el\s+)?(?:(proximo)\s+)?(lunes|martes|miercoles|jueves|viernes|sabado|domingo)(?:\s+(que\s+viene))?\b/,
+    )
+    if (resultado) {
+      const alvo = DIAS_ES[resultado[2] ?? '']
+      adicionar(
+        resultado,
+        alvo === undefined ? undefined : porData(proximoDiaSemana(hoje, alvo, Boolean(resultado[1] || resultado[3]))),
+      )
+    }
+
+    resultado = executar(texto, /\b(?:(?:el|para)\s+)?(?:dia\s+)?(\d{1,2})\/(\d{1,2})\/(\d{4})\b/)
+    if (resultado) {
+      const dia = Number(resultado[1])
+      const mes = Number(resultado[2])
+      const ano = Number(resultado[3])
+      adicionar(resultado, porData(dataValida(ano, mes, dia) ? montarData(ano, mes, dia) : undefined))
+    }
+
+    resultado = executar(texto, /\b(?:(?:el|para)\s+)?(?:dia\s+)?(\d{1,2})\/(\d{1,2})\b/)
+    if (resultado) {
+      adicionar(resultado, porData(dataComAnoInferido(hoje, Number(resultado[2]), Number(resultado[1]))))
+    }
+
+    resultado = executar(texto, /\b(?:el\s+)?dia\s+(\d{1,2})\b/)
+    if (resultado) adicionar(resultado, porData(dataNoProximoMesPossivel(hoje, Number(resultado[1]))))
+  } else {
+    let resultado = executar(texto, /\b(?:pour\s+)?(?:le\s+)?prochain\s+cours\b/)
+    adicionar(resultado, resultado ? { tipo: 'aula', ocorrencia: 1 } : undefined)
+
+    resultado = executar(texto, /\b(?:pour\s+)?apres(?:-|\s+)demain\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 2) : undefined))
+
+    resultado = executar(texto, /\b(?:pour\s+)?demain\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 1) : undefined))
+
+    resultado = executar(texto, /\b(?:pour\s+)?aujourd(?:['’]|\s*)hui\b/)
+    adicionar(resultado, porData(resultado ? hoje : undefined))
+
+    resultado = executar(texto, /\bdans\s+(\d+)\s+jours?\b/)
+    adicionar(resultado, porData(resultado ? somarQuantidadeDias(hoje, resultado[1]) : undefined))
+
+    resultado = executar(texto, /\b(?:pour\s+)?(?:la\s+)?semaine\s+prochaine\b/)
+    adicionar(resultado, porData(resultado ? somarDias(hoje, 7) : undefined))
+
+    resultado = executar(
+      texto,
+      /\b(?:pour\s+)?(?:le\s+)?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)(?:\s+(prochain|prochaine))?\b/,
+    )
+    if (resultado) {
+      const alvo = DIAS_FR[resultado[1] ?? '']
+      adicionar(resultado, alvo === undefined ? undefined : porData(proximoDiaSemana(hoje, alvo, Boolean(resultado[2]))))
+    }
+
+    resultado = executar(texto, /\b(?:(?:le|pour)\s+)?(?:jour\s+)?(\d{1,2})\/(\d{1,2})\/(\d{4})\b/)
+    if (resultado) {
+      const dia = Number(resultado[1])
+      const mes = Number(resultado[2])
+      const ano = Number(resultado[3])
+      adicionar(resultado, porData(dataValida(ano, mes, dia) ? montarData(ano, mes, dia) : undefined))
+    }
+
+    resultado = executar(texto, /\b(?:(?:le|pour)\s+)?(?:jour\s+)?(\d{1,2})\/(\d{1,2})\b/)
+    if (resultado) {
+      adicionar(resultado, porData(dataComAnoInferido(hoje, Number(resultado[2]), Number(resultado[1]))))
+    }
+
+    resultado = executar(texto, /\ble\s+(?:jour\s+)?(\d{1,2})\b/)
+    if (resultado) adicionar(resultado, porData(dataNoProximoMesPossivel(hoje, Number(resultado[1]))))
   }
 
   candidatos.sort((a, b) => a.trecho.de - b.trecho.de || b.trecho.ate - b.trecho.de - (a.trecho.ate - a.trecho.de))
@@ -333,7 +461,7 @@ function reconhecerHora(texto: string, idioma: Idioma): HoraEncontrada | undefin
   if (idioma === 'pt') {
     const resultado = executar(texto, /\b(?:as\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))\b/)
     if (resultado) adicionar(resultado, Number(resultado[1]), Number(resultado[2] ?? resultado[3] ?? 0))
-  } else {
+  } else if (idioma === 'en') {
     let resultado = executar(texto, /\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/)
     if (resultado) {
       const original = Number(resultado[1])
@@ -345,6 +473,12 @@ function reconhecerHora(texto: string, idioma: Idioma): HoraEncontrada | undefin
 
     resultado = executar(texto, /\bat\s+(\d{1,2}):(\d{2})\b/)
     if (resultado) adicionar(resultado, Number(resultado[1]), Number(resultado[2]))
+  } else if (idioma === 'es') {
+    const resultado = executar(texto, /\ba\s+las\s+(\d{1,2})(?:h(\d{2})?|:(\d{2})|\s+y\s+(media))?\b/)
+    if (resultado) adicionar(resultado, Number(resultado[1]), resultado[4] ? 30 : Number(resultado[2] ?? resultado[3] ?? 0))
+  } else {
+    const resultado = executar(texto, /\ba\s+(\d{1,2})(?:h(\d{2})?|:(\d{2}))\b/)
+    if (resultado) adicionar(resultado, Number(resultado[1]), Number(resultado[2] ?? resultado[3] ?? 0))
   }
 
   candidatos.sort((a, b) => a.de - b.de)
@@ -401,7 +535,11 @@ function reconhecerMateria(
     return { nome: original.slice(trecho.de, trecho.ate), trecho, remocao: trecho }
   }
 
-  const exp = /\b(?:de|da|do)\s+/g
+  const exp = idioma === 'es'
+    ? /\b(?:del|de(?:\s+(?:la|el|las|los))?)\s+/g
+    : idioma === 'fr'
+      ? /(?:\bde\s+l['’]\s*|\bd['’]\s*|\b(?:du|des)\s+|\bde(?:\s+(?:la|le|les))?\s+)/g
+      : /\b(?:de|da|do)\s+/g
   let resultado: RegExpExecArray | null
   while ((resultado = exp.exec(texto)) !== null) {
     const inicioPreposicao = resultado.index
@@ -436,9 +574,16 @@ function limparTitulo(texto: string, remocoes: Trecho[], idioma: Idioma): string
   }
 
   let titulo = unidades.join('').replace(/\s+/g, ' ').trim().replace(/^[,;:.\-–—\s]+|[,;:.\-–—\s]+$/g, '')
-  const pontas = idioma === 'pt'
-    ? /^(?:(?:de|da|do|pra|para|ate|até|em|no|na|as|às)(?:\s+|$))+|(?:(?:^|\s)(?:de|da|do|pra|para|ate|até|em|no|na|as|às))+$/gi
-    : /^(?:(?:due|by|on|at|in|for|to|of)(?:\s+|$))+|(?:(?:^|\s)(?:due|by|on|at|in|for|to|of))+$/gi
+  let pontas: RegExp
+  if (idioma === 'pt') {
+    pontas = /^(?:(?:de|da|do|pra|para|ate|até|em|no|na|as|às)(?:\s+|$))+|(?:(?:^|\s)(?:de|da|do|pra|para|ate|até|em|no|na|as|às))+$/gi
+  } else if (idioma === 'en') {
+    pontas = /^(?:(?:due|by|on|at|in|for|to|of)(?:\s+|$))+|(?:(?:^|\s)(?:due|by|on|at|in|for|to|of))+$/gi
+  } else if (idioma === 'es') {
+    pontas = /^(?:(?:de|del|para|hasta|en|el|la|los|las|a)(?:\s+|$))+|(?:(?:^|\s)(?:de|del|para|hasta|en|el|la|los|las|a))+$/gi
+  } else {
+    pontas = /^(?:(?:de|du|des|pour|dans|le|la|les|a|à|au|aux)(?:\s+|$))+|(?:(?:^|\s)(?:de|du|des|pour|dans|le|la|les|a|à|au|aux))+$/gi
+  }
 
   let anterior: string
   do {
@@ -452,8 +597,15 @@ function capitalizar(texto: string): string {
   return texto.length === 0 ? texto : texto[0]?.toLocaleUpperCase() + texto.slice(1)
 }
 
+function tituloGenerico(idioma: Idioma): string {
+  if (idioma === 'pt') return 'Compromisso'
+  if (idioma === 'es') return 'Compromiso'
+  if (idioma === 'fr') return 'Tâche'
+  return 'Task'
+}
+
 function tituloPadrao(tipo: TipoEncontrado | undefined, materia: string | undefined, idioma: Idioma): string {
-  if (!tipo) return materia ? capitalizar(materia) : idioma === 'pt' ? 'Compromisso' : 'Task'
+  if (!tipo) return materia ? capitalizar(materia) : tituloGenerico(idioma)
 
   if (idioma === 'pt') {
     const nomes: Record<TipoCompromisso, string> = {
@@ -463,6 +615,30 @@ function tituloPadrao(tipo: TipoEncontrado | undefined, materia: string | undefi
       leitura: 'Leitura',
       entrega: 'Entrega',
       outro: 'Compromisso',
+    }
+    return materia ? `${nomes[tipo.tipo]} de ${materia}` : nomes[tipo.tipo]
+  }
+
+  if (idioma === 'es') {
+    const nomes: Record<TipoCompromisso, string> = {
+      prova: 'Examen',
+      trabalho: 'Trabajo',
+      tarefa: 'Tarea',
+      leitura: 'Lectura',
+      entrega: 'Entrega',
+      outro: 'Compromiso',
+    }
+    return materia ? `${nomes[tipo.tipo]} de ${materia}` : nomes[tipo.tipo]
+  }
+
+  if (idioma === 'fr') {
+    const nomes: Record<TipoCompromisso, string> = {
+      prova: 'Contrôle',
+      trabalho: 'Devoir',
+      tarefa: 'Exercice',
+      leitura: 'Lecture',
+      entrega: 'Remise',
+      outro: 'Tâche',
     }
     return materia ? `${nomes[tipo.tipo]} de ${materia}` : nomes[tipo.tipo]
   }
@@ -534,7 +710,7 @@ export function interpretar(_texto: string, _agora: Date, _idioma: Idioma): Inte
   try {
     if (_texto.trim().length === 0) {
       return {
-        titulo: _idioma === 'pt' ? 'Compromisso' : 'Task',
+        titulo: tituloGenerico(_idioma),
         confianca: 0.1,
         marcas: [],
         faltando: ['data', 'materia'],
@@ -542,7 +718,7 @@ export function interpretar(_texto: string, _agora: Date, _idioma: Idioma): Inte
     }
     return interpretarComRegras(_texto, _agora, _idioma)
   } catch {
-    const tituloSeguro = typeof _texto === 'string' && _texto.trim() ? _texto.trim() : _idioma === 'en' ? 'Task' : 'Compromisso'
+    const tituloSeguro = typeof _texto === 'string' && _texto.trim() ? _texto.trim() : tituloGenerico(_idioma)
     return { titulo: tituloSeguro, confianca: 0.1, marcas: [], faltando: ['data', 'materia'] }
   }
 }
@@ -560,20 +736,15 @@ export function interpretar(_texto: string, _agora: Date, _idioma: Idioma): Inte
  * quem escreve na língua da interface é a maioria, e não deve pagar por quem não
  * escreve.
  *
- * LIMITE CONHECIDO: o interpretador entende português e inglês. A interface já
- * fala espanhol e francês, e quem usa o app nesses idiomas recebe a interface
- * traduzida mas a frase não interpretada — ela cai no formulário com o texto
- * inteiro como título, que funciona e é honesto, mas não é o caminho rápido.
- *
- * Está escrito aqui, e não escondido, porque é a diferença entre "traduzimos o
- * app" e "o app entende quem escreve nessa língua" — e o padrão de `candidatos`
- * abaixo é onde `es` e `fr` entram quando alguém escrever as regras deles.
+ * O interpretador entende os quatro idiomas da interface. A ordem de
+ * `candidatos` mantém português e inglês primeiro apenas como desempate para
+ * quem ainda não escolheu espanhol ou francês como idioma preferido.
  */
 export function interpretarMelhor(
   texto: string,
   agora: Date,
   preferido: Idioma,
-  candidatos: readonly Idioma[] = ['pt', 'en'],
+  candidatos: readonly Idioma[] = ['pt', 'en', 'es', 'fr'],
 ): Interpretacao {
   const ordem = [preferido, ...candidatos.filter((i) => i !== preferido)]
   let melhor: Interpretacao | null = null
