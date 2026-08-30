@@ -194,26 +194,25 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       />
       </Cartao>
 
-      <Linha>
-        <Toque
+      {/* As três entradas na MESMA fileira de pílulas, e sem `flex: 1`.
+          Dividir a linha em partes iguais espremia "Falar" — que é curto em
+          inglês e comprido em francês — contra a borda, com o texto cortado. */}
+      <Fileira>
+        <Pilula
+          texto={ouvindo ? t('captura.ouvindo') : t('captura.falar')}
+          ativa={ouvindo}
           aoTocar={ouvindo ? terminarDitado : comecarDitado}
-          estilo={[e.acao, ouvindo ? e.acaoAtiva : null]}
-        >
-          <Text style={[fonte.corpo, ouvindo ? { color: cores.fundo, fontWeight: '700' } : null]}>
-            {ouvindo ? t('captura.ouvindo') : t('captura.falar')}
-          </Text>
-        </Toque>
+        />
         {temLeitura() ? (
-          <Toque aoTocar={() => void fotografar('camera')} estilo={e.acao}>
-            <Text style={fonte.corpo}>{lendoFoto ? t('captura.lendo') : t('captura.foto')}</Text>
-          </Toque>
+          <>
+            <Pilula
+              texto={lendoFoto ? t('captura.lendo') : t('captura.foto')}
+              aoTocar={() => void fotografar('camera')}
+            />
+            <Pilula texto={t('papel.da_galeria')} aoTocar={() => void fotografar('galeria')} />
+          </>
         ) : null}
-      </Linha>
-      {temLeitura() ? (
-        <Toque aoTocar={() => void fotografar('galeria')} estilo={e.acao}>
-          <Text style={fonte.apoio}>{t('papel.da_galeria')}</Text>
-        </Toque>
-      ) : null}
+      </Fileira>
       {lendoFoto ? <ActivityIndicator color={cores.marfim} /> : null}
       {avisoDeVoz ? <Apoio cor={cores.aviso}>{avisoDeVoz}</Apoio> : null}
 
@@ -307,13 +306,4 @@ const e = StyleSheet.create({
     minHeight: 120,
     textAlignVertical: 'top',
   },
-  acao: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: espaco.m,
-    borderRadius: raio.pilula,
-    borderWidth: 1,
-    borderColor: cores.borda,
-  },
-  acaoAtiva: { backgroundColor: cores.marfim, borderColor: cores.marfim },
 })
