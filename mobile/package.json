@@ -38,7 +38,8 @@
     "vidro": "file:./modules/vidro",
     "zustand": "^5.0.15",
     "barra": "file:./modules/barra",
-    "alarme-do-sistema": "file:./modules/alarme"
+    "alarme-do-sistema": "file:./modules/alarme",
+    "modelo-local": "file:./modules/modelo"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
