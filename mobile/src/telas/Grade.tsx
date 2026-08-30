@@ -19,8 +19,11 @@ import type { ResultadoImportacao } from '../../../nucleo/importarGrade.ts'
 import { importarGrade } from '../../../nucleo/importarGrade.ts'
 import {
   Apoio,
+  Bolinha,
   Botao,
   Cartao,
+  Pilula,
+  Toque,
   Etiqueta,
   Linha,
   Secao,
@@ -64,6 +67,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const [novaMateriaNome, setNovaMateriaNome] = useState('')
   const [novaMateriaCor, setNovaMateriaCor] = useState<string>(CORES_DE_MATERIA[0])
   const [diaSemana, setDiaSemana] = useState<DiaSemana>(1)
+  /** Qual dia a lista mostra. Separado de `diaSemana`, que é o dia do formulário. */
+  const [diaVisivel, setDiaVisivel] = useState<DiaSemana>(1)
   const [inicio, setInicio] = useState('08:00')
   const [fim, setFim] = useState('09:40')
   const [sala, setSala] = useState('')
@@ -157,6 +162,10 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   // Dias com aula ou segunda a sexta por padrão
   const temSabado = aulasVivas.some((a: Aula) => a.diaSemana === 6)
   const temDomingo = aulasVivas.some((a: Aula) => a.diaSemana === 0)
+  const aulasDoDiaVisivel = aulasVivas
+    .filter((a: Aula) => a.diaSemana === diaVisivel)
+    .sort((a: Aula, b: Aula) => a.inicio.localeCompare(b.inicio))
+
   const diasParaExibir: DiaSemana[] = [
     ...(temDomingo ? ([0] as DiaSemana[]) : []),
     1, 2, 3, 4, 5,
@@ -292,50 +301,63 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         <Botao
           texto={t('grade.adicionar_aula')}
           variante="cheio"
-          aoTocar={() => abrirCriacaoAula(1)}
+          aoTocar={() => abrirCriacaoAula(diaVisivel)}
         />
       </Linha>
 
       {aulasVivas.length === 0 ? (
         <Vazio texto={t('grade.sem_aulas')} />
       ) : (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.gradeContainer}>
-          {diasParaExibir.map((dia: DiaSemana) => {
-            const aulasDoDia = aulasVivas
-              .filter((a: Aula) => a.diaSemana === dia)
-              .sort((a: Aula, b: Aula) => a.inicio.localeCompare(b.inicio))
+        <View style={{ gap: espaco.g }}>
+          {/* Abas de dia. Antes a grade rolava na horizontal, uma coluna por
+              dia: num telefone isso esconde metade da semana fora da tela e
+              obriga a arrastar para descobrir que existe sexta. */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: espaco.s, paddingRight: espaco.g }}
+          >
+            {diasParaExibir.map((dia: DiaSemana) => (
+              <Pilula
+                key={dia}
+                texto={t(`dia.abrev.${dia}` as ChaveI18n)}
+                ativa={dia === diaVisivel}
+                aoTocar={() => setDiaVisivel(dia)}
+              />
+            ))}
+          </ScrollView>
 
-            return (
-              <View key={dia} style={e.colunaDia}>
-                <Text style={fonte.secao}>{t(`dia.completo.${dia}` as ChaveI18n)}</Text>
-                <View style={e.listaBlocos}>
-                  {aulasDoDia.map((aula: Aula) => {
-                    const materia = mapaMaterias[aula.materiaId]
-                    return (
-                      <Cartao
-                        key={aula.id}
-                        faixa={materia?.cor}
-                        aoTocar={() => abrirEdicaoAula(aula)}
-                      >
-                        <Titulo>{materia?.nome ?? ''}</Titulo>
-                        <Apoio>
-                          {aula.inicio} - {aula.fim}
-                          {aula.sala ? ` · ${aula.sala}` : ''}
-                        </Apoio>
-                        {aula.semana !== 'toda' ? (
-                          <Etiqueta texto={t(`grade.semana_${aula.semana}` as ChaveI18n)} />
-                        ) : null}
-                      </Cartao>
-                    )
-                  })}
-                  <Pressable style={e.botaoVazioDia} onPress={() => abrirCriacaoAula(dia)}>
-                    <Text style={fonte.apoio}>+ {t('grade.adicionar_aula')}</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )
-          })}
-        </ScrollView>
+          <View style={{ gap: espaco.m }}>
+            {aulasDoDiaVisivel.length === 0 ? (
+              <Vazio texto={t('hoje.sem_aulas')} />
+            ) : (
+              aulasDoDiaVisivel.map((aula: Aula) => {
+                const materia = mapaMaterias[aula.materiaId]
+                return (
+                  <Toque key={aula.id} aoTocar={() => abrirEdicaoAula(aula)} estilo={e.linhaAula}>
+                    <View style={e.horaAula}>
+                      <Text style={e.horaInicio}>{aula.inicio}</Text>
+                      <Text style={e.horaFim}>{aula.fim}</Text>
+                    </View>
+                    <Bolinha cor={materia?.cor ?? cores.texto3} />
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <Titulo>{materia?.nome ?? ''}</Titulo>
+                      {aula.sala ? <Apoio>{aula.sala}</Apoio> : null}
+                      {aula.semana !== 'toda' ? (
+                        <Etiqueta texto={t(`grade.semana_${aula.semana}` as ChaveI18n)} />
+                      ) : null}
+                    </View>
+                  </Toque>
+                )
+              })
+            )}
+            <Toque aoTocar={() => abrirCriacaoAula(diaVisivel)} estilo={e.botaoVazioDia}>
+              <Text style={[fonte.apoio, { color: cores.texto3 }]}>
+                + {t('grade.adicionar_aula')}
+              </Text>
+            </Toque>
+          </View>
+        </View>
       )}
 
       {/* Modal de Edição / Criação de Aula */}
@@ -600,9 +622,10 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 }
 
 const e = StyleSheet.create({
-  gradeContainer: { flexDirection: 'row', gap: espaco.m, paddingVertical: espaco.s },
-  colunaDia: { width: 220, gap: espaco.s },
-  listaBlocos: { gap: espaco.s },
+  linhaAula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
+  horaAula: { minWidth: 46, paddingTop: 1 },
+  horaInicio: { fontSize: 15, fontWeight: '600', color: cores.texto, fontVariant: ['tabular-nums'] },
+  horaFim: { fontSize: 13, color: cores.texto3, fontVariant: ['tabular-nums'] },
   botaoVazioDia: {
     padding: espaco.m,
     borderRadius: raio.m,

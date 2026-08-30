@@ -26,6 +26,7 @@ import {
   type ViewStyle,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Vidro, temLiquidGlass } from 'vidro'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
 export function Tela({ children, titulo }: { children: ReactNode; titulo?: string }) {
@@ -152,7 +153,14 @@ export function Etiqueta({ texto, cor }: { texto: string; cor?: string }) {
   )
 }
 
-/** Chip que liga e desliga: filtro, tipo, matéria, modo de aviso. */
+/**
+ * Chip que liga e desliga: filtro, tipo, matéria, modo de aviso.
+ *
+ * É vidro de verdade quando o aparelho tem (iOS 26), no mesmo molde que o
+ * LootFlow usa: `Vidro` com `overflow: hidden`, contorno fino, e tonalidade só
+ * quando a pílula está ativa. Abaixo do iOS 26 vira View com cor sólida — o
+ * `Vidro` não desenha nada por si, e sem o fallback a pílula sumiria.
+ */
 export function Pilula({
   texto,
   ativa,
@@ -165,8 +173,9 @@ export function Pilula({
   /** Bolinha à esquerda — usada quando a pílula representa uma matéria. */
   cor?: string
 }) {
-  return (
-    <Toque aoTocar={aoTocar} estilo={[e.pilula, ativa ? e.pilulaAtiva : null]}>
+  const comVidro = temLiquidGlass()
+  const conteudo = (
+    <>
       {cor ? <Bolinha cor={cor} tamanho={7} /> : null}
       <Text
         style={{
@@ -177,10 +186,40 @@ export function Pilula({
       >
         {texto}
       </Text>
+    </>
+  )
+
+  if (!comVidro) {
+    return (
+      <Toque aoTocar={aoTocar} estilo={[e.pilula, ativa ? e.pilulaAtiva : null]}>
+        {conteudo}
+      </Toque>
+    )
+  }
+
+  return (
+    <Toque aoTocar={aoTocar}>
+      <Vidro
+        raio={raio.pilula}
+        variante="regular"
+        interativo
+        tonalidade={ativa ? 'rgba(255,255,255,0.14)' : undefined}
+        style={e.pilulaVidro}
+      >
+        {conteudo}
+      </Vidro>
     </Toque>
   )
 }
 
+/**
+ * Botão. Vidro no iOS 26, no mesmo molde do LootFlow.
+ *
+ * `cheio` é o botão de AÇÃO e leva a cor de destaque como tonalidade do vidro —
+ * é assim que a Apple faz o botão proeminente do iOS 26: vidro tingido, não um
+ * retângulo chapado. `vazado` é o mesmo material sem tinta, e `discreto` não é
+ * vidro nenhum, porque um terceiro material na mesma tela vira ruído.
+ */
 export function Botao({
   texto,
   aoTocar,
@@ -190,17 +229,56 @@ export function Botao({
   aoTocar: () => void
   variante?: 'cheio' | 'vazado' | 'discreto'
 }) {
-  const estilo =
-    variante === 'cheio' ? e.botaoCheio : variante === 'vazado' ? e.botaoVazado : e.botaoDiscreto
-  // Cheio usa a cor de destaque, e só ele: destaque é AÇÃO. Botão secundário é
-  // vazado; se dois botões da mesma tela forem amarelos, nenhum é o principal.
+  const comVidro = temLiquidGlass()
   const corTexto =
-    variante === 'cheio' ? cores.sobreDestaque : variante === 'vazado' ? cores.texto : cores.textoFraco
+    variante === 'cheio' ? cores.texto : variante === 'vazado' ? cores.texto : cores.textoFraco
+  const rotulo = (
+    <Text style={{ fontSize: 16, fontWeight: '600', color: corTexto, textAlign: 'center' }}>
+      {texto}
+    </Text>
+  )
+
+  if (variante === 'discreto') {
+    return (
+      <Toque aoTocar={aoTocar} estilo={[e.botao, e.botaoDiscreto]}>
+        {rotulo}
+      </Toque>
+    )
+  }
+
+  if (!comVidro) {
+    // Sem Liquid Glass o cheio volta a ser sólido, e aí o texto precisa ser
+    // preto: amarelo com texto branco em cima não tem contraste.
+    return (
+      <Toque
+        aoTocar={aoTocar}
+        estilo={[e.botao, variante === 'cheio' ? e.botaoCheio : e.botaoVazado]}
+      >
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: variante === 'cheio' ? cores.sobreDestaque : cores.texto,
+            textAlign: 'center',
+          }}
+        >
+          {texto}
+        </Text>
+      </Toque>
+    )
+  }
+
   return (
-    <Toque aoTocar={aoTocar} estilo={[e.botao, estilo]}>
-      <Text style={{ fontSize: 16, fontWeight: '600', color: corTexto, textAlign: 'center' }}>
-        {texto}
-      </Text>
+    <Toque aoTocar={aoTocar} estilo={{ flex: 1 }}>
+      <Vidro
+        raio={raio.pilula}
+        variante="regular"
+        interativo
+        tonalidade={variante === 'cheio' ? 'rgba(255,214,10,0.34)' : undefined}
+        style={e.botaoVidro}
+      >
+        {rotulo}
+      </Vidro>
     </Toque>
   )
 }
@@ -263,6 +341,27 @@ const e = StyleSheet.create({
     paddingVertical: espaco.m + 2,
     borderRadius: raio.pilula,
     alignItems: 'center',
+  },
+  botaoVidro: {
+    paddingHorizontal: espaco.gg,
+    paddingVertical: espaco.m + 2,
+    borderRadius: raio.pilula,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: cores.borda,
+  },
+  pilulaVidro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: espaco.m + 2,
+    paddingVertical: espaco.s + 1,
+    borderRadius: raio.pilula,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: cores.borda,
   },
   botaoCheio: { backgroundColor: cores.destaque },
   botaoVazado: { borderWidth: 1, borderColor: cores.borda },
