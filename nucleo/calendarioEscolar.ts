@@ -19,8 +19,9 @@
 // Nada aqui apaga linha sozinho. A função classifica e diz por quê; quem decide
 // é a tela, mostrando o que vai entrar e o que vai ficar de fora.
 
-/** Quem está usando o app. Muda o que é relevante, não o que é verdade. */
-export type Papel = 'aluno' | 'responsavel'
+import type { Papel } from './modelo.ts'
+
+export type { Papel }
 
 export type EfeitoNoDia =
   /** Não tem aula: feriado, recesso, escola fechada. Vira feriado do período. */

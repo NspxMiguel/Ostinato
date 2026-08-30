@@ -206,7 +206,25 @@ export type Ajustes = {
   syncLigado: boolean
   /** Escola com semana A/B: qual semana do ano conta como "par". */
   inverterSemanaAlternada: boolean
+  /**
+   * Quem usa o app. Só o filtro do calendário da escola olha para isto — mas ele
+   * não funciona sem: reunião de pais é do responsável, e prova do 1º ano não é
+   * de quem está no 3º.
+   */
+  papel: Papel
+  /**
+   * As séries de quem usa. Lista porque um responsável pode ter dois filhos em
+   * séries diferentes, e aí as duas valem.
+   *
+   * Guardadas na forma normalizada que `seriesCitadas` devolve — `3a serie`,
+   * `ensino medio` — e não como a pessoa digitou, para a comparação não depender
+   * de acento nem de maiúscula.
+   */
+  minhasSeries: string[]
 }
+
+/** Quem está usando o app. Muda o que é relevante, não o que é verdade. */
+export type Papel = 'aluno' | 'responsavel'
 
 /** Ids fixos para os padrões: o usuário edita, e a edição substitui pelo id. */
 function regra(
@@ -269,6 +287,11 @@ export const PADROES_AVISO: Record<TipoCompromisso, RegraAviso[]> = {
 export function ajustesPadrao(): Ajustes {
   return {
     idioma: null,
+    // Aluno por padrão: é quem o app foi feito para atender, e responsável é o
+    // caso derivado. Série vazia significa "ainda não perguntei", e a tela de
+    // importação pergunta antes de filtrar qualquer coisa.
+    papel: 'aluno',
+    minhasSeries: [],
     padroesAviso: PADROES_AVISO,
     somAlarme: 'sino',
     limiteFaltasPadrao: 25,
