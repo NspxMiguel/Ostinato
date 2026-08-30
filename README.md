@@ -16,9 +16,10 @@ Swift is used only where iOS is genuinely better at something.
 
 ## What it does
 
-- **Reminders you actually configure.** How many days ahead, at what time, how many
-  times it repeats, and whether it nags like an alarm. Sensible defaults per kind of
-  work, so it is useful before you open settings.
+- **Reminders at three intensities.** Light, standard or heavy — named for the
+  outcome rather than the mechanism, because nobody assembles a rule from days,
+  hours, modes and repeat counts across six kinds of work. The rule editor is
+  still there for anyone who wants it, one section further down.
 - **Due dates anchored to a class.** "Next math class", "the class after next" — the
   app resolves it against your timetable, skipping holidays and alternating weeks.
 - **A timetable you can paste or photograph.** Paste the schedule your school sent,
@@ -27,6 +28,24 @@ Swift is used only where iOS is genuinely better at something.
   15 classes across eight subjects.
 - **Grades and absences.** What you need to score on the next test, and how many
   classes you can still miss before failing on attendance.
+- **The school calendar, filtered.** Paste or photograph the calendar your school
+  published and the app sorts it into three groups: days with no class, things
+  going to your agenda, and everything left out — each with the reason beside it,
+  and a tap to move anything between groups.
+
+  Lines are judged by what they change rather than what they are about, because
+  the subject does not separate them: a parents' meeting matters and a planning
+  meeting does not, and both are meetings. Teacher recess is a staff event that
+  still cancels your classes, so "closes the school" is decided before "concerns
+  staff". Audience comes from two facts asked once — student or guardian, and
+  which years — which is what resolves an exam belonging to another year.
+
+  Days with no class become holidays on the academic term, which is the part that
+  changes everything else: without it, "next maths class" resolves to a Tuesday
+  when the school is shut.
+
+  Measured against a real published calendar of 148 entries: a third-year student
+  sees 17 non-teaching days and 22 events, and 109 lines stay out.
 
 ## Reminder modes, and their honest limits
 
