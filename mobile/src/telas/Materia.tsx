@@ -356,19 +356,16 @@ function OutrosNomes({
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
           {apelidos.map((a) => (
-            <Toque
+            <Pilula
               key={a}
+              texto={`${a}  ×`}
               aoTocar={() =>
                 guardar('materias', {
                   id: materia.id,
                   apelidos: apelidos.filter((x) => x !== a),
                 })
               }
-              estilo={estiloApelido}
-            >
-              <Text style={fonte.corpo}>{a}</Text>
-              <Text style={[fonte.apoio, { fontSize: 16 }]}>×</Text>
-            </Toque>
+            />
           ))}
         </View>
       )}
@@ -380,14 +377,3 @@ function OutrosNomes({
   )
 }
 
-const estiloApelido = {
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  gap: espaco.s,
-  paddingHorizontal: espaco.m,
-  paddingVertical: espaco.s,
-  borderRadius: raio.pilula,
-  borderWidth: 1,
-  borderColor: cores.borda,
-  backgroundColor: cores.cartao,
-}
