@@ -360,10 +360,22 @@ function BarraDeAbas({
         </GlassView>
       ) : null}
 
-      {/* `clear`, não `regular`: a variante regular é a densa, feita para
-          conteúdo claro atrás. Sobre preto ela vira um cinza chapado, que é
-          exatamente o "opaco demais" — a clear deixa passar. */}
-      <GlassView glassEffectStyle="clear" isInteractive style={e.barra}>
+      {/* `clear` com uma tinta ESCURA de baixa opacidade.
+          
+          A regular é a variante densa, feita para conteúdo claro atrás: sobre
+          preto ela vira cinza chapado, que era o "opaco demais". A clear sozinha
+          vai longe demais na outra direção — o texto que passa por baixo compete
+          com os rótulos das abas e não dá para separar botão de fundo.
+          
+          Preto a 30% resolve os dois: escurece o que passa atrás sem tapar, e é
+          o que o próprio iOS faz numa barra sobre conteúdo escuro. Tinta não é
+          preenchimento — o material continua refratando. */}
+      <GlassView
+        glassEffectStyle="clear"
+        isInteractive
+        tintColor="rgba(0,0,0,0.30)"
+        style={e.barra}
+      >
         {ABAS.map((item) => (
           <Pressable
             key={item.id}

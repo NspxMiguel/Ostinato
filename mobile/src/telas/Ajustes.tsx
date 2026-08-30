@@ -44,7 +44,8 @@ function Campo({
   aoBlur,
   placeholder,
 }: {
-  rotulo: string
+  /** Sem rótulo o campo desenha só a caixa — para linhas que já têm o nome. */
+  rotulo?: string
   valor: string
   aoMudar: (v: string) => void
   teclado?: 'numeric' | 'default'
@@ -52,8 +53,8 @@ function Campo({
   placeholder?: string
 }) {
   return (
-    <View style={{ gap: espaco.xs, flex: 1 }}>
-      <Apoio>{rotulo}</Apoio>
+    <View style={{ gap: espaco.xs, flex: rotulo ? 1 : undefined }}>
+      {rotulo ? <Apoio>{rotulo}</Apoio> : null}
       <TextInput
         style={estilo.campo}
         value={valor}
@@ -167,7 +168,8 @@ function CampoNumero({
   valor,
   aoConfirmar,
 }: {
-  rotulo: string
+  /** Opcional: numa linha que já tem rótulo à esquerda, repetir é ruído. */
+  rotulo?: string
   valor: number
   aoConfirmar: (n: number) => void
 }) {
@@ -349,13 +351,19 @@ export function Ajustes() {
             aoTocar={() => setPeriodoAberto(true)}
           />
           <View style={estilo.bloco}>
+            {/* Um rótulo só. O campo trazia o próprio ("Porcentagem") empilhado
+                acima do número, ao lado de "Limite de faltas" à esquerda — dois
+                rótulos desalinhados para uma coisa só, e a linha parecia
+                quebrada. O sufixo % diz o que o rótulo repetia. */}
             <Linha entre>
               <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
-              <CampoNumero
-                rotulo={t('ajustes.porcentagem')}
-                valor={ajustes.limiteFaltasPadrao}
-                aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
+                <CampoNumero
+                  valor={ajustes.limiteFaltasPadrao}
+                  aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+                />
+                <Apoio>%</Apoio>
+              </View>
             </Linha>
           </View>
         </Grupo>
