@@ -5,12 +5,12 @@
  * para `generic/platform=iOS`:
  *
  *   error: No Accounts: Add a new account in Accounts settings. (target 'Ostinato')
- *   error: No profiles for 'dev.nspx.ostinato' were found       (target 'Ostinato')
- *   error: No profiles for 'dev.nspx.ostinato.widget' were found (target 'OstinatoAtividade')
+ *   error: No profiles for 'com.ostinato.app' were found       (target 'Ostinato')
+ *   error: No profiles for 'com.ostinato.app.widget' were found (target 'OstinatoAtividade')
  *
  * Repare que o alvo do APP falha igual. A explicacao nao e a Apple recusar a
  * capability: o `xcodebuild` nao CRIA nem ATUALIZA perfil, so usa o que ja esta
- * em cache — e nao ha nenhum perfil de `dev.nspx.ostinato` em
+ * em cache — e nao ha nenhum perfil de `com.ostinato.app` em
  * ~/Library/Developer/Xcode/UserData/Provisioning Profiles/. Um archive pela
  * interface do Xcode cria o perfil, e a linha de comando volta a funcionar.
  *

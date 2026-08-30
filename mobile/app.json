@@ -8,7 +8,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "dev.nspx.ostinato",
+      "bundleIdentifier": "com.ostinato.app",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -23,10 +23,10 @@
         "NSSpeechRecognitionUsageDescription": "Para transformar o que você fala em tarefa. O reconhecimento roda no próprio aparelho."
       },
       "icon": "./assets/icone.png",
-      "appleTeamId": "ZTJU92P9H4"
+      "appleTeamId": "SW36PU2B3T"
     },
     "android": {
-      "package": "dev.nspx.ostinato",
+      "package": "com.ostinato.app",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icone.png",

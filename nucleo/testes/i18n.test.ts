@@ -5,7 +5,7 @@ import { MARCA } from '../marca.ts'
 
 test('marca do aplicativo possui valores corretos', () => {
   assert.equal(MARCA.nome, 'Ostinato')
-  assert.equal(MARCA.identificador, 'dev.nspx.ostinato')
+  assert.equal(MARCA.identificador, 'com.ostinato.app')
 })
 
 test('traduções básicas em português', () => {

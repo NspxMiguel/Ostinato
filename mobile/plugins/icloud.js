@@ -14,13 +14,13 @@
  * entitlement E define `OSTINATO_ICLOUD`. Os dois nascem juntos e nao tem como
  * discordar — sem conta paga, o binario nem menciona CKContainer.
  *
- * O dia de ligar: comprar a conta, criar o container iCloud.dev.nspx.ostinato no
+ * O dia de ligar: comprar a conta, criar o container iCloud.com.ostinato.app no
  * painel da Apple, criar os seis record types de docs/CLOUDKIT.md, e trocar
  * `extra.icloud` para true.
  */
 const { withEntitlementsPlist, withXcodeProject } = require('expo/config-plugins')
 
-const CONTAINER = 'iCloud.dev.nspx.ostinato'
+const CONTAINER = 'iCloud.com.ostinato.app'
 
 function comEntitlements(config) {
   return withEntitlementsPlist(config, (cfg) => {

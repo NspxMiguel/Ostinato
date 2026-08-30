@@ -5,7 +5,7 @@ arrives the setup is mechanical rather than archaeological.
 
 ## Container
 
-`iCloud.dev.nspx.ostinato`, **private database only**. Nothing about a student's
+`iCloud.com.ostinato.app`, **private database only**. Nothing about a student's
 schedule belongs in a public or shared database.
 
 ## Zone
@@ -84,7 +84,7 @@ disagree — without a paid account, the binary does not even mention `CKContain
    measured here — declare it, Archive once from the Xcode interface, and read
    the profile with `security cms -D -i <profile> | plutil -extract Entitlements xml1 -o - -`.
    The paid account is the certain path, not the only one worth testing.
-2. Create the container `iCloud.dev.nspx.ostinato` in the Apple developer portal.
+2. Create the container `iCloud.com.ostinato.app` in the Apple developer portal.
 3. Create the six record types above in the CloudKit dashboard, mark `tabela` and
    `atualizadoEm` queryable, then deploy the schema to production.
 4. Set `extra.icloud` to `true` in `mobile/app.json` and run `expo prebuild`.
@@ -100,13 +100,13 @@ app and the extension:
 
 ```
 error: No Accounts: Add a new account in Accounts settings. (in target 'Ostinato')
-error: No profiles for 'dev.nspx.ostinato' were found (in target 'Ostinato')
-error: No profiles for 'dev.nspx.ostinato.widget' were found (in target 'OstinatoAtividade')
+error: No profiles for 'com.ostinato.app' were found (in target 'Ostinato')
+error: No profiles for 'com.ostinato.app.widget' were found (in target 'OstinatoAtividade')
 ```
 
 The explanation is not that Apple refuses the capability. It is that
 **`xcodebuild` never creates or updates a provisioning profile — it only uses one
-that is already cached.** There is no `dev.nspx.ostinato` profile in
+that is already cached.** There is no `com.ostinato.app` profile in
 `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, so it fails at the
 main target before reaching anything else. One Archive from the Xcode interface
 mints the profile, and the command line works from then on.
