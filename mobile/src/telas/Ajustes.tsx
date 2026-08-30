@@ -13,6 +13,7 @@ import { dataDe } from '../../../nucleo/tempo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
+import { NIVEIS, avisosPorIntensidade, intensidadeDe } from '../../../nucleo/intensidade.ts'
 import {
   Apoio,
   Botao,
@@ -229,11 +230,17 @@ export function Ajustes() {
       vivo = false
     }
   }, [])
+  // Cada motivo tem o seu texto. Antes qualquer coisa que não fosse "sem conta
+  // iCloud" caía em "precisa de conta paga" — o que passou a ser mentira no dia
+  // em que a conta paga entrou, e continuava aparecendo porque o motivo real era
+  // outro: o CloudKit não está compilado nesta versão.
   const textoDaNuvem = nuvem?.ligada
     ? t('ajustes.sync_ligado')
     : nuvem?.motivo === 'sem-conta-icloud'
       ? t('ajustes.sync_sem_conta')
-      : t('ajustes.indisponivel_dev_pago')
+      : nuvem?.motivo === 'sem-modulo' || nuvem?.motivo === 'sem-entitlement-icloud'
+        ? t('ajustes.sync_nao_incluido')
+        : t('ajustes.sync_indisponivel')
   const base = usarLoja((s) => s.base)
   const ajustes = usarLoja((s) => s.ajustes)
   const mudarAjustes = usarLoja((s) => s.mudarAjustes)
@@ -292,9 +299,9 @@ export function Ajustes() {
           <LinhaDeMenu
             key={tipo}
             titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
-            valor={t('ajustes.avisos_agendados', {
-              n: (ajustes.padroesAviso[tipo] ?? []).length,
-            })}
+            valor={t(
+              `ajustes.nivel.${intensidadeDe(tipo, ajustes.padroesAviso[tipo] ?? [])}` as ChaveI18n,
+            )}
             aoTocar={() => setTipoAberto(tipo)}
           />
         ))}
@@ -361,7 +368,36 @@ export function Ajustes() {
       >
         {tipoAberto ? (
           <Tela titulo={t(`compromisso.tipo.singular.${tipoAberto}` as ChaveI18n)}>
-            <Secao titulo={t('ajustes.padroes_aviso_tipo')}>
+            {/* Três escolhas nomeadas pelo RESULTADO, e o editor cru atrás de
+                "personalizar". Montar regra por regra — dias, hora, modo,
+                repetição — vezes seis tipos é trabalho que ninguém faz: a pessoa
+                olha, cansa, e sai com o padrão. */}
+            <Secao titulo={t('ajustes.avisos')}>
+              <Fileira>
+                {NIVEIS.map((n) => (
+                  <Pilula
+                    key={n}
+                    texto={t(`ajustes.nivel.${n}` as ChaveI18n)}
+                    ativa={intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? []) === n}
+                    aoTocar={() =>
+                      mudarAjustes({
+                        padroesAviso: {
+                          ...ajustes.padroesAviso,
+                          [tipoAberto]: avisosPorIntensidade(tipoAberto, n),
+                        },
+                      })
+                    }
+                  />
+                ))}
+              </Fileira>
+              <Apoio>
+                {t(
+                  `ajustes.nivel.expl.${intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? [])}` as ChaveI18n,
+                )}
+              </Apoio>
+            </Secao>
+
+            <Secao titulo={t('ajustes.personalizar')}>
               {(ajustes.padroesAviso[tipoAberto] ?? []).length === 0 ? (
                 <Vazio texto={t('ajustes.sem_regras')} />
               ) : (
@@ -380,6 +416,7 @@ export function Ajustes() {
                 aoTocar={() => adicionarRegra(tipoAberto)}
               />
             </Secao>
+
             <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setTipoAberto(null)} />
           </Tela>
         ) : null}
