@@ -83,7 +83,39 @@ const FECHA_A_ESCOLA = [
 
 const AVALIACAO = ['prova', 'simulado', 'avaliacao', 'recuperacao', 'exame', 'vestibular', 'enem']
 const PRESENCA = ['reuniao de pais', 'entrega de boletim', 'conselho de classe com pais']
-const EVENTO = ['festa', 'festival', 'palestra', 'feira', 'mostra', 'formatura', 'gincana', 'retiro']
+/**
+ * O que acontece na escola e o aluno quer saber.
+ *
+ * Esportivo entra junto por pedido dele: jogos internos, interclasse e
+ * campeonato são exatamente o tipo de linha que o aluno procura no calendário e
+ * que um filtro focado em "prova e feriado" descartaria.
+ *
+ * `retiro` fica de fora desta lista de propósito — no calendário da escola dele
+ * ele aparece como "Retiro com todos os colaboradores", que é confraternização
+ * de funcionário. Retiro DE ALUNO existe, e é por isso que a linha ainda passa
+ * pelo teste de cargo antes: quem decide é quem está citado.
+ */
+const EVENTO = [
+  'festa',
+  'festival',
+  'palestra',
+  'feira',
+  'mostra',
+  'formatura',
+  'gincana',
+  'jogos',
+  'interclasse',
+  'campeonato',
+  'torneio',
+  'olimpiada',
+  'amistoso',
+  'excursao',
+  'passeio',
+  'acampamento',
+  'apresentacao',
+  'sarau',
+  'aula de campo',
+]
 
 /**
  * As séries citadas no texto.
@@ -143,6 +175,9 @@ export function classificar(texto: string): LinhaClassificada {
     return { texto, efeito: 'interno', series, para: 'funcionarios', porque: 'assunto-de-funcionario' }
   }
 
+  // Este teste vem DEPOIS do de cargo: "Retiro com todos os colaboradores" é
+  // confraternização de funcionário, e "Festa junina" é da escola. A diferença
+  // está em quem a linha cita, não na palavra do evento.
   if (EVENTO.some((p) => t.includes(p))) {
     return { texto, efeito: 'evento', series, para: 'escola', porque: 'evento-aberto' }
   }

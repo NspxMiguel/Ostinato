@@ -91,3 +91,34 @@ test('linha sem sinal nenhum não é adivinhada', () => {
   assert.equal(c.efeito, 'interno')
   assert.equal(c.porque, 'sem-sinal')
 })
+
+test('jogos internos são evento do aluno, não ruído', () => {
+  // Pedido dele em 30/08/2026: "e colocar jogos internos também eu acho".
+  for (const linha of [
+    'Jogos Internos — 1ª a 3ª série',
+    'Interclasse de vôlei',
+    'Campeonato de futsal',
+    'Olimpíada de Matemática',
+    'Festa Junina',
+  ]) {
+    assert.equal(classificar(linha).efeito, 'evento', linha)
+  }
+})
+
+test('jogos que suspendem aula contam como dia sem aula', () => {
+  // O efeito vence a categoria: se não tem aula, isso é o que muda o dia.
+  const c = classificar('Jogos Internos — não haverá aula')
+  assert.equal(c.efeito, 'semAula')
+})
+
+test('retiro de funcionário continua fora, apesar de parecer evento', () => {
+  const c = classificar('Retiro com todos os colaboradores')
+  assert.equal(c.efeito, 'interno')
+  assert.equal(c.porque, 'assunto-de-funcionario')
+})
+
+test('jogos de outra série não entram na minha agenda', () => {
+  const c = classificar('Jogos Internos — 1ª série')
+  assert.equal(ehParaMim(c, 'aluno', ['3a serie']), false)
+  assert.equal(ehParaMim(c, 'aluno', ['1a serie']), true)
+})
