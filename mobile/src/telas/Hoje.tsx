@@ -9,7 +9,7 @@ import { dataDe, diaSemanaDe, horaDe, instante, somarDias } from '../../../nucle
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { criarT } from '../../../nucleo/i18n.ts'
 import { Apoio, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
-import { dataPorExtenso, quandoPorExtenso } from '../formato.ts'
+import { comInicialMinuscula, dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores } from '../tema.ts'
@@ -121,7 +121,9 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
                     {aviso ? (
                       <Apoio>
                         {t('hoje.aviso_quando', {
-                          quando: quandoPorExtenso(dataDe(aviso.quando), horaDe(aviso.quando), hojeISO, t, idioma),
+                          quando: comInicialMinuscula(
+                            quandoPorExtenso(dataDe(aviso.quando), horaDe(aviso.quando), hojeISO, t, idioma),
+                          ),
                         })}
                       </Apoio>
                     ) : null}

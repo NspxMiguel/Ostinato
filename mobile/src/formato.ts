@@ -93,3 +93,14 @@ export function rotuloDeRegra(regra: RegraAviso, t: T): string {
   const horas = Math.round(min / 60)
   return horas === 1 ? t('avisos.hora_antes') : t('avisos.horas_antes', { n: horas })
 }
+
+/**
+ * "Amanhã às 20:00" -> "amanhã às 20:00".
+ *
+ * A mesma string começa uma linha ("Amanhã") e aparece no meio de outra
+ * ("Avisa você Amanhã às 20:00"). Duplicar a chave por causa de uma letra seria
+ * pior: sobra uma para esquecer de traduzir.
+ */
+export function comInicialMinuscula(texto: string): string {
+  return texto.length === 0 ? texto : texto[0]!.toLocaleLowerCase() + texto.slice(1)
+}
