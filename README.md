@@ -61,9 +61,11 @@ tie-break so two devices reach the same answer without talking — is written an
 tested against an in-memory two-device simulation, including a hundred-round
 randomized convergence check.
 
-CloudKit transport is written and dormant: the iCloud entitlement is not issued to a
-free Apple account. The day it is enabled, syncing is a change of transport, not of
-logic. Android and Google-account sync implement the same interface. See
+CloudKit transport is written and compiled out behind one flag. Whether a free
+Apple team can carry the iCloud entitlement has not been measured here — it is
+gated because shipping code that needs an entitlement you may not have is how you
+get a crash, not because Apple is known to refuse it. The day it is enabled,
+syncing is a change of transport, not of logic. Android and Google-account sync implement the same interface. See
 [docs/CLOUDKIT.md](docs/CLOUDKIT.md).
 
 ## Stack

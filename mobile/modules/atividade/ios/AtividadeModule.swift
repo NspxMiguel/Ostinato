@@ -4,9 +4,16 @@ import ActivityKit
 /**
  Liga e desliga a Live Activity da proxima entrega.
 
- Live Activity NAO precisa de App Group nem de conta paga: o conteudo viaja do
- app para a extensao pelo proprio ActivityKit. Widget de tela de inicio precisaria
- de App Group, que time pessoal da Apple nao emite — e por isso ele nao esta aqui.
+ Live Activity NAO precisa de App Group: o conteudo viaja do app para a extensao
+ pelo proprio ActivityKit, em processo. Widget de tela de inicio precisaria de um
+ App Group para ler os dados — e por isso ele nao esta aqui ainda.
+
+ (Uma correcao honesta: eu escrevi antes que "conta gratuita nao emite App Group".
+ Isso NAO foi medido por mim, e outra sessao mediu o contrario num projeto irmao
+ em 30/08/2026 — o perfil nasceu com o App Group numa conta gratuita, depois de um
+ archive pela interface do Xcode. O que esta medido aqui e outra coisa: o
+ `xcodebuild` nao CRIA perfil, so usa o que ja esta em cache, e por isso capability
+ nova falha na linha de comando com mensagem que parece recusa da Apple.)
 
  Uma atividade por vez, de proposito: sao "a proxima entrega", nao uma lista. Tres
  delas empilhadas na tela de bloqueio seriam ruido, e ruido e o que faz a pessoa

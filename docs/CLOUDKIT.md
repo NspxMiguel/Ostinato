@@ -80,8 +80,10 @@ disagree — without a paid account, the binary does not even mention `CKContain
 
 ## Turning it on
 
-1. Buy the Apple Developer account (the iCloud entitlement is not issued to a
-   personal team).
+1. Try it first. Whether a free team can carry the iCloud entitlement was never
+   measured here — declare it, Archive once from the Xcode interface, and read
+   the profile with `security cms -D -i <profile> | plutil -extract Entitlements xml1 -o - -`.
+   The paid account is the certain path, not the only one worth testing.
 2. Create the container `iCloud.dev.nspx.ostinato` in the Apple developer portal.
 3. Create the six record types above in the CloudKit dashboard, mark `tabela` and
    `atualizadoEm` queryable, then deploy the schema to production.
@@ -90,21 +92,34 @@ disagree — without a paid account, the binary does not even mention `CKContain
 5. Turn the app's sync setting on. Nothing else changes: `PortaCloudKit` already
    implements the same interface the tests exercise.
 
-## The other two things a free Apple account blocks
+## What is actually measured about device builds
 
-Measured on 2026-08-30 with `xcodebuild -allowProvisioningUpdates`, building for
-`generic/platform=iOS`:
+On 2026-08-30, `xcodebuild -allowProvisioningUpdates` building for
+`generic/platform=iOS` failed with four errors — two per target, for **both** the
+app and the extension:
 
 ```
-error: No profiles for 'dev.nspx.ostinato.widget' were found: Xcode couldn't find
-any iOS App Development provisioning profiles matching 'dev.nspx.ostinato.widget'
-(in target 'OstinatoAtividade')
+error: No Accounts: Add a new account in Accounts settings. (in target 'Ostinato')
+error: No profiles for 'dev.nspx.ostinato' were found (in target 'Ostinato')
+error: No profiles for 'dev.nspx.ostinato.widget' were found (in target 'OstinatoAtividade')
 ```
 
-It is not a missing permission — **a free account issues no provisioning profile
-for any extension target at all**, and `-allowProvisioningUpdates` does not help.
-Since the extension ships embedded in the app, it takes the whole device build
-down with it.
+The explanation is not that Apple refuses the capability. It is that
+**`xcodebuild` never creates or updates a provisioning profile — it only uses one
+that is already cached.** There is no `dev.nspx.ostinato` profile in
+`~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, so it fails at the
+main target before reaching anything else. One Archive from the Xcode interface
+mints the profile, and the command line works from then on.
+
+A correction worth writing down, because the wrong version was here first: the
+claim that a free account *refuses* App Groups was never measured. A sibling
+project measured the opposite on the same machine — the profile came back
+carrying `com.apple.security.application-groups` on a free team, after an Archive
+from the interface. The same doubt applies to iCloud below: it is stated as
+untested, not as refused.
+
+None of this touches the Simulator, which requires no profile at all. That is why
+the Live Activity and the Dynamic Island already work and were verified running.
 
 None of this applies to the Simulator, which requires no profile. That is why the
 Live Activity and the Dynamic Island already work and were verified running.
