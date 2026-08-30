@@ -3,6 +3,17 @@
 // Existe para que telas escritas por pessoas (e agentes) diferentes não virem
 // três apps dentro de um. Tela nova compõe estas peças; se faltar alguma, ela
 // nasce AQUI, não solta dentro de uma tela.
+//
+// A regra que governa este arquivo desde o redesenho de 30/08/2026:
+//
+//   LISTA NÃO TEM CARTÃO E NÃO TEM BORDA. A separação entre itens é ESPAÇO.
+//
+// Cartão com contorno em cima de preto puro devolve a "grade de caixinhas" que
+// todo gerador produz. Sem contorno, o que separa os itens é o vazio — e o vazio
+// é parte do desenho, não sobra.
+//
+// Sombra em caixa não existe aqui. Elevação, quando precisa existir, é feita com
+// branco em alfa (`cartao`, `cartaoAlto`), que é o que o iOS faz.
 
 import { useState, type ReactNode } from 'react'
 import {
@@ -23,7 +34,13 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
     <View style={[e.tela, { paddingTop: margem.top }]}>
       {titulo ? <Text style={[fonte.titulo, e.tituloTela]}>{titulo}</Text> : null}
       <ScrollView
-        contentContainerStyle={{ padding: espaco.g, paddingBottom: margem.bottom + 96, gap: espaco.m }}
+        contentContainerStyle={{
+          padding: espaco.g,
+          // A barra de abas flutua por cima: o conteúdo precisa poder passar
+          // por baixo dela sem que o último item fique inalcançável.
+          paddingBottom: margem.bottom + 112,
+          gap: espaco.gg,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {children}
@@ -34,9 +51,11 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
 
 export function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <View style={{ gap: espaco.s }}>
-      <Text style={fonte.secao}>{titulo.toUpperCase()}</Text>
-      {children}
+    <View style={{ gap: espaco.m }}>
+      {/* Sentence case. Caixa alta em rótulo de seção é maneirismo de painel
+          administrativo, e o iOS parou de fazer isso faz anos. */}
+      <Text style={fonte.secao}>{titulo}</Text>
+      <View style={{ gap: espaco.m }}>{children}</View>
     </View>
   )
 }
@@ -75,6 +94,26 @@ export function Toque({
   )
 }
 
+/** A bolinha de cor da matéria. É identidade de item, não decoração. */
+export function Bolinha({ cor, tamanho = 9 }: { cor: string; tamanho?: number }) {
+  return (
+    <View
+      style={{
+        width: tamanho,
+        height: tamanho,
+        borderRadius: tamanho / 2,
+        backgroundColor: cor,
+      }}
+    />
+  )
+}
+
+/**
+ * Uma linha de lista. Sem fundo, sem contorno, sem sombra.
+ *
+ * Mantém o nome `Cartao` porque as sete telas já o chamam assim — mas ele deixou
+ * de desenhar um cartão em 30/08/2026, e o nome é o único resto disso.
+ */
 export function Cartao({
   children,
   aoTocar,
@@ -82,31 +121,63 @@ export function Cartao({
 }: {
   children: ReactNode
   aoTocar?: () => void
-  /** Cor da tarja lateral — normalmente a cor da matéria. */
+  /** Cor da matéria. Vira bolinha, não mais tarja lateral. */
   faixa?: string
 }) {
-  const conteudo = (
-    <View style={e.cartao}>
-      {faixa ? <View style={[e.faixa, { backgroundColor: faixa }]} /> : null}
-      <View style={{ flex: 1, gap: espaco.xs }}>{children}</View>
-    </View>
+  return (
+    <Toque aoTocar={aoTocar} estilo={e.linhaDeLista}>
+      {faixa ? <View style={{ paddingTop: 6 }}><Bolinha cor={faixa} /></View> : null}
+      <View style={{ flex: 1, gap: 3 }}>{children}</View>
+    </Toque>
   )
-  return <Toque aoTocar={aoTocar}>{conteudo}</Toque>
 }
 
 export function Titulo({ children }: { children: ReactNode }) {
-  return <Text style={[fonte.corpo, { fontWeight: '600' }]}>{children}</Text>
+  return <Text style={fonte.tituloItem}>{children}</Text>
 }
 
 export function Apoio({ children, cor }: { children: ReactNode; cor?: string }) {
   return <Text style={[fonte.apoio, cor ? { color: cor } : undefined]}>{children}</Text>
 }
 
-export function Etiqueta({ texto, cor = cores.cartaoAlto }: { texto: string; cor?: string }) {
+export function Etiqueta({ texto, cor }: { texto: string; cor?: string }) {
+  // Sem `cor`, a etiqueta é neutra. Com `cor`, ela é ESTADO — e aí o texto herda
+  // a cor e o fundo fica translúcido, para não virar um bloco chapado.
   return (
-    <View style={[e.etiqueta, { backgroundColor: cor }]}>
-      <Text style={{ fontSize: 11, fontWeight: '700', color: cores.texto }}>{texto}</Text>
+    <View style={[e.etiqueta, cor ? { borderColor: cor } : null]}>
+      <Text style={{ fontSize: 11, fontWeight: '600', color: cor ?? cores.textoFraco }}>
+        {texto}
+      </Text>
     </View>
+  )
+}
+
+/** Chip que liga e desliga: filtro, tipo, matéria, modo de aviso. */
+export function Pilula({
+  texto,
+  ativa,
+  aoTocar,
+  cor,
+}: {
+  texto: string
+  ativa?: boolean
+  aoTocar?: () => void
+  /** Bolinha à esquerda — usada quando a pílula representa uma matéria. */
+  cor?: string
+}) {
+  return (
+    <Toque aoTocar={aoTocar} estilo={[e.pilula, ativa ? e.pilulaAtiva : null]}>
+      {cor ? <Bolinha cor={cor} tamanho={7} /> : null}
+      <Text
+        style={{
+          fontSize: 14,
+          fontWeight: ativa ? '600' : '400',
+          color: ativa ? cores.texto : cores.textoFraco,
+        }}
+      >
+        {texto}
+      </Text>
+    </Toque>
   )
 }
 
@@ -121,10 +192,15 @@ export function Botao({
 }) {
   const estilo =
     variante === 'cheio' ? e.botaoCheio : variante === 'vazado' ? e.botaoVazado : e.botaoDiscreto
-  const corTexto = variante === 'cheio' ? cores.fundo : cores.texto
+  // Cheio usa a cor de destaque, e só ele: destaque é AÇÃO. Botão secundário é
+  // vazado; se dois botões da mesma tela forem amarelos, nenhum é o principal.
+  const corTexto =
+    variante === 'cheio' ? cores.sobreDestaque : variante === 'vazado' ? cores.texto : cores.textoFraco
   return (
     <Toque aoTocar={aoTocar} estilo={[e.botao, estilo]}>
-      <Text style={{ fontWeight: '700', color: corTexto, textAlign: 'center' }}>{texto}</Text>
+      <Text style={{ fontSize: 16, fontWeight: '600', color: corTexto, textAlign: 'center' }}>
+        {texto}
+      </Text>
     </Toque>
   )
 }
@@ -132,7 +208,7 @@ export function Botao({
 export function Vazio({ texto }: { texto: string }) {
   return (
     <View style={e.vazio}>
-      <Text style={[fonte.apoio, { textAlign: 'center' }]}>{texto}</Text>
+      <Text style={[fonte.apoio, { textAlign: 'center', color: cores.texto3 }]}>{texto}</Text>
     </View>
   )
 }
@@ -152,28 +228,43 @@ export function Linha({ children, entre }: { children: ReactNode; entre?: boolea
   )
 }
 
+/** Fileira de pílulas que quebra linha. PT e FR correm ~30% mais longos que EN. */
+export function Fileira({ children }: { children: ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>{children}</View>
+  )
+}
+
 const e = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  tituloTela: { paddingHorizontal: espaco.g, paddingTop: espaco.m },
-  cartao: {
-    flexDirection: 'row',
-    gap: espaco.m,
-    backgroundColor: cores.cartao,
-    borderRadius: raio.m,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: cores.borda,
-    padding: espaco.m,
-  },
-  faixa: { width: 4, borderRadius: raio.pilula, alignSelf: 'stretch' },
-  pressionado: { opacity: 0.6 },
+  tituloTela: { paddingHorizontal: espaco.g, paddingTop: espaco.s, paddingBottom: espaco.xs },
+  linhaDeLista: { flexDirection: 'row', gap: espaco.m, alignItems: 'flex-start' },
+  pressionado: { opacity: 0.55 },
   etiqueta: {
     paddingHorizontal: espaco.s,
     paddingVertical: 2,
     borderRadius: raio.pilula,
+    borderWidth: 1,
+    borderColor: cores.borda,
     alignSelf: 'flex-start',
   },
-  botao: { paddingHorizontal: espaco.g, paddingVertical: espaco.m, borderRadius: raio.m, alignItems: 'center' },
-  botaoCheio: { backgroundColor: cores.marfim },
+  pilula: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: espaco.m + 2,
+    paddingVertical: espaco.s + 1,
+    borderRadius: raio.pilula,
+    backgroundColor: cores.cartao,
+  },
+  pilulaAtiva: { backgroundColor: cores.cartaoAlto },
+  botao: {
+    paddingHorizontal: espaco.gg,
+    paddingVertical: espaco.m + 2,
+    borderRadius: raio.pilula,
+    alignItems: 'center',
+  },
+  botaoCheio: { backgroundColor: cores.destaque },
   botaoVazado: { borderWidth: 1, borderColor: cores.borda },
   botaoDiscreto: { backgroundColor: 'transparent' },
   vazio: { paddingVertical: espaco.ggg, alignItems: 'center' },

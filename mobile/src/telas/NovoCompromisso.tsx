@@ -16,8 +16,9 @@ import type {
   TipoCompromisso,
   Vencimento,
 } from '../../../nucleo/modelo.ts'
-import { TIPOS_COMPROMISSO, avisosDe } from '../../../nucleo/modelo.ts'
+import { LOCALE_DO_IDIOMA, TIPOS_COMPROMISSO, avisosDe } from '../../../nucleo/modelo.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
+import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { momentoPorExtenso, rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
@@ -263,34 +264,14 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
             </Linha>
 
             {vencimento.tipo === 'data' ? (
-              <Linha entre>
-                <View style={[e.campo, { flex: 1 }]}>
-                  <Text style={fonte.secao}>{t('novo_compromisso.data')}</Text>
-                  <TextInput
-                    style={e.input}
-                    value={vencimento.data}
-                    onChangeText={(val) => setVencimento({ ...vencimento, data: val })}
-                    placeholder="AAAA-MM-DD"
-                    placeholderTextColor={cores.textoFraco}
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    selectTextOnFocus
-                  />
-                </View>
-                <View style={[e.campo, { flex: 1 }]}>
-                  <Text style={fonte.secao}>{t('novo_compromisso.hora')}</Text>
-                  <TextInput
-                    style={e.input}
-                    value={vencimento.hora ?? '23:59'}
-                    onChangeText={(val) => setVencimento({ ...vencimento, hora: val })}
-                    placeholder="HH:MM"
-                    placeholderTextColor={cores.textoFraco}
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    selectTextOnFocus
-                  />
-                </View>
-              </Linha>
+              <SeletorDeData
+                data={vencimento.data}
+                hora={vencimento.hora ?? '23:59'}
+                locale={LOCALE_DO_IDIOMA[idioma]}
+                rotuloData={t('novo_compromisso.data')}
+                rotuloHora={t('novo_compromisso.hora')}
+                aoMudar={(data, hora) => setVencimento({ tipo: 'data', data, hora })}
+              />
             ) : (
               <View style={{ gap: espaco.s }}>
                 <Text style={fonte.secao}>{t('novo_compromisso.ocorrencia')}</Text>

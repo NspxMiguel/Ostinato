@@ -59,7 +59,9 @@
       ],
       "expo-audio",
       "expo-background-task",
-      "./plugins/widget"
+      "./plugins/grupo",
+      "./plugins/widget",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "icloud": false,

@@ -46,3 +46,34 @@ export async function esconderAtividade(): Promise<number> {
     return 0
   }
 }
+
+export type ItemDoResumo = {
+  id: string
+  titulo: string
+  materia: string
+  tipo: string
+  /** Epoch em SEGUNDOS. O widget formata — o idioma e o fuso são decididos lá. */
+  venceEm: number
+  cor: string
+  atrasado: boolean
+}
+
+/**
+ * Deposita o resumo que o widget de tela de início lê, e pede recarga.
+ *
+ * Devolve `false` quando o App Group não existe no binário — que é o modo de
+ * falha silencioso deste caminho: sem o grupo o widget aparece na galeria e
+ * desenha vazio, sem erro em lugar nenhum.
+ */
+export function salvarResumo(itens: ItemDoResumo[]): boolean {
+  if (!modulo) return false
+  try {
+    return (
+      (modulo.salvarResumo?.(
+        JSON.stringify({ itens, atualizadoEm: Date.now() / 1000 }),
+      ) as boolean) ?? false
+    )
+  } catch {
+    return false
+  }
+}

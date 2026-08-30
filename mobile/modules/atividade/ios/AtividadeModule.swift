@@ -1,5 +1,6 @@
 import ExpoModulesCore
 import ActivityKit
+import WidgetKit
 
 /**
  Liga e desliga a Live Activity da proxima entrega.
@@ -67,6 +68,25 @@ public class AtividadeModule: Module {
       } catch {
         promise.reject("atividade", error.localizedDescription)
       }
+    }
+
+    /**
+     Deposita o resumo que o widget de tela de inicio le, e pede recarga.
+
+     O widget roda em outro processo e nao enxerga o armazenamento do app. O unico
+     canal e o container do App Group — por isso o grupo precisa estar nos DOIS
+     alvos. Se ele faltar em um deles, `UserDefaults(suiteName:)` devolve nil, esta
+     funcao retorna false, e o widget desenha vazio sem erro nenhum. E por isso que
+     ela devolve Bool em vez de nao devolver nada: e o unico sinal que o lado JS
+     tem de que o canal existe.
+     */
+    Function("salvarResumo") { (json: String) -> Bool in
+      guard let defaults = UserDefaults(suiteName: "group.com.ostinato.app") else {
+        return false
+      }
+      defaults.set(json, forKey: "resumo")
+      WidgetCenter.shared.reloadAllTimelines()
+      return true
     }
 
     AsyncFunction("esconder") { (promise: Promise) in

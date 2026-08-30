@@ -24,6 +24,7 @@ import {
 import { pararAlarme, tocarAlarme } from './avisos/alarme.ts'
 import { registrarTarefaDeFundo } from './avisos/tarefaDeFundo.ts'
 import { atualizarAtividadeViva } from './avisos/atividadeViva.ts'
+import { atualizarWidget } from './avisos/widget.ts'
 import { Hoje } from './telas/Hoje.tsx'
 import { Agenda } from './telas/Agenda.tsx'
 import { Grade } from './telas/Grade.tsx'
@@ -87,6 +88,9 @@ export function Raiz() {
       }
     })
     void atualizarAtividadeViva(base, ajustes, periodo, t)
+    // O widget de tela de inicio le de um container compartilhado, entao ele
+    // so muda quando alguem escreve la — este e o unico lugar que escreve.
+    atualizarWidget(base, ajustes, periodo, t)
     // A busca do iPhone entra no mesmo laço: quem procura "trigonometria" na
     // tela de início acha a prova, e tocar abre ela pela mesma URL da Siri.
     void indexar(itensParaBusca(base, periodo, t, ajustes.inverterSemanaAlternada))
@@ -186,7 +190,7 @@ export function Raiz() {
       <BarraDeAbas
         aba={aba}
         aoTrocar={setAba}
-        aoCriar={() => setCapturando(true)}
+        aoCriar={aba === 'ajustes' ? undefined : () => setCapturando(true)}
         rotulo={(chave) => t(chave)}
         alturaSegura={margem.bottom}
       />
@@ -257,6 +261,58 @@ export function Raiz() {
   )
 }
 
+/**
+ * Os ícones das abas, desenhados em formas geométricas.
+ *
+ * Sem biblioteca de ícones de propósito: Lucide em tudo é um dos sinais mais
+ * confiáveis de interface gerada, e quatro formas simples não justificam uma
+ * dependência. Ativo é BRANCO PLENO, não a cor de destaque — destaque é ação, e
+ * navegação não é ação.
+ */
+function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
+  const cor = ativo ? cores.texto : cores.texto3
+  if (id === 'hoje') {
+    return <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: cor }} />
+  }
+  if (id === 'agenda') {
+    return (
+      <View style={{ width: 16, height: 16, justifyContent: 'space-between', paddingVertical: 2 }}>
+        {[10, 16, 13].map((l, i) => (
+          <View key={i} style={{ height: 2, width: l, borderRadius: 1, backgroundColor: cor }} />
+        ))}
+      </View>
+    )
+  }
+  if (id === 'grade') {
+    return (
+      <View style={{ width: 16, height: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <View key={i} style={{ width: 6.5, height: 6.5, borderRadius: 1.5, backgroundColor: cor }} />
+        ))}
+      </View>
+    )
+  }
+  return (
+    <View style={{ width: 16, height: 16, justifyContent: 'space-between', paddingVertical: 2 }}>
+      {[3, 9, 6].map((x, i) => (
+        <View key={i} style={{ height: 2, width: 16, borderRadius: 1, backgroundColor: cor, opacity: 0.45 }}>
+          <View
+            style={{
+              position: 'absolute',
+              left: x,
+              top: -1.5,
+              width: 5,
+              height: 5,
+              borderRadius: 2.5,
+              backgroundColor: cor,
+            }}
+          />
+        </View>
+      ))}
+    </View>
+  )
+}
+
 function BarraDeAbas({
   aba,
   aoTrocar,
@@ -266,7 +322,7 @@ function BarraDeAbas({
 }: {
   aba: Aba
   aoTrocar: (a: Aba) => void
-  aoCriar: () => void
+  aoCriar?: () => void
   rotulo: (chave: 'abas.hoje' | 'abas.agenda' | 'abas.grade' | 'abas.ajustes') => string
   alturaSegura: number
 }) {
@@ -274,58 +330,85 @@ function BarraDeAbas({
   // de fundo abaixo é que aparece.
   const vidro = temLiquidGlass()
   return (
-    <Vidro
-      raio={raio.g}
-      variante="regular"
-      interativo
-      style={[
-        e.barra,
-        { paddingBottom: alturaSegura + espaco.s },
-        vidro ? null : { backgroundColor: cores.cartao },
-      ]}
-    >
-      {ABAS.map((item) => (
-        <Pressable key={item.id} style={e.aba} onPress={() => aoTrocar(item.id)}>
-          <Text
-            style={[
-              fonte.apoio,
-              { fontWeight: '600' },
-              aba === item.id ? { color: cores.texto } : null,
-            ]}
-          >
-            {rotulo(item.chave)}
+    <View style={[e.ancora, { paddingBottom: alturaSegura + espaco.s }]} pointerEvents="box-none">
+      {aoCriar ? (
+        <Pressable style={e.mais} onPress={aoCriar} accessibilityRole="button">
+          <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
+            +
           </Text>
         </Pressable>
-      ))}
-      <Pressable style={e.mais} onPress={aoCriar}>
-        <Text style={{ color: cores.fundo, fontSize: 22, fontWeight: '700', marginTop: -2 }}>+</Text>
-      </Pressable>
-    </Vidro>
+      ) : null}
+
+      <Vidro
+        raio={raio.pilula}
+        variante="regular"
+        interativo
+        style={[e.barra, vidro ? null : { backgroundColor: cores.vidro }]}
+      >
+        {ABAS.map((item) => (
+          <Pressable
+            key={item.id}
+            style={e.aba}
+            onPress={() => aoTrocar(item.id)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: aba === item.id }}
+          >
+            <IconeDaAba id={item.id} ativo={aba === item.id} />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: aba === item.id ? '600' : '400',
+                color: aba === item.id ? cores.texto : cores.texto3,
+              }}
+              numberOfLines={1}
+            >
+              {rotulo(item.chave)}
+            </Text>
+          </Pressable>
+        ))}
+      </Vidro>
+    </View>
   )
 }
 
 const e = StyleSheet.create({
-  barra: {
+  // A âncora não intercepta toque (`box-none`): a lista continua rolável por
+  // baixo da barra flutuante, e só a barra e o FAB recebem o dedo.
+  ancora: {
     position: 'absolute',
-    left: espaco.m,
-    right: espaco.m,
+    left: 0,
+    right: 0,
     bottom: 0,
+    alignItems: 'center',
+    gap: espaco.m,
+  },
+  barra: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: espaco.xs,
-    paddingTop: espaco.m,
-    paddingHorizontal: espaco.m,
-    borderTopLeftRadius: raio.g,
-    borderTopRightRadius: raio.g,
+    alignSelf: 'center',
+    paddingVertical: espaco.s + 2,
+    paddingHorizontal: espaco.s,
+    borderRadius: raio.pilula,
     overflow: 'hidden',
   },
-  aba: { flex: 1, alignItems: 'center', paddingVertical: espaco.s },
-  mais: {
-    width: 40,
-    height: 40,
-    borderRadius: raio.pilula,
-    backgroundColor: cores.marfim,
+  aba: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
+    paddingVertical: espaco.xs,
+    // Sem largura fixa: "Ajustes" em francês é "Réglages" e em espanhol
+    // "Ajustes" — nenhum deles cabe numa medida decidida em inglês.
+    paddingHorizontal: espaco.g,
+    minWidth: 62,
+  },
+  mais: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: cores.destaque,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    marginRight: espaco.g,
   },
 })
