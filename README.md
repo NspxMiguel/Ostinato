@@ -89,6 +89,19 @@ npm run teste        # core test suite, no simulator required
 npm run teste:i18n   # fails the build on any untranslated string
 ```
 
+## What it uses from the iPhone
+
+Liquid Glass on the tab bar (iOS 26, with a blur fallback) · Live Activity and
+Dynamic Island counting down to the next deadline · Time Sensitive notifications
+that break through Focus, with **Done** and **Snooze** on the notification itself
+· a custom 29-second alarm sound · on-device dictation through the Speech
+framework · on-device text recognition through Vision · Spotlight, so a task is
+findable from the home screen · background refresh to keep the reminder window
+armed · and a URL scheme for Siri and Shortcuts.
+
+Nothing here calls a server. Speech and text recognition run on the device, and
+the app makes no network request at all.
+
 ## Siri and Shortcuts
 
 The app answers a URL:

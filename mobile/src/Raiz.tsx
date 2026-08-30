@@ -32,6 +32,8 @@ import { Materia } from './telas/Materia.tsx'
 import { NovoCompromisso } from './telas/NovoCompromisso.tsx'
 import { Captura } from './telas/Captura.tsx'
 import { ouvirAtalhos } from './atalhos.ts'
+import { itensParaBusca } from '../../nucleo/busca.ts'
+import { indexar } from '../modules/busca/src/index.ts'
 import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
 
 type Aba = 'hoje' | 'agenda' | 'grade' | 'ajustes'
@@ -77,6 +79,9 @@ export function Raiz() {
       }
     })
     void atualizarAtividadeViva(base, ajustes, periodo, t)
+    // A busca do iPhone entra no mesmo laço: quem procura "trigonometria" na
+    // tela de início acha a prova, e tocar abre ela pela mesma URL da Siri.
+    void indexar(itensParaBusca(base, periodo, t, ajustes.inverterSemanaAlternada))
   }, [base, ajustes, t])
 
   const primeiraVez = useRef(true)
