@@ -272,38 +272,38 @@ export function Raiz() {
 function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
   const cor = ativo ? cores.texto : cores.texto3
   if (id === 'hoje') {
-    return <View style={{ width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: cor }} />
+    return <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2.5, borderColor: cor }} />
   }
   if (id === 'agenda') {
     return (
-      <View style={{ width: 16, height: 16, justifyContent: 'space-between', paddingVertical: 2 }}>
-        {[10, 16, 13].map((l, i) => (
-          <View key={i} style={{ height: 2, width: l, borderRadius: 1, backgroundColor: cor }} />
+      <View style={{ width: 22, height: 22, justifyContent: 'space-evenly', paddingVertical: 2 }}>
+        {[14, 22, 18].map((l, i) => (
+          <View key={i} style={{ height: 2.5, width: l, borderRadius: 1.5, backgroundColor: cor }} />
         ))}
       </View>
     )
   }
   if (id === 'grade') {
     return (
-      <View style={{ width: 16, height: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 3 }}>
+      <View style={{ width: 22, height: 22, flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
         {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={{ width: 6.5, height: 6.5, borderRadius: 1.5, backgroundColor: cor }} />
+          <View key={i} style={{ width: 9, height: 9, borderRadius: 2, backgroundColor: cor }} />
         ))}
       </View>
     )
   }
   return (
-    <View style={{ width: 16, height: 16, justifyContent: 'space-between', paddingVertical: 2 }}>
-      {[3, 9, 6].map((x, i) => (
-        <View key={i} style={{ height: 2, width: 16, borderRadius: 1, backgroundColor: cor, opacity: 0.45 }}>
+    <View style={{ width: 22, height: 22, justifyContent: 'space-evenly', paddingVertical: 2 }}>
+      {[4, 13, 8].map((x, i) => (
+        <View key={i} style={{ height: 2.5, width: 22, borderRadius: 1.5, backgroundColor: cor, opacity: 0.45 }}>
           <View
             style={{
               position: 'absolute',
               left: x,
-              top: -1.5,
-              width: 5,
-              height: 5,
-              borderRadius: 2.5,
+              top: -2,
+              width: 6.5,
+              height: 6.5,
+              borderRadius: 3.25,
               backgroundColor: cor,
             }}
           />
@@ -356,7 +356,7 @@ function BarraDeAbas({
             <IconeDaAba id={item.id} ativo={aba === item.id} />
             <Text
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: aba === item.id ? '600' : '400',
                 color: aba === item.id ? cores.texto : cores.texto3,
               }}
@@ -385,8 +385,13 @@ const e = StyleSheet.create({
   barra: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
-    paddingVertical: espaco.s + 2,
+    // Ocupa a largura da tela menos uma margem: barra de navegação é o alvo de
+    // toque mais usado do app, e pílula estreita no meio da tela transforma
+    // trocar de aba em mira.
+    alignSelf: 'stretch',
+    marginHorizontal: espaco.m,
+    justifyContent: 'space-around',
+    paddingVertical: espaco.m,
     paddingHorizontal: espaco.s,
     borderRadius: raio.pilula,
     overflow: 'hidden',
@@ -394,12 +399,14 @@ const e = StyleSheet.create({
   aba: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 5,
+    // 44pt é o alvo mínimo de toque da Apple, e aqui ele é o piso, não a meta.
+    minHeight: 44,
     paddingVertical: espaco.xs,
     // Sem largura fixa: "Ajustes" em francês é "Réglages" e em espanhol
     // "Ajustes" — nenhum deles cabe numa medida decidida em inglês.
-    paddingHorizontal: espaco.g,
-    minWidth: 62,
+    paddingHorizontal: espaco.s,
+    flex: 1,
   },
   mais: {
     width: 56,

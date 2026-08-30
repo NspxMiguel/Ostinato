@@ -18,11 +18,11 @@ import { vivos } from '../../../nucleo/sync/registro.ts'
 import { dataDe, diaSemanaDe, instante, somarDias } from '../../../nucleo/tempo.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { criarT } from '../../../nucleo/i18n.ts'
-import { Apoio, Cartao, Etiqueta, Linha, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
+import { Apoio, Cartao, Etiqueta, Fileira, Linha, Pilula, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
-import { cores, espaco, raio } from '../tema.ts'
+import { cores, espaco } from '../tema.ts'
 
 type TFn = ReturnType<typeof criarT>
 
@@ -167,29 +167,29 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
       {compromissos.length > 0 ? (
         <View style={e.filtros}>
           {materiasComCompromisso.length > 0 ? (
-            <View style={e.pilulas}>
+            <Fileira>
               {materiasComCompromisso.map((m) => (
                 <Pilula
                   key={m.id}
                   texto={m.nome}
-                  ligada={materiasFiltro.includes(m.id)}
-                  corLigada={m.cor}
+                  ativa={materiasFiltro.includes(m.id)}
+                  cor={m.cor}
                   aoTocar={() => alternarMateria(m.id)}
                 />
               ))}
-            </View>
+            </Fileira>
           ) : null}
           {tiposPresentes.length > 0 ? (
-            <View style={e.pilulas}>
+            <Fileira>
               {tiposPresentes.map((tipo) => (
                 <Pilula
                   key={tipo}
                   texto={rotuloTipo(t, tipo)}
-                  ligada={tiposFiltro.includes(tipo)}
+                  ativa={tiposFiltro.includes(tipo)}
                   aoTocar={() => alternarTipo(tipo)}
                 />
               ))}
-            </View>
+            </Fileira>
           ) : null}
           <Linha entre>
             <Apoio>{t('agenda.mostrar_concluidos')}</Apoio>
@@ -259,32 +259,6 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
   )
 }
 
-function Pilula({
-  texto,
-  ligada,
-  corLigada,
-  aoTocar,
-}: {
-  texto: string
-  ligada: boolean
-  corLigada?: string
-  aoTocar: () => void
-}) {
-  const fundo = ligada ? (corLigada ?? cores.marfim) : 'transparent'
-  const corTexto = ligada ? (corLigada ? cores.texto : cores.fundo) : cores.texto
-  return (
-    <Pressable
-      onPress={aoTocar}
-      style={[
-        e.pilula,
-        { backgroundColor: fundo, borderColor: ligada ? fundo : cores.borda },
-      ]}
-    >
-      <Text style={[e.pilulaTexto, { color: corTexto }]}>{texto}</Text>
-    </Pressable>
-  )
-}
-
 function Circulo({
   marcado,
   cor,
@@ -304,9 +278,14 @@ function Circulo({
       <View
         style={[
           e.circulo,
-          { borderColor: marcado ? cor : cores.textoFraco, backgroundColor: marcado ? cor : 'transparent' },
+          {
+            borderColor: marcado ? cores.ok : cores.texto3,
+            backgroundColor: marcado ? cores.ok : 'transparent',
+          },
         ]}
-      />
+      >
+        {marcado ? <Text style={e.visto}>✓</Text> : null}
+      </View>
     </Pressable>
   )
 }
@@ -342,15 +321,19 @@ function duracaoPorExtenso(ms: number, t: TFn): string {
 const e = StyleSheet.create({
   filtros: { gap: espaco.m },
   pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
-  pilula: {
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.xs,
-    borderRadius: raio.pilula,
-    borderWidth: 1,
-  },
-  pilulaTexto: { fontSize: 13, fontWeight: '600' },
-  item: { flexDirection: 'row', alignItems: 'center', gap: espaco.s },
+  // O check fica FORA do texto, à esquerda, alinhado ao topo: assim ele não
+  // desce junto quando o título quebra em duas linhas.
+  item: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
   cartaoFlex: { flex: 1 },
-  circulo: { width: 22, height: 22, borderRadius: 11, borderWidth: 2 },
-  concluido: { opacity: 0.5 },
+  circulo: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  visto: { color: cores.fundo, fontSize: 13, fontWeight: '700', marginTop: -1 },
+  concluido: { opacity: 0.45 },
 })
