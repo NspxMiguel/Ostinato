@@ -4,7 +4,7 @@
 // e uma biblioteca de navegação inteira custaria mais do que resolve.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Animated, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { GlassContainer, GlassView, isLiquidGlassAvailable } from 'expo-glass-effect'
@@ -338,6 +338,20 @@ function BarraDeAbas({
   // No iOS 26 a barra é vidro de verdade; nos outros o `Vidro` vira View e a cor
   // de fundo abaixo é que aparece.
   const vidro = isLiquidGlassAvailable()
+  const [larguraDaBarra, setLarguraDaBarra] = useState(0)
+  const indice = Math.max(0, abas.findIndex((a) => a.id === aba))
+  const deslize = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    if (larguraDaBarra === 0) return
+    Animated.spring(deslize, {
+      toValue: (larguraDaBarra / abas.length) * indice + espaco.xs / 2,
+      useNativeDriver: true,
+      damping: 20,
+      stiffness: 180,
+      mass: 0.9,
+    }).start()
+  }, [indice, larguraDaBarra, abas.length, deslize])
   return (
     <GlassContainer
       spacing={20}
@@ -382,7 +396,37 @@ function BarraDeAbas({
         isInteractive
         tintColor="rgba(0,0,0,0.30)"
         style={e.barra}
+        onLayout={(ev) => setLarguraDaBarra(ev.nativeEvent.layout.width)}
       >
+        {/* A pílula que DESLIZA entre as abas.
+        
+            É o movimento que faz o Liquid Glass parecer líquido: a seleção não
+            pisca de um lugar para o outro, ela escorrega. A mola é de propósito
+            mais lenta na saída que na entrada (`damping` alto, `stiffness`
+            médio) — rápido demais vira teletransporte e o efeito se perde.
+            
+            Ela mora DENTRO do mesmo GlassView da barra, então o container faz as
+            duas peças de vidro se enxergarem e a borda ganha o brilho especular
+            no encontro. */}
+        {larguraDaBarra > 0 ? (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              e.indicador,
+              {
+                width: larguraDaBarra / abas.length - espaco.xs,
+                transform: [{ translateX: deslize }],
+              },
+            ]}
+          >
+            <GlassView
+              glassEffectStyle="regular"
+              tintColor="rgba(255,255,255,0.16)"
+              style={e.indicadorVidro}
+            />
+          </Animated.View>
+        ) : null}
+
         {abas.map((item) => (
           <Pressable
             key={item.id}
@@ -434,6 +478,15 @@ const e = StyleSheet.create({
     borderRadius: raio.pilula,
     overflow: 'hidden',
   },
+  indicador: {
+    position: 'absolute',
+    left: 0,
+    top: espaco.s,
+    bottom: espaco.s,
+    borderRadius: raio.pilula,
+    overflow: 'hidden',
+  },
+  indicadorVidro: { flex: 1, borderRadius: raio.pilula },
   aba: {
     alignItems: 'center',
     justifyContent: 'center',
