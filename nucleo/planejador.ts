@@ -12,6 +12,7 @@
 import type { Ajustes, Base, Compromisso, ModoAviso, Periodo, RegraAviso } from './modelo.ts'
 import { avisosDe } from './modelo.ts'
 import { resolverVencimento } from './vencimento.ts'
+import { respeitarAula } from './silencioEmAula.ts'
 import { primeiraAulaDoDia } from './grade.ts'
 import { vivos } from './sync/registro.ts'
 import { instante, somarDias } from './tempo.ts'
@@ -100,7 +101,17 @@ function disparosDaRegra(
 
   const saida: AvisoAgendado[] = []
   for (let i = 0; i <= vezes; i++) {
-    const t = inicio.getTime() + i * cada * 60_000
+    const bruto = inicio.getTime() + i * cada * 60_000
+
+    // Nenhum aviso toca DENTRO de uma aula — de qualquer matéria, não só da
+    // matéria do compromisso. Um alarme de matemática às 7h cai no meio da
+    // aula de geografia, e de dentro da sala é a mesma coisa.
+    //
+    // O aviso é EMPURRADO para o primeiro instante livre depois do bloco, nunca
+    // descartado: sumir com um aviso porque ele calhou numa hora ruim é a pior
+    // falha que este app pode ter.
+    const t = respeitarAula(new Date(bruto), base, periodo, inverterSemana).getTime()
+
     // Aviso no passado não se agenda, e repetição depois do prazo não serve para nada.
     if (t <= agora) continue
     if (i > 0 && t > venceEm.getTime()) break

@@ -161,3 +161,30 @@ test('a diferença só mexe no que mudou', () => {
   assert.deepEqual(parcial.criar.map((a) => a.chave), [plano[1]!.chave])
   assert.deepEqual(parcial.cancelar, ['velha|regra|0'])
 })
+
+test('nenhum aviso é agendado dentro de uma aula', () => {
+  // O módulo `silencioEmAula` existia e NÃO estava ligado aqui — escrito,
+  // testado e sem efeito nenhum no app. Este teste é o que impede isso de
+  // voltar: ele falha se o planejador parar de consultar a grade.
+  reiniciarIds()
+  const per = periodo({ inicio: '2026-08-01', fim: '2026-12-20' })
+  const mat = materia('matemática', { periodoId: per.id })
+  // Segunda, 07:15–08:00. O aviso de 30 minutos antes das 07:45 cairia dentro.
+  const a = aula(mat.id, 1, '07:15', '08:00')
+  const c = compromisso(
+    'lista',
+    { tipo: 'data', data: '2026-09-07', hora: '07:45' },
+    {
+      materiaId: mat.id,
+      avisos: [{ id: 'x', quando: { tipo: 'antesDe', minutos: 30 }, modo: 'alarme' }],
+    },
+  )
+  const b = base({ periodos: [per], materias: [mat], aulas: [a], compromissos: [c] })
+
+  const plano = planejar(b, ajustesSimples(), new Date('2026-09-01T06:00:00'), per)
+  for (const aviso of plano.agendar.filter((x) => x.compromissoId === c.id)) {
+    const min = aviso.quando.getHours() * 60 + aviso.quando.getMinutes()
+    const dentro = aviso.quando.getDay() === 1 && min >= 7 * 60 + 15 && min < 8 * 60
+    assert.equal(dentro, false, `avisou às ${aviso.quando.toISOString()}, dentro da aula`)
+  }
+})
