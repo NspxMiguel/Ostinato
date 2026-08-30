@@ -31,6 +31,7 @@ import { Ajustes } from './telas/Ajustes.tsx'
 import { Materia } from './telas/Materia.tsx'
 import { NovoCompromisso } from './telas/NovoCompromisso.tsx'
 import { Captura } from './telas/Captura.tsx'
+import { ouvirAtalhos } from './atalhos.ts'
 import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
 
 type Aba = 'hoje' | 'agenda' | 'grade' | 'ajustes'
@@ -50,6 +51,8 @@ export function Raiz() {
   // O + abre a CAPTURA, não o formulário: escrever "prova de mat sexta" é o
   // caminho normal, e o formulário é o ajuste de quem quer mexer em detalhe.
   const [capturando, setCapturando] = useState(false)
+  /** Texto que chegou de fora (Siri, Atalhos), já escrito na captura. */
+  const [textoDeFora, setTextoDeFora] = useState<string | undefined>(undefined)
   const [criando, setCriando] = useState(false)
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null)
   const [alarmeDe, setAlarmeDe] = useState<string | null>(null)
@@ -97,6 +100,20 @@ export function Raiz() {
     })
     return () => inscricao.remove()
   }, [rearmar])
+
+  // Siri, Atalhos, Spotlight: tudo o que vem de fora entra por uma URL.
+  useEffect(
+    () =>
+      ouvirAtalhos((a) => {
+        if (a.tipo === 'anotar') {
+          setTextoDeFora(a.texto)
+          setCapturando(true)
+        } else {
+          setCompromissoAberto(a.id)
+        }
+      }),
+    [],
+  )
 
   // Resposta à notificação: "Feito" conclui, "Adiar" silencia por 10 minutos, e
   // tocar no corpo abre o compromisso — ou a tela de alarme, quando era alarme.
@@ -168,9 +185,14 @@ export function Raiz() {
         onRequestClose={() => setCapturando(false)}
       >
         <Captura
-          aoFechar={() => setCapturando(false)}
+          textoInicial={textoDeFora}
+          aoFechar={() => {
+            setCapturando(false)
+            setTextoDeFora(undefined)
+          }}
           aoAjustar={() => {
             setCapturando(false)
+            setTextoDeFora(undefined)
             setCriando(true)
           }}
         />

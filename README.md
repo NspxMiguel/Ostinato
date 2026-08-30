@@ -87,6 +87,26 @@ npm run teste        # core test suite, no simulator required
 npm run teste:i18n   # fails the build on any untranslated string
 ```
 
+## Siri and Shortcuts
+
+The app answers a URL:
+
+```
+ostinato://anotar?texto=math%20test%20next%20friday
+```
+
+That opens the capture screen with the sentence already written and already
+interpreted. A one-step Shortcut ("Open URL") is enough to make it work with
+Siri, and it needs no paid account and no extension. Spotlight, Back Tap, a
+Control Center button and a Lock Screen item all open a URL too, so they land in
+the same place.
+
+`ostinato://abrir?id=<id>` opens one item.
+
+Anything the app does not recognise exactly is discarded. This is input from
+outside the app, so it is parsed in `nucleo/atalhos.ts`, where it is testable,
+and never turned into a nearby-looking command.
+
 ## Language
 
 Portuguese and English from the first screen. The system language decides the

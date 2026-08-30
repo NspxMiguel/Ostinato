@@ -25,7 +25,9 @@ import { cores, espaco, fonte, raio, CORES_DE_MATERIA } from '../tema.ts'
 import { lerTexto, temLeitura } from '../../modules/leitura/src/index.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
-export function Captura({ aoFechar, aoAjustar }: {
+export function Captura({ textoInicial, aoFechar, aoAjustar }: {
+  /** Frase que chegou de fora (Siri, Atalhos), já escrita no campo. */
+  textoInicial?: string
   aoFechar: () => void
   /** Abre o formulário completo já preenchido com o que deu para entender. */
   aoAjustar: (rascunho: Partial<Compromisso>) => void
@@ -35,7 +37,7 @@ export function Captura({ aoFechar, aoAjustar }: {
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
 
-  const [texto, setTexto] = useState('')
+  const [texto, setTexto] = useState(textoInicial ?? '')
   const [ouvindo, setOuvindo] = useState(false)
   const [lendoFoto, setLendoFoto] = useState(false)
   const [avisoDeVoz, setAvisoDeVoz] = useState<string | null>(null)
