@@ -1,0 +1,15 @@
+{
+  "name": "giz",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Student planner that warns you before the deadline, not on it.",
+  "scripts": {
+    "teste": "node --test nucleo/testes/",
+    "teste:i18n": "node scripts/teste-chaves-i18n.mjs",
+    "tipos": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "~5.9"
+  },
+  "type": "module"
+}

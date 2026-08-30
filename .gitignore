@@ -1,0 +1,43 @@
+# ─── Notas de trabalho — só nossas, não vão pro GitHub ───────────────────────
+PEDIDOS.md
+CONTRATO.md
+IDEIAS.md
+TRABALHO.md
+NOTAS.md
+PROMPT-*.md
+
+# ─── Dependências ────────────────────────────────────────────────────────────
+node_modules/
+.npm
+.yarn/
+.pnp.*
+
+# ─── Build ───────────────────────────────────────────────────────────────────
+dist/
+dist-*/
+build/
+*.tsbuildinfo
+
+# ─── Nativo gerado pelo prebuild ─────────────────────────────────────────────
+mobile/ios/
+mobile/android/
+mobile/.expo/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# ─── SEGURANÇA — nunca commitar ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+*.mobileprovision
+secrets/
+
+# ─── Editor / macOS ──────────────────────────────────────────────────────────
+.DS_Store
+.vscode/
+.idea/
+*.swp
