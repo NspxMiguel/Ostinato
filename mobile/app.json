@@ -23,7 +23,7 @@
         "NSSpeechRecognitionUsageDescription": "Para transformar o que você fala em tarefa. O reconhecimento roda no próprio aparelho."
       },
       "icon": "./assets/icone.png",
-      "appleTeamId": "ZTJU92P9H4"
+      "appleTeamId": "A44CCRN8Y4"
     },
     "android": {
       "package": "dev.nspx.ostinato",
