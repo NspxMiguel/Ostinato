@@ -64,7 +64,7 @@ export function Raiz() {
       // jeito de conferir de fora quantos avisos o iOS realmente guardou.
       if (__DEV__) {
         console.log(
-          `[giz] avisos: ${r.agendadas} armados (+${r.criadas} -${r.canceladas}), ` +
+          `[ostinato] avisos: ${r.agendadas} armados (+${r.criadas} -${r.canceladas}), ` +
             `${r.cortados} fora da janela, ${r.semData.length} sem data`,
         )
       }
@@ -270,7 +270,7 @@ const e = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: raio.pilula,
-    backgroundColor: cores.giz,
+    backgroundColor: cores.marfim,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,4 +1,4 @@
-// O envelope que todo registro do Giz carrega.
+// O envelope que todo registro do Ostinato carrega.
 //
 // Estes quatro campos existem desde a primeira versão, mesmo com o sync desligado.
 // São eles que permitem ligar o CloudKit (e depois o Firestore, no Android) sem

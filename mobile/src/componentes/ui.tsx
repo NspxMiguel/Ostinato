@@ -1,4 +1,4 @@
-// O vocabulário visual do Giz.
+// O vocabulário visual do Ostinato.
 //
 // Existe para que telas escritas por pessoas (e agentes) diferentes não virem
 // três apps dentro de um. Tela nova compõe estas peças; se faltar alguma, ela
@@ -173,7 +173,7 @@ const e = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   botao: { paddingHorizontal: espaco.g, paddingVertical: espaco.m, borderRadius: raio.m, alignItems: 'center' },
-  botaoCheio: { backgroundColor: cores.giz },
+  botaoCheio: { backgroundColor: cores.marfim },
   botaoVazado: { borderWidth: 1, borderColor: cores.borda },
   botaoDiscreto: { backgroundColor: 'transparent' },
   vazio: { paddingVertical: espaco.ggg, alignItems: 'center' },

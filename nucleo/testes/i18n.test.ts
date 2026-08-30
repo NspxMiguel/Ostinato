@@ -4,8 +4,8 @@ import { criarT } from '../i18n.ts'
 import { MARCA } from '../marca.ts'
 
 test('marca do aplicativo possui valores corretos', () => {
-  assert.equal(MARCA.nome, 'Giz')
-  assert.equal(MARCA.identificador, 'dev.nspx.giz')
+  assert.equal(MARCA.nome, 'Ostinato')
+  assert.equal(MARCA.identificador, 'dev.nspx.ostinato')
 })
 
 test('traduções básicas em português', () => {

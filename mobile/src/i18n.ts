@@ -7,7 +7,7 @@ import { criarT } from '../../nucleo/i18n.ts'
 import { usarLoja } from './estado/loja.ts'
 
 export function idiomaDoSistema(): Idioma {
-  const forcado = process.env.EXPO_PUBLIC_GIZ_LANG
+  const forcado = process.env.EXPO_PUBLIC_OSTINATO_LANG
   if (forcado === 'pt' || forcado === 'en') return forcado
   const primeiro = getLocales()[0]?.languageCode
   return primeiro === 'pt' ? 'pt' : 'en'

@@ -12,7 +12,7 @@
 
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
 
-const SINO = require('../../assets/giz-sino.caf')
+const SINO = require('../../assets/ostinato-sino.caf')
 
 let tocador: AudioPlayer | null = null
 

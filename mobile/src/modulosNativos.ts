@@ -5,7 +5,7 @@
 // build de desenvolvimento feito antes de o módulo existir, um prebuild que não
 // foi refeito, ou o Android, onde três dos quatro módulos não têm par.
 //
-// Todo módulo do Giz é opcional por natureza — vidro tem fallback, nuvem só liga
+// Todo módulo do Ostinato é opcional por natureza — vidro tem fallback, nuvem só liga
 // com conta paga, atividade e leitura são enfeite e conveniência. Nenhum deles
 // justifica derrubar o app.
 

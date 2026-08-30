@@ -1,4 +1,4 @@
-// Onde o Giz guarda tudo: MMKV, síncrono, no aparelho.
+// Onde o Ostinato guarda tudo: MMKV, síncrono, no aparelho.
 //
 // Síncrono importa: a tela "Hoje" precisa desenhar a lista já preenchida no
 // primeiro quadro. Armazenamento assíncrono obriga a um estado "carregando" que o
@@ -7,7 +7,7 @@
 import { createMMKV } from 'react-native-mmkv'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 
-const mmkv = createMMKV({ id: 'giz' })
+const mmkv = createMMKV({ id: 'ostinato' })
 
 export function ler<T>(chave: string, padrao: T): T {
   const bruto = mmkv.getString(chave)

@@ -13,7 +13,7 @@ import Foundation
  Se mudar um campo, mude nos DOIS. O teste que pega o esquecimento e simples: a
  Live Activity para de aparecer.
  */
-public struct GizAtributos: ActivityAttributes {
+public struct OstinatoAtributos: ActivityAttributes {
   public struct ContentState: Codable, Hashable {
     /// O que vence, ja formatado — quem sabe traduzir e o TypeScript.
     public var titulo: String

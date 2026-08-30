@@ -1,4 +1,4 @@
-// O contrato do Giz. Tudo — telas, avisos, sync — fala destes tipos.
+// O contrato do Ostinato. Tudo — telas, avisos, sync — fala destes tipos.
 //
 // Regra que não se quebra: este arquivo (e todo o `nucleo/`) é TypeScript puro.
 // Nada de `react-native` aqui dentro. É isso que faz o Android e a web saírem

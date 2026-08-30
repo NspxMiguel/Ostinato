@@ -216,7 +216,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                   {/* Fora do cartão: o círculo marca feito, o cartão abre o compromisso. */}
                   <Circulo
                     marcado={c.concluido}
-                    cor={materia?.cor ?? cores.giz}
+                    cor={materia?.cor ?? cores.marfim}
                     aoTocar={() => alternarConcluido(c)}
                   />
                   <View style={e.cartaoFlex}>
@@ -270,7 +270,7 @@ function Pilula({
   corLigada?: string
   aoTocar: () => void
 }) {
-  const fundo = ligada ? (corLigada ?? cores.giz) : 'transparent'
+  const fundo = ligada ? (corLigada ?? cores.marfim) : 'transparent'
   const corTexto = ligada ? (corLigada ? cores.texto : cores.fundo) : cores.texto
   return (
     <Pressable

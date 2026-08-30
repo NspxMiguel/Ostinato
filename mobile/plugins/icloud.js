@@ -11,16 +11,16 @@
  * nao serve: o `SecTaskCreateFromSelf` que faria isso e do macOS.
  *
  * Entao a trava e de compilacao: com `extra.icloud` ligado, este plugin poe o
- * entitlement E define `GIZ_ICLOUD`. Os dois nascem juntos e nao tem como
+ * entitlement E define `OSTINATO_ICLOUD`. Os dois nascem juntos e nao tem como
  * discordar — sem conta paga, o binario nem menciona CKContainer.
  *
- * O dia de ligar: comprar a conta, criar o container iCloud.dev.nspx.giz no
+ * O dia de ligar: comprar a conta, criar o container iCloud.dev.nspx.ostinato no
  * painel da Apple, criar os seis record types de docs/CLOUDKIT.md, e trocar
  * `extra.icloud` para true.
  */
 const { withEntitlementsPlist, withXcodeProject } = require('expo/config-plugins')
 
-const CONTAINER = 'iCloud.dev.nspx.giz'
+const CONTAINER = 'iCloud.dev.nspx.ostinato'
 
 function comEntitlements(config) {
   return withEntitlementsPlist(config, (cfg) => {
@@ -39,8 +39,8 @@ function comFlagDeCompilacao(config) {
       if (!bloco?.buildSettings) continue
       const atual = bloco.buildSettings.SWIFT_ACTIVE_COMPILATION_CONDITIONS
       const lista = String(atual ?? '$(inherited)')
-      if (lista.includes('GIZ_ICLOUD')) continue
-      bloco.buildSettings.SWIFT_ACTIVE_COMPILATION_CONDITIONS = `${lista} GIZ_ICLOUD`
+      if (lista.includes('OSTINATO_ICLOUD')) continue
+      bloco.buildSettings.SWIFT_ACTIVE_COMPILATION_CONDITIONS = `${lista} OSTINATO_ICLOUD`
     }
     return cfg
   })

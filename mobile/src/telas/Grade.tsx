@@ -599,7 +599,7 @@ const e = StyleSheet.create({
     borderWidth: 1,
     borderColor: cores.borda,
   },
-  pilulaSelecionada: { backgroundColor: cores.giz },
+  pilulaSelecionada: { backgroundColor: cores.marfim },
   pilulaAdicionar: { borderStyle: 'dashed' },
   textoPilula: { fontSize: 13, color: cores.texto },
   linhaCores: { flexDirection: 'row', gap: espaco.s, paddingVertical: espaco.xs },

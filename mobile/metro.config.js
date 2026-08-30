@@ -5,7 +5,7 @@ const path = require('path')
 const raizDoRepo = path.resolve(__dirname, '..')
 const config = getDefaultConfig(__dirname)
 
-// A logica do Giz vive em ../nucleo, fora de mobile/, e e TypeScript puro —
+// A logica do Ostinato vive em ../nucleo, fora de mobile/, e e TypeScript puro —
 // e ela que o Android e a web vao reaproveitar sem copia. O Metro precisa
 // vigiar a raiz do repositorio para enxergar aqueles arquivos.
 config.watchFolders = [raizDoRepo]

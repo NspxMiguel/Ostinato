@@ -1,6 +1,6 @@
 // A paleta. Uma só, e todas as telas bebem daqui.
 //
-// Giz é lousa: o fundo escuro é o padrão da marca, e o claro é a variante. As
+// Ostinato é lousa: o fundo escuro é o padrão da marca, e o claro é a variante. As
 // cores das matérias são escolhidas pelo usuário e não saem desta lista.
 
 export const cores = {
@@ -10,7 +10,7 @@ export const cores = {
   borda: '#3A332D',
   texto: '#F4EFE9',
   textoFraco: '#A79C90',
-  giz: '#F4EFE9',
+  marfim: '#F4EFE9',
   aviso: '#E8A33D',
   atrasado: '#D9534F',
   ok: '#5FB37A',

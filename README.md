@@ -1,6 +1,11 @@
-# Giz
+# Ostinato
 
-A student planner that warns you **before** the deadline, not on it.
+A student planner that warns you **before** the deadline, and keeps insisting
+until you answer.
+
+In music, an *ostinato* is a figure that repeats in the low end, over and over,
+until you cannot help but notice it. That is the reminder engine: it does not
+tell you once and give up.
 
 Register your class schedule once. Then, instead of opening a calendar and hunting
 for the date of the next math class, you write the task down as *"due next math
@@ -85,7 +90,7 @@ npm run teste:i18n   # fails the build on any untranslated string
 ## Language
 
 Portuguese and English from the first screen. The system language decides the
-default, the choice is changeable in settings, and `EXPO_PUBLIC_GIZ_LANG=pt|en`
+default, the choice is changeable in settings, and `EXPO_PUBLIC_OSTINATO_LANG=pt|en`
 forces one for testing.
 
 ## License

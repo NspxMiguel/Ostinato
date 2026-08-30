@@ -525,7 +525,7 @@ const e = StyleSheet.create({
     borderWidth: 1,
     borderColor: cores.borda,
   },
-  pilulaSelecionada: { backgroundColor: cores.giz },
+  pilulaSelecionada: { backgroundColor: cores.marfim },
   textoPilula: { fontSize: 13, color: cores.texto },
   opcaoVencimento: {
     flex: 1,
@@ -537,7 +537,7 @@ const e = StyleSheet.create({
     alignItems: 'center',
   },
   opcaoVencimentoSelecionada: {
-    borderColor: cores.giz,
+    borderColor: cores.marfim,
     backgroundColor: cores.cartaoAlto,
   },
   textoOpcaoVencimento: { fontSize: 13, color: cores.texto },

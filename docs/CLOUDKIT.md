@@ -1,16 +1,16 @@
-# CloudKit schema for Giz
+# CloudKit schema for Ostinato
 
 Written before the container exists, so the day the paid Apple Developer account
 arrives the setup is mechanical rather than archaeological.
 
 ## Container
 
-`iCloud.dev.nspx.giz`, **private database only**. Nothing about a student's
+`iCloud.dev.nspx.ostinato`, **private database only**. Nothing about a student's
 schedule belongs in a public or shared database.
 
 ## Zone
 
-A single custom zone named `giz`.
+A single custom zone named `ostinato`.
 
 The default zone cannot hand out a per-zone change token, and without a token
 every app launch would download the whole database instead of a delta. The zone
@@ -74,15 +74,15 @@ Checking the entitlement at runtime is not an option either: `SecTaskCreateFromS
 is macOS-only.
 
 So the switch is a compile-time one. `plugins/icloud.js` adds the entitlement
-**and** defines `GIZ_ICLOUD`; the module's CloudKit half lives inside
-`#if GIZ_ICLOUD`. Entitlement and code are turned on by the same line and cannot
+**and** defines `OSTINATO_ICLOUD`; the module's CloudKit half lives inside
+`#if OSTINATO_ICLOUD`. Entitlement and code are turned on by the same line and cannot
 disagree — without a paid account, the binary does not even mention `CKContainer`.
 
 ## Turning it on
 
 1. Buy the Apple Developer account (the iCloud entitlement is not issued to a
    personal team).
-2. Create the container `iCloud.dev.nspx.giz` in the Apple developer portal.
+2. Create the container `iCloud.dev.nspx.ostinato` in the Apple developer portal.
 3. Create the six record types above in the CloudKit dashboard, mark `tabela` and
    `atualizadoEm` queryable, then deploy the schema to production.
 4. Set `extra.icloud` to `true` in `mobile/app.json` and run `expo prebuild`.

@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Giz",
-    "slug": "giz",
+    "name": "Ostinato",
+    "slug": "ostinato",
     "version": "0.1.0",
     "orientation": "portrait",
-    "scheme": "giz",
+    "scheme": "ostinato",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "dev.nspx.giz",
+      "bundleIdentifier": "dev.nspx.ostinato",
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -24,7 +24,7 @@
       "appleTeamId": "ZTJU92P9H4"
     },
     "android": {
-      "package": "dev.nspx.giz",
+      "package": "dev.nspx.ostinato",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icone.png",
@@ -50,7 +50,7 @@
         {
           "color": "#1F1B16",
           "sounds": [
-            "./assets/giz-sino.caf"
+            "./assets/ostinato-sino.caf"
           ]
         }
       ],

@@ -12,13 +12,13 @@ import { diferenca, planejar } from '../../../nucleo/planejador.ts'
 import { textoDoAviso } from '../../../nucleo/textoAviso.ts'
 import type { criarT } from '../../../nucleo/i18n.ts'
 
-export const CATEGORIA = 'giz.compromisso'
-export const ACAO_FEITO = 'giz.feito'
-export const ACAO_ADIAR = 'giz.adiar'
+export const CATEGORIA = 'ostinato.compromisso'
+export const ACAO_FEITO = 'ostinato.feito'
+export const ACAO_ADIAR = 'ostinato.adiar'
 export const MINUTOS_DE_ADIAMENTO = 10
 
 /** O nome do arquivo de som que vai no bundle do app. */
-const SOM_INSISTENTE = 'giz-sino.caf'
+const SOM_INSISTENTE = 'ostinato-sino.caf'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -60,7 +60,7 @@ export async function registrarCategoria(t: ReturnType<typeof criarT>): Promise<
     },
   ])
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('giz-insistente', {
+    await Notifications.setNotificationChannelAsync('ostinato-insistente', {
       name: 'Avisos insistentes',
       importance: Notifications.AndroidImportance.MAX,
       sound: SOM_INSISTENTE,

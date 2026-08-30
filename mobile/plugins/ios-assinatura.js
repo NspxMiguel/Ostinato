@@ -22,7 +22,7 @@ function comTime(config) {
       const bloco = configuracoes[chave]
       if (!bloco?.buildSettings) continue
       const alvo = bloco.buildSettings.PRODUCT_NAME
-      if (!alvo || !String(alvo).includes('Giz')) continue
+      if (!alvo || !String(alvo).includes('Ostinato')) continue
       bloco.buildSettings.DEVELOPMENT_TEAM = TIME
       bloco.buildSettings.CODE_SIGN_STYLE = 'Automatic'
     }

@@ -58,6 +58,6 @@ const e = StyleSheet.create({
     paddingBottom: 64,
   },
   botao: { paddingVertical: espaco.g, borderRadius: raio.m, alignItems: 'center' },
-  principal: { backgroundColor: cores.giz },
+  principal: { backgroundColor: cores.marfim },
   secundario: { borderWidth: 1, borderColor: cores.borda },
 })

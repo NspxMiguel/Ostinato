@@ -10,9 +10,9 @@ import WidgetKit
  o texto fosse calculado pelo app, ele congelaria no minuto em que foi criado.
  */
 @available(iOS 16.1, *)
-struct GizAtividade: Widget {
+struct OstinatoAtividade: Widget {
   var body: some WidgetConfiguration {
-    ActivityConfiguration(for: GizAtributos.self) { contexto in
+    ActivityConfiguration(for: OstinatoAtributos.self) { contexto in
       // Tela de bloqueio
       HStack(alignment: .center, spacing: 12) {
         Capsule()

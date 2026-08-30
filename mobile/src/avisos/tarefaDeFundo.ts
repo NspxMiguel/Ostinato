@@ -18,7 +18,7 @@ import { usarLoja } from '../estado/loja.ts'
 import { idiomaDoSistema } from '../i18n.ts'
 import { sincronizarAvisos } from './notificacoes.ts'
 
-export const TAREFA = 'giz.rearmar-avisos'
+export const TAREFA = 'ostinato.rearmar-avisos'
 
 TaskManager.defineTask(TAREFA, async () => {
   try {

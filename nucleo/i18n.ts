@@ -1,5 +1,5 @@
 /**
- * Sistema de tradução do Giz.
+ * Sistema de tradução do Ostinato.
  * Caso falte alguma chave em inglês, o sistema usará a versão em português de forma silenciosa.
  */
 
@@ -16,7 +16,7 @@ const traducoes = {
     // 2. Hoje
     'hoje.sem_horario': 'Cadastre o horário da matéria para saber quando isto vence.',
     'hoje.vazio_aulas': 'Cadastre sua grade na aba {aba} para ver as aulas de hoje.',
-    'hoje.vazio_compromissos': 'Anote uma tarefa ou prova para o Giz te avisar a tempo.',
+    'hoje.vazio_compromissos': 'Anote uma tarefa ou prova para o Ostinato te avisar a tempo.',
     'agenda.sem_data': 'Sem data',
     'agenda.vazio': 'Nenhum compromisso. Anote o que precisa entregar.',
     'agenda.vazio_filtro': 'Nenhum compromisso com esses filtros.',
@@ -261,7 +261,7 @@ const traducoes = {
     // 2. Hoje
     'hoje.sem_horario': 'Add the class times for this subject so we can tell when this is due.',
     'hoje.vazio_aulas': 'Add your timetable in the {aba} tab to see classes for today.',
-    'hoje.vazio_compromissos': 'Add a task or exam so Giz can remind you in time.',
+    'hoje.vazio_compromissos': 'Add a task or exam so Ostinato can remind you in time.',
     'agenda.sem_data': 'No date',
     'agenda.vazio': 'No items yet. Add what you need to hand in.',
     'agenda.vazio_filtro': 'No items match these filters.',
