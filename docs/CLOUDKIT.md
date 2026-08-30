@@ -118,6 +118,10 @@ carrying `com.apple.security.application-groups` on a free team, after an Archiv
 from the interface. The same doubt applies to iCloud below: it is stated as
 untested, not as refused.
 
+Whether an **extension** target gets a profile from the interface is also still
+unmeasured. Two attempts on a sibling project were abandoned before finishing, so
+the honest answer is "nobody knows yet", not "it cannot".
+
 None of this touches the Simulator, which requires no profile at all. That is why
 the Live Activity and the Dynamic Island already work and were verified running.
 
