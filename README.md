@@ -47,6 +47,22 @@ Swift is used only where iOS is genuinely better at something.
   Measured against a real published calendar of 148 entries: a third-year student
   sees 17 non-teaching days and 22 events, and 109 lines stay out.
 
+## You choose what you use
+
+Nobody should have to register a school timetable to note down an exam. The
+timetable and the grades tracker are features you switch on or off in settings:
+with the timetable off its tab closes and the classes section leaves the Today
+screen, rather than sitting there asking for something you decided not to use.
+
+Reminders are not on that list, because they are the app. Open it, say "biology
+exam friday", and that is a complete way to use Ostinato.
+
+The timetable screen used to be a wall: without an academic term it refused to
+let anything be added, so noting that maths is on Tuesday first required a term
+name and two dates. A subject still belongs to a term — that is what carries
+holidays and alternating weeks — so one covering the current year is created
+silently with the first subject, and can be adjusted afterwards.
+
 ## Reminder modes, and their honest limits
 
 | Mode | What happens |
