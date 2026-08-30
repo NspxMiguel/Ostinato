@@ -15,9 +15,11 @@ struct OstinatoAtividade: Widget {
     ActivityConfiguration(for: OstinatoAtributos.self) { contexto in
       // Tela de bloqueio
       HStack(alignment: .center, spacing: 12) {
-        Capsule()
+        // A mesma bolinha das listas do app, e nao uma tarja: a Live Activity e
+        // a continuacao da tela, nao um cartao de outro sistema.
+        Circle()
           .fill(cor(contexto.state.cor))
-          .frame(width: 4, height: 38)
+          .frame(width: 9, height: 9)
         VStack(alignment: .leading, spacing: 2) {
           Text(contexto.attributes.tipo.uppercased())
             .font(.caption2.weight(.semibold))
@@ -38,7 +40,7 @@ struct OstinatoAtividade: Widget {
           .frame(maxWidth: 88)
       }
       .padding(16)
-      .activityBackgroundTint(Color.black.opacity(0.55))
+      .activityBackgroundTint(Color.black)
       .activitySystemActionForegroundColor(.white)
     } dynamicIsland: { contexto in
       DynamicIsland {

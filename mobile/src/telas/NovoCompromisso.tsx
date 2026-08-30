@@ -32,7 +32,9 @@ import {
   Botao,
   Cartao,
   Etiqueta,
+  Fileira,
   Linha,
+  Pilula,
   Secao,
   Tela,
   Titulo,
@@ -163,20 +165,12 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
         <Secao titulo={t('novo_compromisso.tipo_regra')}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.listaPilulas}>
             {TIPOS_COMPROMISSO.map((item: TipoCompromisso) => (
-              <Pressable
+              <Pilula
                 key={item}
-                style={[e.pilula, tipo === item && e.pilulaSelecionada]}
-                onPress={() => setTipo(item)}
-              >
-                <Text
-                  style={[
-                    e.textoPilula,
-                    tipo === item && { color: cores.fundo, fontWeight: '700' },
-                  ]}
-                >
-                  {t(`compromisso.tipo.singular.${item}` as ChaveI18n)}
-                </Text>
-              </Pressable>
+                texto={t(`compromisso.tipo.singular.${item}` as ChaveI18n)}
+                ativa={tipo === item}
+                aoTocar={() => setTipo(item)}
+              />
             ))}
           </ScrollView>
         </Secao>
@@ -207,59 +201,42 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
 
         {/* Matéria */}
         <Secao titulo={t('novo_compromisso.materia')}>
-          <View style={e.listaPilulas}>
-            <Pressable
-              style={[e.pilula, materiaId === '' && e.pilulaSelecionada]}
-              onPress={() => handleSelecionarMateria('')}
-            >
-              <Text style={[e.textoPilula, materiaId === '' && { color: cores.fundo, fontWeight: '700' }]}>
-                {t('novo_compromisso.nenhuma_materia')}
-              </Text>
-            </Pressable>
+          <Fileira>
+            <Pilula
+              texto={t('novo_compromisso.nenhuma_materia')}
+              ativa={materiaId === ''}
+              aoTocar={() => handleSelecionarMateria('')}
+            />
             {materiasVivas.map((m: Materia) => (
-              <Pressable
+              <Pilula
                 key={m.id}
-                style={[
-                  e.pilula,
-                  materiaId === m.id && { backgroundColor: m.cor },
-                ]}
-                onPress={() => handleSelecionarMateria(m.id)}
-              >
-                <Text
-                  style={[
-                    e.textoPilula,
-                    materiaId === m.id && { color: cores.fundo, fontWeight: '700' },
-                  ]}
-                >
-                  {m.nome}
-                </Text>
-              </Pressable>
+                texto={m.nome}
+                cor={m.cor}
+                ativa={materiaId === m.id}
+                aoTocar={() => handleSelecionarMateria(m.id)}
+              />
             ))}
-          </View>
+          </Fileira>
         </Secao>
 
         {/* Vencimento */}
         <Secao titulo={t('novo_compromisso.quando_vence')}>
           <View style={{ gap: espaco.s }}>
             <Linha entre>
-              <Pressable
-                style={[e.opcaoVencimento, vencimento.tipo === 'data' && e.opcaoVencimentoSelecionada]}
-                onPress={() => setVencimento({ tipo: 'data', data: dataDe(new Date()), hora: '23:59' })}
-              >
-                <Text style={[e.textoOpcaoVencimento, vencimento.tipo === 'data' && { fontWeight: '700' }]}>
-                  {t('novo_compromisso.opcao_data')}
-                </Text>
-              </Pressable>
+              <Pilula
+                texto={t('novo_compromisso.opcao_data')}
+                ativa={vencimento.tipo === 'data'}
+                aoTocar={() => setVencimento({ tipo: 'data', data: dataDe(new Date()), hora: '23:59' })}
+              />
 
               {materiaId && materiaTemAula ? (
-                <Pressable
-                  style={[e.opcaoVencimento, vencimento.tipo === 'aula' && e.opcaoVencimentoSelecionada]}
-                  onPress={() => setVencimento({ tipo: 'aula', materiaId, ocorrencia: 1 })}
-                >
-                  <Text style={[e.textoOpcaoVencimento, vencimento.tipo === 'aula' && { fontWeight: '700' }]}>
-                    {t('novo_compromisso.opcao_proxima_aula', { materia: materiaSelecionada?.nome ?? '' })}
-                  </Text>
-                </Pressable>
+                <Pilula
+                  texto={t('novo_compromisso.opcao_proxima_aula', {
+                    materia: materiaSelecionada?.nome ?? '',
+                  })}
+                  ativa={vencimento.tipo === 'aula'}
+                  aoTocar={() => setVencimento({ tipo: 'aula', materiaId, ocorrencia: 1 })}
+                />
               ) : null}
             </Linha>
 
@@ -275,29 +252,16 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
             ) : (
               <View style={{ gap: espaco.s }}>
                 <Text style={fonte.secao}>{t('novo_compromisso.ocorrencia')}</Text>
-                <View style={e.listaPilulas}>
+                <Fileira>
                   {[1, 2, 3, 4].map((n) => (
-                    <Pressable
+                    <Pilula
                       key={n}
-                      style={[
-                        e.pilula,
-                        vencimento.ocorrencia === n && e.pilulaSelecionada,
-                      ]}
-                      onPress={() =>
-                        setVencimento({ tipo: 'aula', materiaId, ocorrencia: n })
-                      }
-                    >
-                      <Text
-                        style={[
-                          e.textoPilula,
-                          vencimento.ocorrencia === n && { color: cores.fundo, fontWeight: '700' },
-                        ]}
-                      >
-                        {t('novo_compromisso.proxima_aula_n', { n })}
-                      </Text>
-                    </Pressable>
+                      texto={t('novo_compromisso.proxima_aula_n', { n })}
+                      ativa={vencimento.ocorrencia === n}
+                      aoTocar={() => setVencimento({ tipo: 'aula', materiaId, ocorrencia: n })}
+                    />
                   ))}
-                </View>
+                </Fileira>
 
                 {previa ? (
                   <Cartao>
@@ -356,29 +320,16 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
                   <Cartao key={regra.id || idx}>
                     <View style={{ gap: espaco.s }}>
                       <Linha entre>
-                        <View style={e.listaPilulas}>
+                        <Fileira>
                           {(['normal', 'insistente', 'alarme'] as ModoAviso[]).map((m: ModoAviso) => (
-                            <Pressable
+                            <Pilula
                               key={m}
-                              style={[
-                                e.pilulaPequena,
-                                regra.modo === m && e.pilulaSelecionada,
-                              ]}
-                              onPress={() =>
-                                atualizarRegra(idx, { ...regra, modo: m })
-                              }
-                            >
-                              <Text
-                                style={[
-                                  e.textoPilula,
-                                  regra.modo === m && { color: cores.fundo, fontWeight: '700' },
-                                ]}
-                              >
-                                {t(`avisos.modo.${m}` as ChaveI18n)}
-                              </Text>
-                            </Pressable>
+                              texto={t(`avisos.modo.${m}` as ChaveI18n)}
+                              ativa={regra.modo === m}
+                              aoTocar={() => atualizarRegra(idx, { ...regra, modo: m })}
+                            />
                           ))}
-                        </View>
+                        </Fileira>
                         <Pressable onPress={() => removerRegra(idx)}>
                           <Apoio cor={cores.atrasado}>
                             {t('novo_compromisso.remover_aviso')}
@@ -511,36 +462,4 @@ const e = StyleSheet.create({
   },
   inputMultilinha: { height: 80, textAlignVertical: 'top' },
   listaPilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
-  pilula: {
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.s,
-    borderRadius: raio.pilula,
-    backgroundColor: cores.cartaoAlto,
-    borderWidth: 1,
-    borderColor: cores.borda,
-  },
-  pilulaPequena: {
-    paddingHorizontal: espaco.s,
-    paddingVertical: 4,
-    borderRadius: raio.pilula,
-    backgroundColor: cores.cartaoAlto,
-    borderWidth: 1,
-    borderColor: cores.borda,
-  },
-  pilulaSelecionada: { backgroundColor: cores.marfim },
-  textoPilula: { fontSize: 13, color: cores.texto },
-  opcaoVencimento: {
-    flex: 1,
-    padding: espaco.m,
-    borderRadius: raio.m,
-    borderWidth: 1,
-    borderColor: cores.borda,
-    backgroundColor: cores.cartao,
-    alignItems: 'center',
-  },
-  opcaoVencimentoSelecionada: {
-    borderColor: cores.marfim,
-    backgroundColor: cores.cartaoAlto,
-  },
-  textoOpcaoVencimento: { fontSize: 13, color: cores.texto },
 })

@@ -107,17 +107,20 @@ struct LinhaDoItem: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: 8) {
-      Capsule()
+      // Bolinha, não tarja lateral: é a mesma gramática que o app usa nas listas,
+      // e o widget precisa parecer o app, não um parente distante.
+      Circle()
         .fill(corDaMateria)
-        .frame(width: 3, height: compacto ? 26 : 30)
+        .frame(width: 7, height: 7)
 
       VStack(alignment: .leading, spacing: 1) {
         Text(item.titulo)
           .font(compacto ? .caption.weight(.semibold) : .subheadline.weight(.semibold))
+          .foregroundStyle(.white)
           .lineLimit(1)
         Text(legenda)
           .font(.caption2)
-          .foregroundStyle(item.atrasado ? Color.red : Color.secondary)
+          .foregroundStyle(item.atrasado ? Color(red: 1, green: 0.271, blue: 0.227) : Color.white.opacity(0.62))
           .lineLimit(1)
       }
       Spacer(minLength: 0)
@@ -148,9 +151,10 @@ struct SemNada: View {
     VStack(alignment: .leading, spacing: 4) {
       Text("Ostinato")
         .font(.caption.weight(.semibold))
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color(red: 1, green: 0.839, blue: 0.039))
       Text("Nada pendente")
         .font(.subheadline.weight(.semibold))
+        .foregroundStyle(.white)
       Spacer(minLength: 0)
     }
   }
@@ -178,7 +182,9 @@ struct VistaDoResumo: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     // `containerBackground` e obrigatorio a partir do iOS 17: sem ele o widget
     // aparece na galeria e desenha em branco na tela de inicio.
-    .containerBackground(.fill.tertiary, for: .widget)
+    // Preto puro, igual ao app — e não `.fill.tertiary`, que devolve o cinza
+    // padrão do sistema e faz o widget parecer de outro app na tela de início.
+    .containerBackground(for: .widget) { Color.black }
     // Tocar em qualquer lugar abre o app na aba certa.
     .widgetURL(URL(string: "ostinato://hoje"))
   }
