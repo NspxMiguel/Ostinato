@@ -9,9 +9,10 @@ import {
   View,
 } from 'react-native'
 import type { Aula, DiaSemana, Materia, SemanaAlternada } from '../../../nucleo/modelo.ts'
+import { LOCALE_DO_IDIOMA } from '../../../nucleo/modelo.ts'
 import { CORES_DE_MATERIA, cores, espaco, fonte, raio } from '../tema.ts'
 import { usarLoja } from '../estado/loja.ts'
-import { usarT } from '../i18n.ts'
+import { usarIdioma, usarT } from '../i18n.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
@@ -33,6 +34,7 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
+import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
@@ -46,6 +48,7 @@ function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string
 
 export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void }) {
   const t = usarT()
+  const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
   const remover = usarLoja((e) => e.remover)
@@ -113,43 +116,45 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
     return (
       <Tela titulo={t('grade.sem_periodo_titulo')}>
-        <Secao titulo={t('grade.sem_periodo_titulo')}>
-          <Apoio>{t('grade.sem_periodo_desc')}</Apoio>
+        {/* Sem repetir o título numa seção logo abaixo dele: a tela dizia
+            "Criar período letivo" duas vezes, uma grande e uma pequena. */}
+        <Apoio>{t('grade.sem_periodo_desc')}</Apoio>
+        <Cartao>
           <View style={e.campo}>
             <Text style={fonte.secao}>{t('grade.nome_periodo')}</Text>
             <TextInput
               style={e.input}
               value={nomePeriodo}
               onChangeText={setNomePeriodo}
-              placeholderTextColor={cores.textoFraco}
+              placeholderTextColor={cores.texto4}
             />
           </View>
-          <View style={e.campo}>
-            <Text style={fonte.secao}>{t('grade.inicio_periodo')}</Text>
-            <TextInput
-              style={e.input}
-              value={inicioPeriodo}
-              onChangeText={setInicioPeriodo}
-              placeholder="AAAA-MM-DD"
-              placeholderTextColor={cores.textoFraco}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={e.campo}>
-            <Text style={fonte.secao}>{t('grade.fim_periodo')}</Text>
-            <TextInput
-              style={e.input}
-              value={fimPeriodo}
-              onChangeText={setFimPeriodo}
-              placeholder="AAAA-MM-DD"
-              placeholderTextColor={cores.textoFraco}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </View>
-          <Botao texto={t('grade.criar_periodo')} aoTocar={handleCriarPeriodo} />
+        </Cartao>
+
+        {/* Datas pelo calendário do sistema, e não digitadas. Aqui era o mesmo
+            `AAAA-MM-DD` que já saiu da tela de nova tarefa — e é onde a correção
+            automática do iPhone estraga o texto sem ninguém perceber. */}
+        <Secao titulo={t('grade.inicio_periodo')}>
+          <SeletorDeData
+            data={inicioPeriodo}
+            hora="08:00"
+            locale={LOCALE_DO_IDIOMA[idioma]}
+            rotuloData={t('grade.inicio_periodo')}
+            rotuloHora={t('novo_compromisso.hora')}
+            aoMudar={(d) => setInicioPeriodo(d)}
+          />
         </Secao>
+        <Secao titulo={t('grade.fim_periodo')}>
+          <SeletorDeData
+            data={fimPeriodo}
+            hora="23:59"
+            locale={LOCALE_DO_IDIOMA[idioma]}
+            rotuloData={t('grade.fim_periodo')}
+            rotuloHora={t('novo_compromisso.hora')}
+            aoMudar={(d) => setFimPeriodo(d)}
+          />
+        </Secao>
+        <Botao texto={t('grade.criar_periodo')} aoTocar={handleCriarPeriodo} />
       </Tela>
     )
   }
