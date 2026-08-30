@@ -26,6 +26,7 @@ import {
   Titulo,
   Vazio,
 } from '../componentes/ui.tsx'
+import { temLiquidGlass } from 'vidro'
 import { rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
@@ -319,6 +320,15 @@ export function Ajustes() {
 
       <Secao titulo={t('ajustes.sincronizacao')}>
         <Apoio>{textoDaNuvem}</Apoio>
+        {/* Diagnóstico, e não enfeite: o módulo Swift do Liquid Glass é
+            invisível quando funciona, e sem isso a única forma de saber se ele
+            está ativo é acreditar em quem escreveu o código. */}
+        <Linha entre>
+          <Apoio>{t('ajustes.vidro')}</Apoio>
+          <Apoio cor={temLiquidGlass() ? cores.ok : cores.textoFraco}>
+            {temLiquidGlass() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
+          </Apoio>
+        </Linha>
       </Secao>
 
       <Secao titulo={t('ajustes.avisos_agendados', { n: plano.agendar.length })}>
