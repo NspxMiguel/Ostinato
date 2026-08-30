@@ -9,6 +9,10 @@ const config = getDefaultConfig(__dirname)
 // e ela que o Android e a web vao reaproveitar sem copia. O Metro precisa
 // vigiar a raiz do repositorio para enxergar aqueles arquivos.
 config.watchFolders = [raizDoRepo]
+
+// O som do alarme e um .caf, que o Metro nao trata como asset por padrao — sem
+// esta linha o `require` do sino quebra o bundle em vez de dar erro claro.
+config.resolver.assetExts = [...config.resolver.assetExts, 'caf']
 config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, 'node_modules'),
   path.resolve(raizDoRepo, 'node_modules'),
