@@ -1,14 +1,16 @@
+import type { Idioma } from '../../../../nucleo/modelo.ts'
+import { LOCALE_DO_IDIOMA } from '../../../../nucleo/modelo.ts'
 import { moduloOpcional } from '../../../src/modulosNativos.ts'
 import type { EventSubscription } from 'expo-modules-core'
 
 const modulo = moduloOpcional<any>('Voz')
 
 /** O idioma do ditado, no formato que o iOS espera. */
-export function localeDe(idioma: 'pt' | 'en'): string {
-  return idioma === 'pt' ? 'pt-BR' : 'en-US'
+export function localeDe(idioma: Idioma): string {
+  return LOCALE_DO_IDIOMA[idioma]
 }
 
-export function temVoz(idioma: 'pt' | 'en'): boolean {
+export function temVoz(idioma: Idioma): boolean {
   try {
     return modulo?.disponivel?.(localeDe(idioma)) ?? false
   } catch {
@@ -32,7 +34,7 @@ export type Ouvinte = {
   aoFalhar: (motivo: string) => void
 }
 
-export function ouvir(idioma: 'pt' | 'en', o: Ouvinte): () => Promise<string> {
+export function ouvir(idioma: Idioma, o: Ouvinte): () => Promise<string> {
   if (!modulo) {
     o.aoFalhar('ditado indisponível')
     return async () => ''

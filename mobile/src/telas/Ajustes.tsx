@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { StyleSheet, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
-import { TIPOS_COMPROMISSO, type ModoAviso, type RegraAviso, type TipoCompromisso } from '../../../nucleo/modelo.ts'
+import {
+  IDIOMAS,
+  NOME_DO_IDIOMA,
+  TIPOS_COMPROMISSO,
+  type ModoAviso,
+  type RegraAviso,
+  type TipoCompromisso,
+} from '../../../nucleo/modelo.ts'
 import { dataDe } from '../../../nucleo/tempo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
@@ -227,23 +234,23 @@ export function Ajustes() {
   return (
     <Tela titulo={t('abas.ajustes')}>
       <Secao titulo={t('ajustes.idioma')}>
-        <Linha>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s }}>
           <Botao
             texto={t('ajustes.seguir_sistema')}
             variante={ajustes.idioma === null ? 'cheio' : 'vazado'}
             aoTocar={() => mudarAjustes({ idioma: null })}
           />
-          <Botao
-            texto={t('ajustes.portugues')}
-            variante={ajustes.idioma === 'pt' ? 'cheio' : 'vazado'}
-            aoTocar={() => mudarAjustes({ idioma: 'pt' })}
-          />
-          <Botao
-            texto={t('ajustes.english')}
-            variante={ajustes.idioma === 'en' ? 'cheio' : 'vazado'}
-            aoTocar={() => mudarAjustes({ idioma: 'en' })}
-          />
-        </Linha>
+          {/* Cada idioma aparece no próprio nome: quem procura "Español" não
+              está lendo a tela em português para achar "Espanhol". */}
+          {IDIOMAS.map((id) => (
+            <Botao
+              key={id}
+              texto={NOME_DO_IDIOMA[id]}
+              variante={ajustes.idioma === id ? 'cheio' : 'vazado'}
+              aoTocar={() => mudarAjustes({ idioma: id })}
+            />
+          ))}
+        </View>
       </Secao>
 
       <Secao titulo={t('ajustes.padroes_aviso_tipo')}>

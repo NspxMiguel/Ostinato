@@ -3,7 +3,9 @@
  * Caso falte alguma chave em inglês, o sistema usará a versão em português de forma silenciosa.
  */
 
-export type Idioma = 'pt' | 'en'
+import type { Idioma } from './modelo.ts'
+
+export type { Idioma }
 
 const traducoes = {
   pt: {
@@ -549,9 +551,18 @@ export type ChaveI18n = keyof PT
  * Cria a função de tradução `t` para o idioma escolhido.
  * Caso uma chave falte em inglês, ela será exibida em português como fallback.
  */
+/**
+ * Cria o `t` do idioma escolhido.
+ *
+ * Chave que falta cai para o português, em silêncio. É de propósito: um idioma
+ * novo entra pela metade e o app continua inteiro, em vez de mostrar o nome da
+ * chave na tela. Quem cobra a tradução completa é o `scripts/teste-chaves-i18n.mjs`,
+ * que falha o build — o lugar certo para essa cobrança é ali, não no usuário.
+ */
 export function criarT(idioma: Idioma) {
   return function t(chave: ChaveI18n, variaveis?: Record<string, string | number>): string {
-    const mapa = (traducoes[idioma] ?? traducoes.pt) as Record<string, string>
+    const mapa = ((traducoes as Record<string, Record<string, string>>)[idioma] ??
+      traducoes.pt) as Record<string, string>
     const ptMapa = traducoes.pt as Record<string, string>
     let str = mapa[chave] ?? ptMapa[chave] ?? chave
     if (variaveis) {

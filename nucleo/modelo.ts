@@ -159,7 +159,33 @@ export function baseVazia(): Base {
 
 // ─── Ajustes (singleton, não é registro sincronizável por enquanto) ──────────
 
-export type Idioma = 'pt' | 'en'
+/**
+ * Os idiomas da interface.
+ *
+ * O app não é só do Brasil. A estrutura foi feita para isso desde o começo —
+ * chave por chave, com um script que falha o build quando falta tradução — e
+ * cada idioma novo é um bloco a mais, não uma varredura pelas telas.
+ */
+export type Idioma = 'pt' | 'en' | 'es' | 'fr'
+
+/** A ordem em que aparecem em Ajustes. */
+export const IDIOMAS: readonly Idioma[] = ['pt', 'en', 'es', 'fr']
+
+/** Como cada idioma se chama na própria língua. */
+export const NOME_DO_IDIOMA: Record<Idioma, string> = {
+  pt: 'Português',
+  en: 'English',
+  es: 'Español',
+  fr: 'Français',
+}
+
+/** O locale que o sistema entende, para formatar data e hora. */
+export const LOCALE_DO_IDIOMA: Record<Idioma, string> = {
+  pt: 'pt-BR',
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+}
 
 export type Ajustes = {
   /** `null` = seguir o idioma do sistema. */

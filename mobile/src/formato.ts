@@ -1,6 +1,7 @@
 // Datas e distâncias como uma pessoa fala.
 
-import type { DataISO, RegraAviso } from '../../nucleo/modelo.ts'
+import type { DataISO, Idioma, RegraAviso } from '../../nucleo/modelo.ts'
+import { LOCALE_DO_IDIOMA } from '../../nucleo/modelo.ts'
 import { criarT } from '../../nucleo/i18n.ts'
 import { dataDe, diferencaEmDias, instante, somarDias } from '../../nucleo/tempo.ts'
 
@@ -17,11 +18,11 @@ export function distancia(deMs: number, ateMs: number, t: T): string {
 }
 
 /** "Hoje", "Amanhã", ou "quinta, 3 de setembro". */
-export function diaPorExtenso(data: DataISO, idioma: 'pt' | 'en', t: T, hoje = dataDe(new Date())): string {
+export function diaPorExtenso(data: DataISO, idioma: Idioma, t: T, hoje = dataDe(new Date())): string {
   const d = diferencaEmDias(hoje, data)
   if (d === 0) return t('agenda.hoje')
   if (d === 1) return t('agenda.amanha')
-  return instante(data).toLocaleDateString(idioma === 'pt' ? 'pt-BR' : 'en-US', {
+  return instante(data).toLocaleDateString(LOCALE_DO_IDIOMA[idioma], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -29,8 +30,8 @@ export function diaPorExtenso(data: DataISO, idioma: 'pt' | 'en', t: T, hoje = d
 }
 
 /** "quinta, 3 de setembro, 13:30" — o formato longo, com hora. */
-export function momentoPorExtenso(quando: Date, idioma: 'pt' | 'en'): string {
-  return quando.toLocaleString(idioma === 'pt' ? 'pt-BR' : 'en-US', {
+export function momentoPorExtenso(quando: Date, idioma: Idioma): string {
+  return quando.toLocaleString(LOCALE_DO_IDIOMA[idioma], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -39,8 +40,8 @@ export function momentoPorExtenso(quando: Date, idioma: 'pt' | 'en'): string {
   })
 }
 
-export function horaCurta(quando: Date, idioma: 'pt' | 'en'): string {
-  return quando.toLocaleTimeString(idioma === 'pt' ? 'pt-BR' : 'en-US', {
+export function horaCurta(quando: Date, idioma: Idioma): string {
+  return quando.toLocaleTimeString(LOCALE_DO_IDIOMA[idioma], {
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -53,10 +54,10 @@ export function horaCurta(quando: Date, idioma: 'pt' | 'en'): string {
  * ele acerta a gramática de cada idioma, e um terceiro idioma não custa mais
  * dezenove traduções para escrever e esquecer.
  */
-export function dataPorExtenso(iso: DataISO, hojeISO: DataISO, t: T, idioma: 'pt' | 'en'): string {
+export function dataPorExtenso(iso: DataISO, hojeISO: DataISO, t: T, idioma: Idioma): string {
   if (iso === hojeISO) return t('data.hoje')
   if (iso === somarDias(hojeISO, 1)) return t('data.amanha')
-  return instante(iso).toLocaleDateString(idioma === 'pt' ? 'pt-BR' : 'en-US', {
+  return instante(iso).toLocaleDateString(LOCALE_DO_IDIOMA[idioma], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -68,7 +69,7 @@ export function quandoPorExtenso(
   hora: string,
   hojeISO: DataISO,
   t: T,
-  idioma: 'pt' | 'en',
+  idioma: Idioma,
 ): string {
   return t('data.com_hora', { data: dataPorExtenso(iso, hojeISO, t, idioma), hora })
 }
@@ -105,7 +106,7 @@ export function rotuloDeRegra(regra: RegraAviso, t: T): string {
  * meio da frase. Baixar a inicial ali deixaria "Alerts you friday", que é erro
  * de português aplicado ao inglês.
  */
-export function comInicialMinuscula(texto: string, idioma: 'pt' | 'en'): string {
+export function comInicialMinuscula(texto: string, idioma: Idioma): string {
   if (idioma !== 'pt' || texto.length === 0) return texto
   return texto[0]!.toLocaleLowerCase('pt-BR') + texto.slice(1)
 }
