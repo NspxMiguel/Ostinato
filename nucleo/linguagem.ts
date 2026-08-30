@@ -546,3 +546,36 @@ export function interpretar(_texto: string, _agora: Date, _idioma: Idioma): Inte
     return { titulo: tituloSeguro, confianca: 0.1, marcas: [], faltando: ['data', 'materia'] }
   }
 }
+
+/**
+ * Interpreta tentando o idioma da interface primeiro, e os outros depois.
+ *
+ * O app é global, e a língua da INTERFACE não é necessariamente a língua em que
+ * a pessoa escreve. Um estudante brasileiro com o iPhone em inglês digita
+ * "prova de historia sexta que vem", e com uma leitura só ele receberia de volta
+ * "Task, sem data" — o app pareceria burro por um motivo que não tem nada a ver
+ * com o que ele pediu.
+ *
+ * O critério de desempate é a confiança, e o idioma preferido ganha os empates:
+ * quem escreve na língua da interface é a maioria, e não deve pagar por quem não
+ * escreve.
+ */
+export function interpretarMelhor(
+  texto: string,
+  agora: Date,
+  preferido: Idioma,
+  candidatos: readonly Idioma[] = ['pt', 'en'],
+): Interpretacao {
+  const ordem = [preferido, ...candidatos.filter((i) => i !== preferido)]
+  let melhor: Interpretacao | null = null
+  for (const idioma of ordem) {
+    let atual: Interpretacao
+    try {
+      atual = interpretar(texto, agora, idioma)
+    } catch {
+      continue
+    }
+    if (!melhor || atual.confianca > melhor.confianca) melhor = atual
+  }
+  return melhor ?? { titulo: texto.trim(), confianca: 0.1, marcas: [], faltando: ['data', 'materia'] }
+}

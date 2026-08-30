@@ -11,7 +11,7 @@ import * as ImagePicker from 'expo-image-picker'
 import type { Compromisso, Materia, TipoCompromisso } from '../../../nucleo/modelo.ts'
 import { TIPOS_COMPROMISSO } from '../../../nucleo/modelo.ts'
 import type { Interpretacao } from '../../../nucleo/linguagem.ts'
-import { interpretar } from '../../../nucleo/linguagem.ts'
+import { interpretarMelhor } from '../../../nucleo/linguagem.ts'
 import { resolverMateria, comApelido } from '../../../nucleo/materias.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { instante, dataDe } from '../../../nucleo/tempo.ts'
@@ -51,7 +51,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   let lido: Interpretacao | null = null
   let erroDeLeitura = false
   try {
-    lido = texto.trim() === '' ? null : interpretar(texto, agora, idioma)
+    lido = texto.trim() === '' ? null : interpretarMelhor(texto, agora, idioma)
   } catch {
     erroDeLeitura = true
   }
