@@ -35,6 +35,7 @@
     },
     "plugins": [
       "./plugins/ios-assinatura",
+      "./plugins/textos-de-permissao",
       "./plugins/icloud",
       [
         "expo-splash-screen",
@@ -58,10 +59,11 @@
       ],
       "expo-audio",
       "expo-background-task",
-      "@bacons/apple-targets"
+      "./plugins/widget"
     ],
     "extra": {
-      "icloud": false
+      "icloud": false,
+      "widget": true
     },
     "icon": "./assets/icone.png",
     "backgroundColor": "#14110F"

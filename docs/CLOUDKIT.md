@@ -89,3 +89,26 @@ disagree — without a paid account, the binary does not even mention `CKContain
    That single flag adds the entitlement and compiles the CloudKit half in.
 5. Turn the app's sync setting on. Nothing else changes: `PortaCloudKit` already
    implements the same interface the tests exercise.
+
+## The other two things a free Apple account blocks
+
+Measured on 2026-08-30 with `xcodebuild -allowProvisioningUpdates`, building for
+`generic/platform=iOS`:
+
+```
+error: No profiles for 'dev.nspx.ostinato.widget' were found: Xcode couldn't find
+any iOS App Development provisioning profiles matching 'dev.nspx.ostinato.widget'
+(in target 'OstinatoAtividade')
+```
+
+It is not a missing permission — **a free account issues no provisioning profile
+for any extension target at all**, and `-allowProvisioningUpdates` does not help.
+Since the extension ships embedded in the app, it takes the whole device build
+down with it.
+
+None of this applies to the Simulator, which requires no profile. That is why the
+Live Activity and the Dynamic Island already work and were verified running.
+
+`extra.widget` in `mobile/app.json` is the switch: `false` plus
+`expo prebuild --clean` removes the target from the project and gives the device
+build back, losing only the Live Activity. No code is deleted.
