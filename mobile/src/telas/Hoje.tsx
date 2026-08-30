@@ -29,7 +29,13 @@ type TFn = ReturnType<typeof criarT>
 
 const LIMITE_CHEGANDO = 10
 
-export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) => void }) {
+export function Hoje({
+  aoAbrirCompromisso,
+  aoIrParaGrade,
+}: {
+  aoAbrirCompromisso: (id: string) => void
+  aoIrParaGrade?: () => void
+}) {
   const t = usarT()
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
@@ -65,9 +71,10 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
       <Secao titulo={t('hoje.aulas')}>
         {aulas.length === 0 ? (
           <Vazio
-            texto={
-              semGrade ? t('hoje.vazio_aulas', { aba: t('abas.grade') }) : t('hoje.sem_aulas')
-            }
+            titulo={semGrade ? t('hoje.vazio_aulas_titulo') : t('hoje.sem_aulas')}
+            texto={semGrade ? t('hoje.vazio_aulas', { aba: t('abas.grade') }) : ''}
+            acao={semGrade ? t('abas.grade') : undefined}
+            aoAgir={semGrade ? aoIrParaGrade : undefined}
           />
         ) : (
           aulas.map((item, i) => {
@@ -104,7 +111,8 @@ export function Hoje({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) 
       <Secao titulo={t('hoje.chegando')}>
         {chegando.length === 0 ? (
           <Vazio
-            texto={semCompromisso ? t('hoje.vazio_compromissos') : t('hoje.nada_entregar')}
+            titulo={semCompromisso ? t('hoje.vazio_compromissos_titulo') : t('hoje.nada_entregar')}
+            texto={semCompromisso ? t('hoje.vazio_compromissos') : ''}
           />
         ) : (
           chegando.map((item, i) => {

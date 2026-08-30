@@ -183,7 +183,7 @@ export function Raiz() {
       {/* A aba inteira reaparece a cada troca; a chave faz o React remontar e a
           `Entrada` de cada item rodar de novo, o que dá a transição. */}
       <View style={{ flex: 1 }} key={aba}>
-        {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} /> : null}
+        {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} aoIrParaGrade={() => setAba('grade')} /> : null}
         {aba === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
         {aba === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
         {aba === 'ajustes' ? <Ajustes /> : null}
@@ -360,7 +360,10 @@ function BarraDeAbas({
         </GlassView>
       ) : null}
 
-      <GlassView glassEffectStyle="regular" isInteractive style={e.barra}>
+      {/* `clear`, não `regular`: a variante regular é a densa, feita para
+          conteúdo claro atrás. Sobre preto ela vira um cinza chapado, que é
+          exatamente o "opaco demais" — a clear deixa passar. */}
+      <GlassView glassEffectStyle="clear" isInteractive style={e.barra}>
         {ABAS.map((item) => (
           <Pressable
             key={item.id}

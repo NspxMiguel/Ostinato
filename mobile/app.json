@@ -30,7 +30,7 @@
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icone.png",
-        "backgroundColor": "#14110F"
+        "backgroundColor": "#000000"
       }
     },
     "plugins": [
@@ -42,7 +42,7 @@
         {
           "image": "./assets/icone.png",
           "imageWidth": 180,
-          "backgroundColor": "#14110F",
+          "backgroundColor": "#000000",
           "resizeMode": "contain"
         }
       ],
@@ -68,6 +68,6 @@
       "widget": true
     },
     "icon": "./assets/icone.png",
-    "backgroundColor": "#14110F"
+    "backgroundColor": "#000000"
   }
 }

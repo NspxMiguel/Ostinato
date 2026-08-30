@@ -299,7 +299,10 @@ export function Pilula({
       <GlassView
         glassEffectStyle="regular"
         isInteractive
-        tintColor={ativa ? cores.texto : undefined}
+        // Alfa baixo, e NÃO `cores.texto`: tingir vidro de branco pleno devolve
+        // uma pílula branca opaca com texto branco em cima — ilegível. A seleção
+        // é uma diferença de luz, não uma troca de cor.
+        tintColor={ativa ? 'rgba(255,255,255,0.20)' : undefined}
         style={e.pilulaVidro}
       >
         {conteudo}
@@ -378,10 +381,38 @@ export function Botao({
   )
 }
 
-export function Vazio({ texto }: { texto: string }) {
+/**
+ * Estado vazio.
+ *
+ * Antes era uma frase cinza centrada no meio de uma tela preta, e é isso que
+ * fazia o app parecer não terminado: a primeira coisa que TODO usuário novo vê
+ * era um vazio com uma legenda.
+ *
+ * Um estado vazio da Apple tem três partes — uma forma, um título, e uma AÇÃO.
+ * A ação é a que muda tudo: "cadastre sua grade na aba Grade" é um beco sem
+ * saída que manda a pessoa procurar; um botão leva ela lá.
+ */
+export function Vazio({
+  texto,
+  titulo,
+  acao,
+  aoAgir,
+}: {
+  texto: string
+  titulo?: string
+  acao?: string
+  aoAgir?: () => void
+}) {
   return (
     <View style={e.vazio}>
-      <Text style={[fonte.apoio, { textAlign: 'center', color: cores.texto3 }]}>{texto}</Text>
+      {/* Um anel, não um ícone de biblioteca: é a mesma forma da aba Hoje e do
+          alarme, e é o mais perto de uma marca que este app tem. */}
+      <View style={e.anelVazio} />
+      {titulo ? <Text style={[fonte.tituloItem, { textAlign: 'center' }]}>{titulo}</Text> : null}
+      <Text style={[fonte.apoio, { textAlign: 'center', color: cores.texto3, maxWidth: 280 }]}>
+        {texto}
+      </Text>
+      {acao && aoAgir ? <Botao texto={acao} variante="vazado" aoTocar={aoAgir} /> : null}
     </View>
   )
 }
@@ -503,5 +534,13 @@ const e = StyleSheet.create({
     minHeight: 44,
     paddingVertical: espaco.s,
   },
-  vazio: { paddingVertical: espaco.ggg, alignItems: 'center' },
+  vazio: { paddingVertical: espaco.ggg, alignItems: 'center', gap: espaco.m },
+  anelVazio: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: cores.texto4,
+    marginBottom: espaco.xs,
+  },
 })

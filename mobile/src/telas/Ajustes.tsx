@@ -321,32 +321,6 @@ export function Ajustes() {
         </Grupo>
       </Secao>
 
-      <Secao titulo={t('ajustes.idioma')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            {/* Escolher idioma é seleção, não ação: pílulas, e não cinco botões
-                amarelos disputando qual é o principal da tela. */}
-            <Fileira>
-              <Pilula
-                texto={`${t('ajustes.seguir_sistema')} · ${NOME_DO_IDIOMA[idiomaDoSistema()]}`}
-                ativa={ajustes.idioma === null}
-                aoTocar={() => mudarAjustes({ idioma: null })}
-              />
-              {/* Cada idioma no próprio nome: quem procura "Español" não está
-                  lendo a tela em português para achar "Espanhol". */}
-              {IDIOMAS.map((id) => (
-                <Pilula
-                  key={id}
-                  texto={NOME_DO_IDIOMA[id]}
-                  ativa={ajustes.idioma === id}
-                  aoTocar={() => mudarAjustes({ idioma: id })}
-                />
-              ))}
-            </Fileira>
-          </View>
-        </Grupo>
-      </Secao>
-
       {/* Um tipo por linha, e as regras dele abrem numa folha. */}
       <Secao titulo={t('ajustes.avisos')}>
         <Grupo>
