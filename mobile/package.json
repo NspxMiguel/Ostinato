@@ -1,0 +1,42 @@
+{
+  "name": "giz-mobile",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo run:ios",
+    "android": "expo run:android"
+  },
+  "dependencies": {
+    "expo": "~57.0.15",
+    "expo-audio": "~57.0.4",
+    "expo-background-task": "~57.0.14",
+    "expo-font": "~57.0.1",
+    "expo-haptics": "~57.0.1",
+    "expo-image-picker": "~57.0.14",
+    "expo-localization": "~57.0.1",
+    "expo-notifications": "~57.0.13",
+    "expo-splash-screen": "~57.0.7",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.2",
+    "expo-task-manager": "~57.0.14",
+    "nativewind": "^4.2.6",
+    "react": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-mmkv": "^4.3.2",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "tailwindcss": "^3.4.19",
+    "vidro": "file:./modules/vidro",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "babel-preset-expo": "^57.0.7",
+    "typescript": "~6.0.3"
+  }
+}

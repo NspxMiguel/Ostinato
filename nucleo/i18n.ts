@@ -102,6 +102,12 @@ const traducoes = {
     'ajustes.avisos_agendados': '{n} de 60 avisos agendados',
 
     // 9. Notificações
+    'notificacao.titulo': '{tipo}: {titulo}',
+    'notificacao.corpo.dias': 'Em {n} dias{materia}',
+    'notificacao.corpo.amanha': 'Amanhã{materia}',
+    'notificacao.corpo.horas': 'Em {n} horas{materia}',
+    'notificacao.corpo.minutos': 'Em {n} minutos{materia}',
+    'notificacao.corpo.agora': 'Vence agora{materia}',
     'notificacao.prova_dias.titulo': 'Prova chegando',
     'notificacao.prova_dias.corpo': 'Prova de {materia} em {n} dias',
     'notificacao.entrega_amanha.titulo': 'Entrega amanhã',
@@ -207,6 +213,12 @@ const traducoes = {
     'ajustes.avisos_agendados': '{n} of 60 alerts scheduled',
 
     // 9. Notificações
+    'notificacao.titulo': '{tipo}: {titulo}',
+    'notificacao.corpo.dias': 'In {n} days{materia}',
+    'notificacao.corpo.amanha': 'Tomorrow{materia}',
+    'notificacao.corpo.horas': 'In {n} hours{materia}',
+    'notificacao.corpo.minutos': 'In {n} minutes{materia}',
+    'notificacao.corpo.agora': 'Due now{materia}',
     'notificacao.prova_dias.titulo': 'Upcoming exam',
     'notificacao.prova_dias.corpo': 'Exam for {materia} in {n} days',
     'notificacao.entrega_amanha.titulo': 'Due tomorrow',

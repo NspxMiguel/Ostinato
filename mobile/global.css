@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Valores iniciais dos tokens, so para o primeiro quadro.
+   A partir do momento em que o <Tema> monta, quem manda e o `vars()` que ele
+   injeta na raiz — e a fonte daqueles valores e `src/nucleo/paleta.ts`.
+   Mexer em cor la, nao aqui: aqui e apenas o escuro, que e o padrao do app. */
+:root {
+  --bg: #0d1117;
+  --surface-1: #11161d;
+  --surface-2: #161c25;
+  --surface-3: #111827;
+  --borda: rgba(255, 255, 255, 0.06);
+  --borda-forte: rgba(255, 255, 255, 0.12);
+  --texto-1: #e6edf3;
+  --texto-2: #cbd5e1;
+  --texto-3: #96a3b3;
+  --texto-4: #7e8b9b;
+  --primaria: #10b981;
+  --lucro: #4ade80;
+  --perda: #f87171;
+  --ouro: #fbbf24;
+}

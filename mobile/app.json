@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Giz",
+    "slug": "giz",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "giz",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "dev.nspx.giz",
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "fetch",
+          "processing"
+        ],
+        "NSCameraUsageDescription": "Para ler o horário das aulas a partir de uma foto, no próprio aparelho.",
+        "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem."
+      }
+    },
+    "android": {
+      "package": "dev.nspx.giz",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#1F1B16",
+          "sounds": [
+            "./assets/giz-sino.caf"
+          ]
+        }
+      ],
+      "./plugins/ios-assinatura",
+      "expo-audio",
+      "expo-background-task"
+    ],
+    "extra": {}
+  }
+}
