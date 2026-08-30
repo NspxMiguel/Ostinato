@@ -95,6 +95,15 @@ export type RegraAviso = {
 
 export type Compromisso = Registro & {
   materiaId?: string
+  /**
+   * Quando ele anotou. NÃO é `atualizadoEm` — este não muda ao editar.
+   *
+   * É a âncora de `vencimento.tipo === 'aula'`: "na próxima aula de matemática"
+   * significa a próxima aula depois do momento em que você anotou. Resolver contra
+   * o "agora" faria o prazo escorregar para a frente todo dia, e a tarefa nunca
+   * venceria — que é o oposto do app.
+   */
+  criadoEm: number
   tipo: TipoCompromisso
   titulo: string
   detalhe?: string
