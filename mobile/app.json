@@ -67,7 +67,7 @@
     "extra": {
       "icloud": false,
       "widget": true,
-      "rotuloDeBuild": "A1"
+      "rotuloDeBuild": "A2"
     },
     "icon": "./assets/icone.png",
     "backgroundColor": "#000000"

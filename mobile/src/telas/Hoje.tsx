@@ -21,6 +21,7 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { comInicialMinuscula, dataPorExtenso, horaDeTexto, quandoPorExtenso } from '../formato.ts'
+import { ehAssuntoDeHoje } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco } from '../tema.ts'
@@ -233,25 +234,16 @@ function montarChegando(
 
   resolvidos.sort((a, b) => (a.resolvido?.quando.getTime() ?? 0) - (b.resolvido?.quando.getTime() ?? 0))
 
-  // HOJE é hoje. Uma tarefa que vence quarta não é coisa para fazer hoje, e
-  // misturar as duas transforma esta tela numa segunda Agenda — que é a aba do
-  // lado, e essa sim mostra tudo.
+  // Quem decide o que é assunto de hoje mora no núcleo, com teste.
   //
-  // Atrasado FICA: já passou da hora, então é a coisa mais de hoje que existe.
-  //
-  // E AVISAR HOJE também conta, que era o que faltava.
-  //
-  // Ele marcou uma tarefa para amanhã com o alarme para hoje de manhã, e ela
-  // não apareceu aqui. Estava certo em reclamar: se o app vai tocar hoje por
-  // causa dela, ela é assunto de hoje — o prazo é amanhã, mas a AÇÃO é agora.
-  // Filtrar só por vencimento escondia exatamente o compromisso sobre o qual a
-  // pessoa acabou de ser cobrada.
-  const hojeISO = dataDe(agora)
-  const deHoje = resolvidos.filter(
-    (i) =>
-      i.atrasado ||
-      (i.resolvido && dataDe(i.resolvido.quando) === hojeISO) ||
-      (i.proximoAviso && dataDe(new Date(i.proximoAviso.quando)) === hojeISO),
+  // Esta regra já esteve errada três vezes — só vencimento, depois vencimento
+  // mais aviso futuro — e cada versão escondia algo que a pessoa tinha para
+  // fazer. Fora da tela ela é testável, e é lá que a razão está escrita.
+  const deHoje = resolvidos.filter((i) =>
+    ehAssuntoDeHoje(
+      { quando: i.resolvido?.quando ?? null, proximoAviso: i.proximoAviso ? new Date(i.proximoAviso.quando) : null },
+      agora,
+    ),
   )
   return [...semDataItens, ...deHoje.slice(0, LIMITE_CHEGANDO)]
 }
