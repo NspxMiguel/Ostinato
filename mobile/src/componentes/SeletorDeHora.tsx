@@ -80,7 +80,14 @@ export function SeletorDeHora({
         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setAberto(false)} />
         <View
           style={{
-            backgroundColor: cores.cartaoAlto,
+            // OPACO, e não `cores.cartaoAlto`.
+            //
+            // Aquela cor é branco com 11% de alfa — feita para se apoiar sobre o
+            // fundo preto de uma tela. Aqui ela flutua num `Modal` transparente,
+            // e o que apareceu foi a tela de trás inteira ATRAVÉS da roda:
+            // "Allow the alarm" escrito por cima dos números. Folha precisa de
+            // fundo próprio.
+            backgroundColor: cores.fundoElevado,
             borderTopLeftRadius: raio.g,
             borderTopRightRadius: raio.g,
             paddingHorizontal: espaco.g,

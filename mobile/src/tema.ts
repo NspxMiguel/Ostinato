@@ -23,6 +23,14 @@ export const paletaEscura = {
   cartao: 'rgba(255,255,255,0.07)',
   /** Pílula selecionada, opção ativa de segmentado. */
   cartaoAlto: 'rgba(255,255,255,0.11)',
+  /**
+   * Fundo OPACO para folha e menu que flutuam sobre a tela.
+   *
+   * As cores de cartão são translúcidas de propósito — elas se apoiam no preto
+   * da tela atrás. Num `Modal` transparente não há esse preto, e o conteúdo da
+   * tela vaza através da folha.
+   */
+  fundoElevado: '#1C1C1E',
   borda: 'rgba(255,255,255,0.09)',
   texto: '#FFFFFF',
   textoFraco: 'rgba(255,255,255,0.62)',
@@ -59,6 +67,7 @@ export const paletaClara = {
   fundo: '#FFFFFF',
   cartao: 'rgba(0,0,0,0.045)',
   cartaoAlto: 'rgba(0,0,0,0.07)',
+  fundoElevado: '#F2F2F7',
   borda: 'rgba(0,0,0,0.09)',
   texto: '#000000',
   textoFraco: 'rgba(0,0,0,0.62)',
