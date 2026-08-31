@@ -54,14 +54,14 @@ test('"Festa de julho" não é cabeçalho de mês', () => {
   // inteiro — foi o erro que o teste do cabeçalho existe para pegar.
   const eventos = lerCalendario('Março\n5 Festa de julho\n', 2026)
   assert.equal(eventos.length, 1)
-  assert.equal(eventos[0].inicio, '2026-03-05')
+  assert.equal(eventos[0]!.inicio, '2026-03-05')
 })
 
 test('linha com data própria manda no mês corrente', () => {
   const eventos = lerCalendario('Janeiro\n19/02 Reunião de pais\n20 Prova\n', 2026)
-  assert.equal(eventos[0].inicio, '2026-02-19')
+  assert.equal(eventos[0]!.inicio, '2026-02-19')
   // E a linha seguinte segue nesse mês, não volta para janeiro.
-  assert.equal(eventos[1].inicio, '2026-02-20')
+  assert.equal(eventos[1]!.inicio, '2026-02-20')
 })
 
 test('linha sem mês nenhum antes dela é ignorada, não chutada', () => {
@@ -73,13 +73,13 @@ test('o ano vem de fora', () => {
   // A folha quase nunca repete o ano, e adivinhar pelo relógio erraria em
   // dezembro, quando a escola já publicou o calendário do ano seguinte.
   const eventos = lerCalendario('Janeiro\n1 Dia Mundial da Paz\n', 2027)
-  assert.equal(eventos[0].inicio, '2027-01-01')
+  assert.equal(eventos[0]!.inicio, '2027-01-01')
 })
 
 test('lixo de OCR não vira evento', () => {
   const eventos = lerCalendario('Janeiro\n|||\n99 Nada\n1\n5 Prova de matemática\n', 2026)
   assert.equal(eventos.length, 1)
-  assert.equal(eventos[0].efeito, 'avaliacao')
+  assert.equal(eventos[0]!.efeito, 'avaliacao')
 })
 
 // As linhas abaixo são recortes EXATOS do que sai ao copiar o PDF do calendário

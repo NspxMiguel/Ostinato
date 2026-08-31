@@ -35,6 +35,12 @@ import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
 import { idiomaDoSistema, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
+import {
+  estadoDoAlarme,
+  pedirPermissaoDeAlarme,
+  type EstadoDoAlarme,
+} from '../../modules/alarme/src/index.ts'
+import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 
 function Campo({
   rotulo,

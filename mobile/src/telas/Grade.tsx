@@ -596,7 +596,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   placeholderTextColor={cores.textoFraco}
                 />
                 {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}
-                {avisoIa ? <Text style={e.ajuda}>{t(avisoIa)}</Text> : null}
+                {avisoIa ? <Text style={e.ajuda}>{t(avisoIa as ChaveI18n)}</Text> : null}
                 {temLeitura() ? (
                   <Botao
                     texto={lendoFoto ? t('captura.lendo') : t('grade.tirar_foto')}
@@ -664,7 +664,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 const e = StyleSheet.create({
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
-  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.p, lineHeight: 18 },
+  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.s, lineHeight: 18 },
   linhaAula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
   horaAula: { minWidth: 46, paddingTop: 1 },
   horaInicio: { fontSize: 15, fontWeight: '600', color: cores.texto, fontVariant: ['tabular-nums'] },

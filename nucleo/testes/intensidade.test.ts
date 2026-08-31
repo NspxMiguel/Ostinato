@@ -33,7 +33,7 @@ test('cada nível se reconhece de volta', () => {
 
 test('regra editada à mão vira "personalizado", não um nível parecido', () => {
   const regras = avisosPorIntensidade('tarefa', 'padrao').map((r) => ({ ...r }))
-  regras[0] = { ...regras[0], modo: 'normal' }
+  regras[0] = { ...regras[0]!, modo: 'normal' }
   assert.equal(intensidadeDe('tarefa', regras), 'personalizado')
 })
 

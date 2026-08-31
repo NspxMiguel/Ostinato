@@ -80,6 +80,7 @@ export function Raiz() {
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
   const guardar = usarLoja((e) => e.guardar)
+  const mudarAjustes = usarLoja((e) => e.mudarAjustes)
 
   // O plano é recalculado a cada mudança na base ou nos ajustes, e de novo
   // quando o app volta para a frente: o tempo passou, e a janela dos 60 avisos
@@ -205,7 +206,7 @@ export function Raiz() {
         {aba === 'ajustes' ? (
           <Ajustes
             aoEscanearHorario={() => {
-              guardar('ajustes', { recursos: { ...recursos, grade: true } })
+              mudarAjustes({ recursos: { ...recursos, grade: true } })
               setAba('grade')
             }}
           />

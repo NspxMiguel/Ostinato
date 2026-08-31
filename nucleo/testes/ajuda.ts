@@ -135,8 +135,10 @@ export function base(partes: {
 }
 
 /** Ajustes sem repetição nenhuma, para o teste contar só o que ele pediu. */
-export function ajustesSimples(regras: RegraAviso[]): ReturnType<typeof ajustesPadrao> {
+/** Sem lista, devolve os padrões de fábrica — que é o que alguns testes querem. */
+export function ajustesSimples(regras?: RegraAviso[]): ReturnType<typeof ajustesPadrao> {
   const a = ajustesPadrao()
+  if (!regras) return a
   const padroes = { ...a.padroesAviso }
   for (const t of Object.keys(padroes) as TipoCompromisso[]) padroes[t] = regras
   return { ...a, padroesAviso: padroes }

@@ -376,7 +376,7 @@ function EscolherMateria({
 const e = StyleSheet.create({
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
-  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.p, lineHeight: 18 },
+  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.s, lineHeight: 18 },
   // A proposta da IA fica na cor de destaque para se ler como algo em que dá
   // para TOCAR — texto cinza aqui viraria mais um aviso que ninguém aperta.
   sugestao: { color: cores.destaque, fontSize: 15, lineHeight: 21, marginTop: 2 },
