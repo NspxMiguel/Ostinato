@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { ehParaMim } from '../calendarioEscolar.ts'
 import { diasDoEvento, lerCalendario } from '../importarCalendario.ts'
 
 // O bloco abaixo é o calendário de 2026 da escola do Miguel, na forma em que ele
@@ -141,4 +142,42 @@ test('linha sem dia continua no dia anterior', () => {
   const ev = lerCalendario(COMO_O_PDF_COPIA, 2026)
   // "Semana de Avaliação Diagnóstica SAS" vem sem número, logo abaixo do dia 16.
   assert.equal(ev.find((e) => e.texto.includes('Semana de Avaliação'))?.inicio, '2026-02-16')
+})
+
+test('um mes inteiro, do texto cru ate quem ve cada linha', () => {
+  // Teste de PONTA A PONTA, e nao das pecas: `lerCalendario` e `ehParaMim` sao
+  // corretos separados e e a costura deles que decide o que aparece na tela.
+  // Cada linha aqui existe por um motivo diferente.
+  const texto = [
+    'Setembro',
+    '7 Feriado Independencia',
+    '12 Reuniao pedagogica sem aula',
+    '15 a 19 Semana de provas 3o ano',
+    '22 Jogos internos',
+    '30 Conselho de classe professores',
+  ].join('\n')
+
+  const lidos = lerCalendario(texto, 2026)
+  assert.equal(lidos.length, 5, 'nenhuma linha se perde')
+
+  const paraMim = lidos.filter((e) => ehParaMim(e, 'aluno', ['3a serie']))
+  assert.deepEqual(
+    paraMim.map((e) => e.texto),
+    [
+      'Feriado Independencia',
+      'Reuniao pedagogica sem aula',
+      'Semana de provas 3o ano',
+      'Jogos internos',
+    ],
+    'o conselho de classe fica de fora; o resto passa',
+  )
+
+  // O intervalo "15 a 19" vira faixa, e nao um dia solto.
+  const provas = lidos.find((e) => e.texto.includes('provas'))!
+  assert.equal(provas.inicio, '2026-09-15')
+  assert.equal(provas.fim, '2026-09-19')
+
+  // "Reuniao pedagogica SEM AULA" fecha a escola, mesmo sendo reuniao de
+  // professor: o efeito manda, e no dia o aluno nao tem aula.
+  assert.equal(lidos.find((e) => e.texto.includes('Reuniao'))!.efeito, 'semAula')
 })
