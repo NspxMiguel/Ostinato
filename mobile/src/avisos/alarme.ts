@@ -1,14 +1,18 @@
-// O alarme de verdade — e o limite dele, dito sem enfeite.
+// O som do alarme com o app ABERTO. O de verdade não é este.
 //
-// Com o app RODANDO, isto toca o sino em laço e ignora o botão de silencioso:
-// `playsInSilentMode: true` é o que o iOS permite a qualquer app, sem pedir nada
-// a ninguém.
+// Quem acorda a pessoa é o `AlarmKit` (ver `modules/alarme`): alarme de sistema,
+// alto, em tela cheia, com o app fechado. Este arquivo cobre um caso menor — a
+// pessoa tocou na notificação e chegou na tela do alarme dentro do app, e aí
+// precisa de som até dispensar.
 //
-// Com o app FECHADO, nenhum app de iOS toca som por cima do silencioso sem o
-// entitlement de Critical Alerts, que a Apple concede caso a caso e que não foi
-// pedido. Nesse cenário sobra a insistência: notificação Time Sensitive, que
-// fura Foco e Não Perturbe, com vibração e repetição até você responder. Isso
-// está escrito na tela de configuração do alarme, e não só aqui.
+// Ele ignora o botão de silencioso (`playsInSilentMode`), e isso NÃO contradiz
+// o pedido de não furar Foco e Modo Sono. O que aquele pedido proíbe é o app
+// interromper alguém sem ser chamado; aqui a pessoa acabou de abrir a tela.
+// Interromper é diferente de responder.
+//
+// O comentário anterior descrevia o mundo antes do iOS 26 — dizia que nenhum
+// app toca com o telefone fechado sem Critical Alerts. Era verdade, e o
+// AlarmKit deixou de ser.
 
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
 
