@@ -29,35 +29,76 @@ export function temModelo(): boolean {
 }
 
 /**
+ * A chave de tradução que explica por que a IA não entrou, ou `null` se entrou.
+ *
+ * Existe porque a versão anterior falhava em SILÊNCIO: quem estivesse com a
+ * Apple Intelligence desligada via o texto cru aparecer e concluía que a IA não
+ * fazia nada. Dizer "está baixando" ou "ligue nos Ajustes do iPhone" é a
+ * diferença entre um app quebrado e um app esperando.
+ */
+export function motivoDaIa(): string | null {
+  switch (estadoDoModelo()) {
+    case 'pronto':
+      return null
+    case 'baixando':
+      return 'resgate.ia_baixando'
+    case 'apple-intelligence-desligada':
+      return 'resgate.ia_desligada'
+    default:
+      return 'resgate.ia_sem_suporte'
+  }
+}
+
+/**
  * Tenta melhorar um horário fotografado que saiu mal lido.
  *
  * Devolve o texto que deve ficar no campo — o normalizado quando o resgate
  * valeu, e o original quando não valeu. O `usou` serve para a tela dizer que a
  * IA entrou, porque texto mudando sozinho sem explicação assusta.
  */
-export async function resgatarGrade(
-  texto: string,
-  confianca: number,
-): Promise<{ texto: string; usou: boolean }> {
-  const antes: ResultadoImportacao = importarGrade(texto)
-  const gatilho = precisaDeResgateDeGrade({
-    confianca,
-    aulas: antes.aulas.length,
-    ignoradas: antes.ignoradas.length,
-  })
-  if (!gatilho || !temModelo()) return { texto, usou: false }
+export type Analise = {
+  /** O que o parser leu, já com o resgate aplicado quando ele valeu. */
+  resultado: ResultadoImportacao
+  /** O texto correspondente — muda quando a IA reescreveu. */
+  texto: string
+  usou: boolean
+  /** Chave de tradução quando a IA era necessária e não estava disponível. */
+  aviso: string | null
+}
+
+/**
+ * Lê o horário, e chama a IA do aparelho quando o algoritmo não deu conta.
+ *
+ * Isto acontece na hora de ANALISAR, e não na hora da foto, por dois motivos:
+ * o texto colado à mão passa a ganhar o mesmo resgate que a foto, e a espera
+ * cai num momento em que a pessoa já está esperando resposta.
+ *
+ * `confianca` é 1 quando o texto não veio de foto — sem OCR não há o que medir,
+ * e a regra de "nenhuma aula lida" cobre esse caso sozinha.
+ */
+export async function analisarGrade(texto: string, confianca = 1): Promise<Analise> {
+  const antes = importarGrade(texto)
+  const gatilho =
+    texto.trim().length >= 12 &&
+    precisaDeResgateDeGrade({
+      confianca,
+      aulas: antes.aulas.length,
+      ignoradas: antes.ignoradas.length,
+    })
+  if (!gatilho) return { resultado: antes, texto, usou: false, aviso: null }
+  if (!temModelo()) return { resultado: antes, texto, usou: false, aviso: motivoDaIa() }
 
   const bruto = await perguntar(instrucoesDeGrade(), texto)
-  if (!bruto) return { texto, usou: false }
+  if (!bruto) return { resultado: antes, texto, usou: false, aviso: null }
 
   const limpo = limparResposta(bruto)
   const depois = importarGrade(limpo)
   // O algoritmo continua sendo o juiz: o modelo só vence quando o resultado
   // dele passa pelo MESMO parser e sai com mais aula.
   if (!vale({ aulas: antes.aulas.length }, { aulas: depois.aulas.length })) {
-    return { texto, usou: false }
+    return { resultado: antes, texto, usou: false, aviso: null }
   }
-  return { texto: limpo, usou: true }
+  return { resultado: depois, texto: limpo, usou: true, aviso: null }
 }
 
 /**

@@ -202,7 +202,14 @@ export function Raiz() {
         {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} aoIrParaGrade={() => setAba('grade')} /> : null}
         {aba === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
         {aba === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
-        {aba === 'ajustes' ? <Ajustes /> : null}
+        {aba === 'ajustes' ? (
+          <Ajustes
+            aoEscanearHorario={() => {
+              guardar('ajustes', { recursos: { ...recursos, grade: true } })
+              setAba('grade')
+            }}
+          />
+        ) : null}
       </View>
 
       <BarraDeAbas

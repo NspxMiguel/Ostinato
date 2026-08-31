@@ -214,7 +214,17 @@ function CampoHora({
   )
 }
 
-export function Ajustes() {
+export function Ajustes({ aoEscanearHorario }: {
+  /**
+   * Liga a grade e abre a aba dela.
+   *
+   * Existe porque escanear o horário morava DENTRO da aba Grade, que só aparece
+   * com o recurso ligado. Quem nunca ligou não tinha como descobrir que dava
+   * para fotografar o horário da escola em vez de digitar aula por aula — e
+   * fotografar é justamente o argumento para querer o recurso.
+   */
+  aoEscanearHorario?: () => void
+}) {
   const t = usarT()
   // O motivo vem do módulo nativo, e não de um texto fixo: quando a conta paga
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
@@ -343,6 +353,13 @@ export function Ajustes() {
                 thumbColor={cores.texto}
               />
             </Linha>
+            {!ajustes.recursos.grade && aoEscanearHorario ? (
+              <Botao
+                texto={t('ajustes.escanear_horario')}
+                variante="vazado"
+                aoTocar={aoEscanearHorario}
+              />
+            ) : null}
           </View>
           <View style={estilo.bloco}>
             <Linha entre>

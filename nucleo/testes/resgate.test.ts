@@ -65,3 +65,10 @@ test('confianca alta mas sem materia NEM titulo ainda aciona', () => {
     true,
   )
 })
+
+// O caso que ele encontrou: horario IMPRESSO fotografado torto. O Vision le
+// cada palavra perfeitamente (confianca alta) e as colunas viram sopa. A regra
+// antiga, que exigia confianca baixa, deixava justamente este de fora.
+test('confianca alta com ZERO aula lida ainda aciona', () => {
+  assert.equal(precisaDeResgateDeGrade({ confianca: 0.97, aulas: 0, ignoradas: 30 }), true)
+})

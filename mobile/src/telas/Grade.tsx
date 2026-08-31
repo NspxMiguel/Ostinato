@@ -17,7 +17,6 @@ import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import type { ResultadoImportacao } from '../../../nucleo/importarGrade.ts'
-import { importarGrade } from '../../../nucleo/importarGrade.ts'
 import {
   Apoio,
   Bolinha,
@@ -36,7 +35,7 @@ import {
 import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
-import { resgatarGrade } from '../resgatar.ts'
+import { analisarGrade } from '../resgatar.ts'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -118,17 +117,22 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     try {
       const r = await lerPapel(de)
       if (r.tipo === 'lido') {
-        // Letra de mão e rasura derrubam a confiança do OCR, e é só nesse caso
-        // que a IA do aparelho entra — print de computador o Vision já acerta.
-        const { texto, usou } = await resgatarGrade(r.texto, r.confianca)
-        setTextoColado(texto)
-        setUsouIa(usou)
+        setTextoColado(r.texto)
+        // A confiança do OCR fica guardada para a análise: é um dos sinais que
+        // decidem chamar a IA, e ela só existe quando o texto veio de foto.
+        setConfiancaDaFoto(r.confianca)
+        setUsouIa(false)
+        setAvisoIa(null)
       }
     } finally {
       setLendoFoto(false)
     }
   }
   const [usouIa, setUsouIa] = useState(false)
+  const [avisoIa, setAvisoIa] = useState<string | null>(null)
+  const [analisando, setAnalisando] = useState(false)
+  /** 1 quando o texto não veio de foto: sem OCR não há confiança para medir. */
+  const [confiancaDaFoto, setConfiancaDaFoto] = useState(1)
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
 
   // O período letivo é OPCIONAL. Ele serve para uma coisa só — saber quais dias
@@ -279,13 +283,30 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     setModalAulaVisivel(false)
   }
 
-  const analisarTextoColado = () => {
-    const res = importarGrade(textoColado)
-    setPreviaImportacao(res)
+  const analisarTextoColado = async () => {
+    setAnalisando(true)
+    try {
+      // A IA entra AQUI, e não na hora da foto: assim o texto colado à mão
+      // ganha o mesmo resgate, e a espera cai num momento em que a pessoa já
+      // está esperando resposta.
+      const a = await analisarGrade(textoColado, confiancaDaFoto)
+      if (a.usou) setTextoColado(a.texto)
+      setUsouIa(a.usou)
+      setAvisoIa(a.aviso)
+      setPreviaImportacao(a.resultado)
+    } finally {
+      setAnalisando(false)
+    }
   }
 
   const confirmarImportacao = () => {
-    if (!previaImportacao || !periodo) return
+    // O período letivo NÃO entra na condição.
+    //
+    // Ele é opcional desde que a grade virou opcional, e este `return` mudo era
+    // o "nem dá pra confirmar e salvar": quem não cadastrou semestre tocava em
+    // Confirmar e nada acontecia — sem erro, sem aviso, sem nada. Falha calada
+    // é o pior tipo, porque a pessoa conclui que o app está quebrado.
+    if (!previaImportacao) return
 
     const mapaNomesParaId: Record<string, string> = {}
     let corIndice = 0
@@ -299,7 +320,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         const cor = CORES_DE_MATERIA[corIndice % CORES_DE_MATERIA.length] ?? CORES_DE_MATERIA[0]
         corIndice++
         const novaId = guardar('materias', {
-          periodoId: periodo.id,
+          periodoId: periodo?.id ?? '',
           nome: nomeMat.trim(),
           cor,
           limiteFaltasPct: 25,
@@ -591,6 +612,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   placeholderTextColor={cores.textoFraco}
                 />
                 {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}
+                {avisoIa ? <Text style={e.ajuda}>{t(avisoIa)}</Text> : null}
                 {temLeitura() ? (
                   <Botao
                     texto={lendoFoto ? t('captura.lendo') : t('grade.tirar_foto')}
@@ -605,7 +627,10 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                     aoTocar={() => void fotografarHorario('galeria')}
                   />
                 ) : null}
-                <Botao texto={t('grade.previa_titulo')} aoTocar={analisarTextoColado} />
+                <Botao
+                  texto={analisando ? t('resgate.pensando') : t('grade.previa_titulo')}
+                  aoTocar={() => void analisarTextoColado()}
+                />
                 <Botao
                   texto={t('acao.cancelar')}
                   variante="vazado"

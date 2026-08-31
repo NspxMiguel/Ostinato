@@ -41,8 +41,16 @@ export function precisaDeResgateDeGrade(sinais: {
   ignoradas: number
 }): boolean {
   const { confianca, aulas, ignoradas } = sinais
-  if (confianca >= CONFIANCA_BAIXA) return false
+  // NENHUMA aula lida chama o modelo, e a confiança não entra aqui.
+  //
+  // Esta linha corrige um erro meu. Eu tinha posto a confiança como primeira
+  // porta para todos os casos, mas ela mede se as LETRAS foram lidas — não se a
+  // TABELA foi entendida. Um horário impresso fotografado torto tem confiança
+  // alta e estrutura destruída: o Vision lê cada palavra perfeitamente e as
+  // colunas viram sopa. Era exatamente esse caso que ficava de fora, e é o mais
+  // comum de todos. Com zero aula lida não há nada a perder chamando o modelo.
   if (aulas === 0) return true
+  if (confianca >= CONFIANCA_BAIXA) return false
   // Mais lixo que aula lida: a tabela não fechou.
   return ignoradas > aulas
 }
