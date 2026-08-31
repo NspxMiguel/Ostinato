@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ostinato",
     "slug": "ostinato",
-    "version": "0.1.0",
+    "version": "2.0",
     "orientation": "portrait",
     "scheme": "ostinato",
     "userInterfaceStyle": "automatic",
@@ -66,7 +66,8 @@
     ],
     "extra": {
       "icloud": false,
-      "widget": true
+      "widget": true,
+      "rotuloDeBuild": "A1"
     },
     "icon": "./assets/icone.png",
     "backgroundColor": "#000000"

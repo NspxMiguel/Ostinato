@@ -49,6 +49,7 @@ import {
 } from 'som-do-alarme'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
+import { VERSAO } from '../versao.ts'
 
 function Campo({
   rotulo,
@@ -467,6 +468,12 @@ export function Ajustes({ aoEscanearHorario }: {
           número no título, o que dava a um contador o mesmo peso de "Escola". */}
       <Secao titulo={t('ajustes.sobre')}>
         <Grupo>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.versao')}</Apoio>
+              <Apoio cor={cores.texto3}>{VERSAO}</Apoio>
+            </Linha>
+          </View>
           <View style={estilo.bloco}>
             <Linha entre>
               <Apoio>{t('ajustes.sincronizacao')}</Apoio>
