@@ -118,3 +118,61 @@ export function limparResposta(bruto: string): string {
 export function vale(antes: { aulas: number }, depois: { aulas: number }): boolean {
   return depois.aulas > antes.aulas
 }
+
+// ---------------------------------------------------------------------------
+// A frase da captura — ditada ou digitada.
+//
+// Pedido dele em 30/08/2026: *"tbm usar ia, quando tiver ,uito complicado de
+// entender oq o cara falou ou escreveu pra agenda.."*
+//
+// Aqui o sinal já existia e é melhor que o da foto: o interpretador devolve uma
+// CONFIANÇA e a lista do que ficou faltando. Não é preciso adivinhar se a frase
+// era difícil — ele diz.
+//
+// E vale a mesma disciplina da foto, por um motivo mais forte ainda: o modelo
+// não resolve data. Ele reescreve a frase mantendo "sexta", "amanhã", "próxima
+// aula" do jeito que estão, e quem converte isso em dia do calendário continua
+// sendo `linguagem.ts`. Modelo de aparelho errando aritmética de calendário é
+// comum, e uma prova marcada no dia errado é pior que uma prova sem data.
+
+/** O mesmo corte que a tela já usa para decidir abrir o formulário. */
+export const CONFIANCA_DE_FRASE = 0.5
+
+/**
+ * Vale chamar o modelo para esta frase?
+ *
+ * Frase curta não entra: "mat" tem confiança baixa por não dizer nada, e não há
+ * o que reescrever — o que falta ali é informação, não clareza.
+ */
+export function precisaDeResgateDeFrase(sinais: {
+  confianca: number
+  faltando: readonly string[]
+  texto: string
+}): boolean {
+  if (sinais.texto.trim().length < 12) return false
+  if (sinais.confianca < CONFIANCA_DE_FRASE) return true
+  // Confiança alta mas com título e matéria perdidos é sinal de frase torta:
+  // o interpretador achou uma data e se apoiou nela.
+  return sinais.faltando.includes('materia') && sinais.faltando.includes('titulo')
+}
+
+/**
+ * As instruções para reescrever a frase.
+ *
+ * O exemplo vale mais que a explicação para um modelo pequeno, e por isso vem
+ * um de entrada e um de saída — inclusive um com fala hesitante, que é o caso
+ * do ditado.
+ */
+export function instrucoesDeFrase(): string {
+  return [
+    'Você reescreve uma frase bagunçada sobre uma tarefa escolar.',
+    'Devolva UMA linha só, na forma: <tipo> de <matéria> para <quando> - <o que fazer>',
+    'Exemplo de entrada: "ahn tipo... o professor de bio passou uns exercício pra sexta"',
+    'Exemplo de saída: tarefa de biologia para sexta - exercícios',
+    'Regras absolutas:',
+    '- NÃO calcule datas: mantenha "amanhã", "sexta", "semana que vem" como estão;',
+    '- não invente matéria, prazo nem tipo que não esteja na frase;',
+    '- se a frase não disser quando, omita a parte do "para";',
+    '- não escreva explicação, comentário nem marcação de código.',
+  ].join('\n')
+}

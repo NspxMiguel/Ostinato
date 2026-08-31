@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   limparResposta,
+  precisaDeResgateDeFrase,
   precisaDeResgateDeGrade,
   precisaDeResgateDeTarefa,
   vale,
@@ -39,4 +40,28 @@ test('cerca de codigo e preambulo saem da resposta', () => {
 test('empate fica com o algoritmo', () => {
   assert.equal(vale({ aulas: 5 }, { aulas: 5 }), false)
   assert.equal(vale({ aulas: 5 }, { aulas: 6 }), true)
+})
+
+test('frase curta nao vale resgate, mesmo mal entendida', () => {
+  // Aqui falta INFORMACAO, nao clareza: nao ha o que reescrever.
+  assert.equal(precisaDeResgateDeFrase({ confianca: 0.2, faltando: ['data'], texto: 'mat' }), false)
+})
+
+test('fala hesitante e longa aciona', () => {
+  const texto = 'ahn tipo o professor de bio passou uns exercicio pra sexta'
+  assert.equal(precisaDeResgateDeFrase({ confianca: 0.3, faltando: ['materia'], texto }), true)
+})
+
+test('frase bem entendida nao aciona', () => {
+  const texto = 'prova de matematica na sexta-feira'
+  assert.equal(precisaDeResgateDeFrase({ confianca: 0.9, faltando: [], texto }), false)
+})
+
+test('confianca alta mas sem materia NEM titulo ainda aciona', () => {
+  // O interpretador achou so a data e se apoiou nela.
+  const texto = 'aquilo que a professora falou ontem para depois de amanha'
+  assert.equal(
+    precisaDeResgateDeFrase({ confianca: 0.8, faltando: ['materia', 'titulo'], texto }),
+    true,
+  )
 })

@@ -9,10 +9,14 @@
 // casos volta o que o algoritmo já tinha lido, e a pessoa nem fica sabendo.
 
 import { importarGrade, type ResultadoImportacao } from '../../nucleo/importarGrade.ts'
+import type { Idioma } from '../../nucleo/i18n.ts'
+import { interpretarMelhor, type Interpretacao } from '../../nucleo/linguagem.ts'
 import {
+  instrucoesDeFrase,
   instrucoesDeGrade,
   instrucoesDeTarefa,
   limparResposta,
+  precisaDeResgateDeFrase,
   precisaDeResgateDeGrade,
   precisaDeResgateDeTarefa,
   vale,
@@ -76,4 +80,44 @@ export async function resgatarTarefa(
   const limpo = limparResposta(bruto)
   if (limpo.length < 4 || limpo.length > texto.length * 2) return { texto, usou: false }
   return { texto: limpo, usou: true }
+}
+
+/**
+ * Tenta entender uma frase que o interpretador não conseguiu ler.
+ *
+ * O juiz continua sendo o algoritmo: a frase reescrita só vence se, passando
+ * pelo MESMO interpretador, sair com confiança maior. Modelo que reescreve
+ * bonito e piora a leitura perde.
+ */
+export async function resgatarFrase(
+  texto: string,
+  agora: Date,
+  idioma: Idioma,
+): Promise<{ texto: string; usou: boolean }> {
+  let antes: Interpretacao
+  try {
+    antes = interpretarMelhor(texto, agora, idioma)
+  } catch {
+    return { texto, usou: false }
+  }
+  const gatilho = precisaDeResgateDeFrase({
+    confianca: antes.confianca,
+    faltando: antes.faltando,
+    texto,
+  })
+  if (!gatilho || !temModelo()) return { texto, usou: false }
+
+  const bruto = await perguntar(instrucoesDeFrase(), texto)
+  if (!bruto) return { texto, usou: false }
+
+  const limpo = limparResposta(bruto).split('\n')[0]?.trim() ?? ''
+  if (limpo.length < 4) return { texto, usou: false }
+
+  try {
+    const depois = interpretarMelhor(limpo, agora, idioma)
+    if (depois.confianca <= antes.confianca) return { texto, usou: false }
+    return { texto: limpo, usou: true }
+  } catch {
+    return { texto, usou: false }
+  }
 }

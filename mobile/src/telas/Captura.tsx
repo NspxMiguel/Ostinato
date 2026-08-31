@@ -37,7 +37,7 @@ import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio, CORES_DE_MATERIA } from '../tema.ts'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
-import { resgatarTarefa } from '../resgatar.ts'
+import { resgatarFrase, resgatarTarefa } from '../resgatar.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
 export function Captura({ textoInicial, aoFechar, aoAjustar }: {
@@ -54,6 +54,8 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
 
   const [texto, setTexto] = useState(textoInicial ?? '')
   const [usouIa, setUsouIa] = useState(false)
+  /** A frase que a IA propôs para o que foi DIGITADO. Só entra se a pessoa tocar. */
+  const [sugestao, setSugestao] = useState<string | null>(null)
   const [ouvindo, setOuvindo] = useState(false)
   const [lendoFoto, setLendoFoto] = useState(false)
   const [avisoDeVoz, setAvisoDeVoz] = useState<string | null>(null)
@@ -183,9 +185,37 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
     setOuvindo(false)
     if (parar) {
       const final = await parar()
-      if (final) setTexto(final)
+      if (!final) return
+      // Fala hesitante — "ahn, tipo, o professor passou uns exercício pra
+      // sexta" — é o caso em que o interpretador mais apanha. Aqui a IA aplica
+      // SOZINHA: a pessoa não digitou nada, então não há texto dela para
+      // atropelar, e ela vê o resultado escrito antes de salvar.
+      const { texto: bom, usou } = await resgatarFrase(final, new Date(), idioma)
+      setTexto(bom)
+      setUsouIa(usou)
+      setSugestao(null)
     }
-  }, [])
+  }, [idioma])
+
+  // Digitado é outra história: trocar o texto embaixo de quem está escrevendo
+  // move o cursor e apaga palavra pela metade. Aqui a IA só PROPÕE, depois de
+  // uma pausa, e quem decide é o toque.
+  useEffect(() => {
+    setSugestao(null)
+    if (ouvindo || texto.trim() === '') return
+    let valeu = true
+    const timer = setTimeout(() => {
+      void resgatarFrase(texto, new Date(), idioma).then(({ texto: bom, usou }) => {
+        // A pessoa continuou escrevendo enquanto o modelo pensava: a proposta
+        // já é sobre outra frase, e mostrá-la seria pior que não mostrar nada.
+        if (valeu && usou && bom !== texto) setSugestao(bom)
+      })
+    }, 1200)
+    return () => {
+      valeu = false
+      clearTimeout(timer)
+    }
+  }, [texto, idioma, ouvindo])
 
   const fotografar = useCallback(async (de: 'camera' | 'galeria' = 'camera') => {
     setLendoFoto(true)
@@ -225,6 +255,19 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         spellCheck={false}
       />
       {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}
+      {sugestao ? (
+        <Pressable
+          onPress={() => {
+            setTexto(sugestao)
+            setUsouIa(true)
+            setSugestao(null)
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={e.ajuda}>{t('resgate.entendi')}</Text>
+          <Text style={e.sugestao}>{sugestao}</Text>
+        </Pressable>
+      ) : null}
       </Cartao>
 
       {/* As três entradas na MESMA fileira de pílulas, e sem `flex: 1`.
@@ -334,6 +377,9 @@ const e = StyleSheet.create({
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
   ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.p, lineHeight: 18 },
+  // A proposta da IA fica na cor de destaque para se ler como algo em que dá
+  // para TOCAR — texto cinza aqui viraria mais um aviso que ninguém aperta.
+  sugestao: { color: cores.destaque, fontSize: 15, lineHeight: 21, marginTop: 2 },
   // Sem fundo nem contorno próprios: o cartão em volta já é a superfície, e
   // caixa dentro de caixa é o que fazia esta tela parecer formulário.
   campo: {
