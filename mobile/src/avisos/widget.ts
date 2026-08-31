@@ -11,6 +11,7 @@
 import type { Ajustes, Base, Periodo } from '../../../nucleo/modelo.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { resolverVencimento } from '../../../nucleo/vencimento.ts'
+import { estaAtrasado } from '../../../nucleo/hoje.ts'
 import type { criarT } from '../../../nucleo/i18n.ts'
 import { salvarResumo, type ItemDoResumo } from '../../modules/atividade/src/index.ts'
 
@@ -47,7 +48,10 @@ export function atualizarWidget(
       tipo: t(`compromisso.tipo.singular.${c.tipo}` as never),
       venceEm: quandoMs / 1000,
       cor: materia?.cor ?? '#F4EFE9',
-      atrasado: quandoMs < agoraMs,
+      // A MESMA regra do app, e não `quando < agora`: o dia da entrega chegou
+      // basta. Uma terceira definição de "atrasado" faria a tarefa aparecer
+      // vermelha no app e normal na tela de início.
+      atrasado: estaAtrasado(r.valor.quando, agora),
       ordem: quandoMs,
     })
   }
