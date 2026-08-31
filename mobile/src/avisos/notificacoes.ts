@@ -52,8 +52,16 @@ export async function pedirPermissao(): Promise<boolean> {
   return pedido.granted
 }
 
-/** As ações que aparecem ao segurar a notificação. */
-export async function registrarCategoria(t: ReturnType<typeof criarT>): Promise<void> {
+/**
+ * As ações que aparecem ao segurar a notificação.
+ *
+ * `adiarMinutos` entra no RÓTULO porque ele é configurável: "Adiar 10 min" num
+ * botão que adia 5 é o app mentindo sobre o que o próprio botão faz.
+ */
+export async function registrarCategoria(
+  t: ReturnType<typeof criarT>,
+  adiarMinutos = 10,
+): Promise<void> {
   await Notifications.setNotificationCategoryAsync(CATEGORIA, [
     {
       identifier: ACAO_FEITO,
@@ -62,7 +70,7 @@ export async function registrarCategoria(t: ReturnType<typeof criarT>): Promise<
     },
     {
       identifier: ACAO_ADIAR,
-      buttonTitle: t('notificacao.acao.adiar'),
+      buttonTitle: t('notificacao.acao.adiar', { n: adiarMinutos }),
       options: { opensAppToForeground: false },
     },
   ])
@@ -137,7 +145,7 @@ async function agendar(
     await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando, {
       som,
       adiarMinutos: ajustes.adiarMinutos,
-      rotuloAdiar: t('notificacao.acao.adiar'),
+      rotuloAdiar: t('notificacao.acao.adiar', { n: ajustes.adiarMinutos }),
     })
   }
 

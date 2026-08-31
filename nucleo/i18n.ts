@@ -368,7 +368,7 @@ const traducoes = {
     'notificacao.vence_horas.corpo': '{titulo} vence em {n} horas',
     'alarme.dispensar': 'Dispensar',
     'notificacao.acao.feito': 'Feito',
-    'notificacao.acao.adiar': 'Adiar 10 min',
+    'notificacao.acao.adiar': 'Adiar {n} min',
   } as const,
   en: {
     // 1. Abas
@@ -730,7 +730,7 @@ const traducoes = {
     'notificacao.vence_horas.corpo': '{titulo} is due in {n} hours',
     'alarme.dispensar': 'Dismiss',
     'notificacao.acao.feito': 'Done',
-    'notificacao.acao.adiar': 'Snooze 10 min',
+    'notificacao.acao.adiar': 'Snooze {n} min',
   } as const,
   es: {
     // 1. Abas
@@ -1092,7 +1092,7 @@ const traducoes = {
     'notificacao.vence_horas.corpo': '{titulo} vence en {n} horas',
     'alarme.dispensar': 'Descartar',
     'notificacao.acao.feito': 'Hecho',
-    'notificacao.acao.adiar': 'Posponer 10 min',
+    'notificacao.acao.adiar': 'Posponer {n} min',
   } as const,
   fr: {
     // 1. Abas
@@ -1454,7 +1454,7 @@ const traducoes = {
     'notificacao.vence_horas.corpo': '{titulo} est à rendre dans {n} heures',
     'alarme.dispensar': 'Rejeter',
     'notificacao.acao.feito': 'Fait',
-    'notificacao.acao.adiar': 'Répéter dans 10 min',
+    'notificacao.acao.adiar': 'Rappel {n} min',
   } as const,
 } as const
 

@@ -122,14 +122,22 @@ export function Raiz() {
       primeiraVez.current = false
       void (async () => {
         await pedirPermissao()
-        await registrarCategoria(t)
+        await registrarCategoria(t, ajustes.adiarMinutos)
         await registrarTarefaDeFundo()
         rearmar()
       })()
       return
     }
     rearmar()
-  }, [rearmar, t])
+  }, [rearmar, t, ajustes.adiarMinutos])
+
+  // O rótulo do botão da notificação carrega os minutos, então ele tem que ser
+  // reescrito quando a pessoa muda o intervalo — senão a categoria antiga
+  // continua valendo e o botão volta a mentir.
+  useEffect(() => {
+    if (primeiraVez.current) return
+    void registrarCategoria(t, ajustes.adiarMinutos)
+  }, [t, ajustes.adiarMinutos])
 
   useEffect(() => {
     const inscricao = AppState.addEventListener('change', (estado) => {
