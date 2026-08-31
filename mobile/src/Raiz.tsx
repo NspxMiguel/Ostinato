@@ -56,6 +56,8 @@ export function Raiz() {
   const t = usarT()
   const margem = useSafeAreaInsets()
   const [aba, setAba] = useState<Aba>('hoje')
+  /** A procedência do último estado que o controlador nativo confirmou. */
+  const procedencia = useRef(0)
   const recursos = usarLoja((s) => s.ajustes.recursos)
   // A barra mostra só o que a pessoa usa. Aba que abre um muro é pior que aba
   // que não existe.
@@ -216,7 +218,18 @@ export function Raiz() {
           // Encolher ao rolar é comportamento do iOS 26, não animação minha.
           tabBarMinimizeBehavior: 'onScrollDown',
         }}
-        onTabSelected={({ nativeEvent }: { nativeEvent: { selectedScreenKey?: string } }) => {
+        // Trocar de aba por código passa por AQUI, e não por `setAba`.
+        //
+        // Quem guarda o estado agora é o controlador nativo, não o React. O
+        // `navStateRequest` é um PEDIDO: ele carrega a procedência do último
+        // estado que o nativo confirmou, e é isso que deixa o iOS recusar um
+        // pedido velho — o caso real é a pessoa tocar numa aba enquanto um
+        // `setAba` nosso ainda está no caminho.
+        navStateRequest={{ selectedScreenKey: aba, baseProvenance: procedencia.current }}
+        onTabSelected={({ nativeEvent }: {
+          nativeEvent: { selectedScreenKey?: string; provenance?: number }
+        }) => {
+          procedencia.current = nativeEvent.provenance ?? procedencia.current
           const id = nativeEvent.selectedScreenKey as Aba | undefined
           if (id) setAba(id)
         }}
