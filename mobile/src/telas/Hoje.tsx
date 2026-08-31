@@ -261,7 +261,15 @@ function montarChegando(
       agora,
     ),
   )
-  return [...semDataItens, ...deHoje.slice(0, LIMITE_CHEGANDO)]
+  // Atrasado primeiro, sempre.
+  //
+  // A ordenação por data punha o atrasado no TOPO só por acaso — e quando um
+  // item sem data entrasse na frente, o que está vencido descia. O corte de dez
+  // itens tornava isso pior: o atrasado podia sair da lista enquanto tarefa de
+  // amanhã aparecia. O que já passou não pode competir por espaço.
+  const atrasados = deHoje.filter((i) => i.atrasado)
+  const resto = deHoje.filter((i) => !i.atrasado)
+  return [...atrasados, ...semDataItens, ...resto].slice(0, LIMITE_CHEGANDO)
 }
 
 const CHAVE_TIPO: Record<TipoCompromisso, ChaveI18n> = {
