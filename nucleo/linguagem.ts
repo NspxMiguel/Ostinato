@@ -35,8 +35,6 @@ export type Interpretacao = {
   faltando: ('data' | 'materia' | 'titulo')[]
 }
 
-export const NAO_IMPLEMENTADO = 'linguagem: interpretar ainda não foi escrito'
-
 type Trecho = { de: number; ate: number }
 
 type TipoEncontrado = Trecho & {
