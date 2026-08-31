@@ -16,6 +16,9 @@ import {
 import type { Idioma } from '../../nucleo/i18n.ts'
 import { interpretarMelhor, type Interpretacao } from '../../nucleo/linguagem.ts'
 import {
+  diaDoModeloParaApp,
+  diaValido,
+  horaValida,
   instrucoesDeFrase,
   instrucoesDeGrade,
   instrucoesDeTarefa,
@@ -104,9 +107,11 @@ export async function analisarGrade(texto: string, _confianca = 1): Promise<Anal
   }
 
   const aulas = doModelo
-    .filter((a) => VALIDA_DIA(a.dia) && VALIDA_HORA(a.inicio) && VALIDA_HORA(a.fim) && a.materia.trim() !== '')
+    .filter(
+      (a) => diaValido(a.dia) && horaValida(a.inicio) && horaValida(a.fim) && a.materia.trim() !== '',
+    )
     .map((a) => ({
-      diaSemana: ((a.dia % 7) as AulaCrua['diaSemana']),
+      diaSemana: diaDoModeloParaApp(a.dia) as AulaCrua['diaSemana'],
       inicio: a.inicio as AulaCrua['inicio'],
       fim: a.fim as AulaCrua['fim'],
       materia: a.materia.trim(),
@@ -130,11 +135,6 @@ export async function analisarGrade(texto: string, _confianca = 1): Promise<Anal
     aviso: null,
   }
 }
-
-/** Dia 1..7 como o modelo foi instruído a devolver. */
-const VALIDA_DIA = (n: unknown) => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 7
-/** "HH:MM" de verdade — o modelo às vezes escreve "8h" ou "das 8". */
-const VALIDA_HORA = (h: unknown) => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h)
 
 /**
  * Idem para a foto de uma anotação de tarefa.

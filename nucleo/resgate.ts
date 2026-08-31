@@ -184,3 +184,29 @@ export function instrucoesDeFrase(): string {
     '- não escreva explicação, comentário nem marcação de código.',
   ].join('\n')
 }
+
+// ---------------------------------------------------------------------------
+// A conversão do que o modelo devolve.
+//
+// Mora aqui, e não na tela, porque é onde um erro de UM dia jogaria a semana
+// inteira para o lugar errado — e sem nada na tela indicando isso: as aulas
+// apareceriam, bonitas, na segunda em vez do domingo.
+//
+// O modelo responde 1 = segunda … 7 = domingo, que é o ISO e é o que faz
+// sentido pedir a ele. O app usa 0 = domingo … 6 = sábado, que é o do
+// JavaScript. `% 7` faz a ponte, e o único caso que importa é o domingo.
+
+/** Dia 1..7 como o modelo foi instruído a devolver. */
+export function diaValido(n: unknown): boolean {
+  return Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 7
+}
+
+/** "HH:MM" de verdade — o modelo às vezes escreve "8h" ou "das 8". */
+export function horaValida(h: unknown): boolean {
+  return typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h)
+}
+
+/** 1 = segunda … 7 = domingo  →  0 = domingo … 6 = sábado. */
+export function diaDoModeloParaApp(dia: number): number {
+  return dia % 7
+}

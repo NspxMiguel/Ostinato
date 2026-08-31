@@ -72,3 +72,26 @@ test('confianca alta mas sem materia NEM titulo ainda aciona', () => {
 test('confianca alta com ZERO aula lida ainda aciona', () => {
   assert.equal(precisaDeResgateDeGrade({ confianca: 0.97, aulas: 0, ignoradas: 30 }), true)
 })
+
+import { diaDoModeloParaApp, diaValido, horaValida } from '../resgate.ts'
+
+test('segunda a sabado passam iguais; domingo e o unico que vira', () => {
+  // O modelo responde ISO (1=segunda). O app usa o do JavaScript (0=domingo).
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map(diaDoModeloParaApp), [1, 2, 3, 4, 5, 6, 0])
+})
+
+test('dia fora de 1..7 nao passa', () => {
+  assert.equal(diaValido(0), false)
+  assert.equal(diaValido(8), false)
+  assert.equal(diaValido('2'), false)
+  assert.equal(diaValido(3), true)
+})
+
+test('hora tem que ser HH:MM de 24h', () => {
+  assert.equal(horaValida('8h'), false)
+  assert.equal(horaValida('das 8'), false)
+  assert.equal(horaValida('8:00'), false)
+  assert.equal(horaValida('25:00'), false)
+  assert.equal(horaValida('08:00'), true)
+  assert.equal(horaValida('23:59'), true)
+})
