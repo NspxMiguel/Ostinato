@@ -39,8 +39,8 @@ export async function pedirPermissao(): Promise<boolean> {
       allowAlert: true,
       allowSound: true,
       allowBadge: true,
-      // Time Sensitive é o que fura Foco e Não Perturbe, e não precisa de
-      // aprovação da Apple. Critical Alerts precisaria, e não é pedido.
+      // Nem Time Sensitive nem Critical Alerts: quem decide se o aviso passa
+      // pelo Foco é o telefone da pessoa, não este app. Ver `nivelDeInterrupcao`.
       allowProvisional: false,
     },
   })

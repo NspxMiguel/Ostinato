@@ -179,8 +179,8 @@ export function Raiz() {
     return () => inscricao.remove()
   }, [guardar])
 
-  // Alarme com o app aberto na hora do disparo: aqui o som toca mesmo com o
-  // telefone no silencioso, que é o mais longe que dá sem Critical Alerts.
+  // Alarme com o app ABERTO na hora do disparo. Quem acorda a pessoa com o app
+  // fechado é o AlarmKit; isto é o som da tela do alarme dentro do app.
   useEffect(() => {
     const inscricao = Notifications.addNotificationReceivedListener((n) => {
       const dados = n.request.content.data as { compromissoId?: string; alarme?: boolean }
