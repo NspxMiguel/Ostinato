@@ -27,11 +27,29 @@ export async function pedirPermissaoDeAlarme(): Promise<boolean> {
   }
 }
 
-/** `id` precisa ser UUID — é a chave que o sistema usa para cancelar depois. */
-export async function agendarAlarme(id: string, titulo: string, quando: Date): Promise<boolean> {
+/**
+ * `id` precisa ser UUID — é a chave que o sistema usa para cancelar depois.
+ *
+ * `som` é o nome de um arquivo em `Library/Sounds`, ou `null` para o padrão do
+ * sistema. `adiarMinutos` em 0 tira o botão de adiar: botão que aparece e não
+ * adia nada é pior do que não ter botão.
+ */
+export async function agendarAlarme(
+  id: string,
+  titulo: string,
+  quando: Date,
+  opcoes: { som?: string | null; adiarMinutos?: number; rotuloAdiar?: string } = {},
+): Promise<boolean> {
   if (!modulo) return false
   try {
-    return (await modulo.agendar(id, titulo, quando.getTime() / 1000)) as boolean
+    return (await modulo.agendar(
+      id,
+      titulo,
+      quando.getTime() / 1000,
+      opcoes.som ?? null,
+      opcoes.adiarMinutos ?? 0,
+      opcoes.rotuloAdiar ?? 'Snooze',
+    )) as boolean
   } catch {
     return false
   }

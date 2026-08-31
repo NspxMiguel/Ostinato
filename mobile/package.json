@@ -11,9 +11,12 @@
   "dependencies": {
     "@bacons/apple-targets": "^5.0.0",
     "@react-native-community/datetimepicker": "9.1.0",
+    "alarme-do-sistema": "file:./modules/alarme",
+    "barra": "file:./modules/barra",
     "expo": "~57.0.15",
     "expo-audio": "~57.0.4",
     "expo-background-task": "~57.0.14",
+    "expo-document-picker": "~57.0.1",
     "expo-font": "~57.0.1",
     "expo-glass-effect": "~57.0.1",
     "expo-haptics": "~57.0.2",
@@ -25,6 +28,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.2",
     "expo-task-manager": "~57.0.14",
+    "modelo-local": "file:./modules/modelo",
     "nativewind": "^4.2.6",
     "react": "19.2.3",
     "react-native": "0.86.2",
@@ -34,12 +38,10 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "som-do-alarme": "file:./modules/som",
     "tailwindcss": "^3.4.19",
     "vidro": "file:./modules/vidro",
-    "zustand": "^5.0.15",
-    "barra": "file:./modules/barra",
-    "alarme-do-sistema": "file:./modules/alarme",
-    "modelo-local": "file:./modules/modelo"
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

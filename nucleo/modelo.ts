@@ -201,7 +201,21 @@ export type Ajustes = {
   /** `null` = seguir o idioma do sistema. */
   idioma: Idioma | null
   padroesAviso: Record<TipoCompromisso, RegraAviso[]>
-  somAlarme: string
+  /**
+   * O som do alarme: o nome de um arquivo importado, ou `null` para o do sistema.
+   *
+   * Guarda o NOME, e não o caminho: quem resolve o nome é o iOS, procurando na
+   * bundle e em `Library/Sounds`. Nome que não resolve mais — som apagado — cai
+   * no padrão em silêncio, então quem agenda confere antes se ele ainda existe.
+   */
+  somAlarme: string | null
+  /**
+   * Quanto o botão "Adiar" adia, em minutos. `0` tira o botão.
+   *
+   * Nove por herança do despertador do iPhone, e não por acaso: é o intervalo
+   * que a pessoa já espera quando aperta adiar em qualquer alarme.
+   */
+  adiarMinutos: number
   limiteFaltasPadrao: number
   syncLigado: boolean
   /** Escola com semana A/B: qual semana do ano conta como "par". */
@@ -322,7 +336,8 @@ export function ajustesPadrao(): Ajustes {
     recursos: { grade: true, notas: true, semanaAlternada: false },
     minhasSeries: [],
     padroesAviso: PADROES_AVISO,
-    somAlarme: 'sino',
+    somAlarme: null,
+    adiarMinutos: 9,
     limiteFaltasPadrao: 25,
     syncLigado: false,
     inverterSemanaAlternada: false,

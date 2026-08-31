@@ -82,10 +82,13 @@ export function Secao({ titulo, children }: { titulo: string; children: ReactNod
 export function Toque({
   children,
   aoTocar,
+  aoSegurar,
   estilo,
 }: {
   children: ReactNode
   aoTocar?: () => void
+  /** Segurar. Usado para o que é destrutivo e não merece um botão próprio. */
+  aoSegurar?: () => void
   estilo?: StyleProp<ViewStyle>
 }) {
   // A escala usa `Animated` do próprio React Native, e não Reanimated: este é o
@@ -101,10 +104,18 @@ export function Toque({
       bounciness: 0,
     }).start()
 
-  if (!aoTocar) return <View style={estilo}>{children}</View>
+  if (!aoTocar && !aoSegurar) return <View style={estilo}>{children}</View>
   return (
     <Pressable
       onPress={aoTocar}
+      onLongPress={
+        aoSegurar
+          ? () => {
+              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+              aoSegurar()
+            }
+          : undefined
+      }
       onPressIn={() => {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
         animar(0.96)
@@ -265,11 +276,14 @@ export function Pilula({
   texto,
   ativa,
   aoTocar,
+  aoSegurar,
   cor,
 }: {
   texto: string
   ativa?: boolean
   aoTocar?: () => void
+  /** Segurar para remover — só onde remover faz sentido. */
+  aoSegurar?: () => void
   /** Bolinha à esquerda — usada quando a pílula representa uma matéria. */
   cor?: string
 }) {
@@ -291,14 +305,14 @@ export function Pilula({
 
   if (!comVidro) {
     return (
-      <Toque aoTocar={aoTocar} estilo={[e.pilula, ativa ? e.pilulaAtiva : null]}>
+      <Toque aoTocar={aoTocar} aoSegurar={aoSegurar} estilo={[e.pilula, ativa ? e.pilulaAtiva : null]}>
         {conteudo}
       </Toque>
     )
   }
 
   return (
-    <Toque aoTocar={aoTocar}>
+    <Toque aoTocar={aoTocar} aoSegurar={aoSegurar}>
       <GlassView
         glassEffectStyle="regular"
         isInteractive

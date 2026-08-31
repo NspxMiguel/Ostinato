@@ -40,6 +40,13 @@ import {
   pedirPermissaoDeAlarme,
   type EstadoDoAlarme,
 } from '../../modules/alarme/src/index.ts'
+import {
+  importarSom,
+  ouvirSom,
+  removerSom,
+  rotuloDoSom,
+  sonsImportados,
+} from 'som-do-alarme'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 
 function Campo({
@@ -236,6 +243,8 @@ export function Ajustes({ aoEscanearHorario }: {
   useEffect(() => {
     void estadoDoAlarme().then(setEstadoAlarme)
   }, [])
+  const [sons, setSons] = useState<string[]>(() => sonsImportados())
+  const [importandoSom, setImportandoSom] = useState(false)
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   /** O editor de período letivo abre em folha: ele é uma tela inteira. */
@@ -470,6 +479,66 @@ export function Ajustes({ aoEscanearHorario }: {
               </Apoio>
             </Linha>
           </View>
+          <View style={estilo.bloco}>
+            <Apoio>{t('ajustes.som_do_alarme')}</Apoio>
+            <Fileira>
+              <Pilula
+                texto={t('ajustes.som_padrao')}
+                ativa={!ajustes.somAlarme}
+                aoTocar={() => mudarAjustes({ somAlarme: null })}
+              />
+              {sons.map((nome) => (
+                <Pilula
+                  key={nome}
+                  texto={rotuloDoSom(nome)}
+                  ativa={ajustes.somAlarme === nome}
+                  // Tocar já escolhe E toca: escolher som sem ouvir é apostar,
+                  // e a única prova viria no meio da madrugada.
+                  aoTocar={() => {
+                    mudarAjustes({ somAlarme: nome })
+                    void ouvirSom(nome)
+                  }}
+                  aoSegurar={() => {
+                    removerSom(nome)
+                    if (ajustes.somAlarme === nome) mudarAjustes({ somAlarme: null })
+                    setSons(sonsImportados())
+                  }}
+                />
+              ))}
+            </Fileira>
+            <Botao
+              texto={importandoSom ? t('ajustes.som_importando') : t('ajustes.som_importar')}
+              variante="vazado"
+              aoTocar={() => {
+                setImportandoSom(true)
+                void importarSom()
+                  .then((nome) => {
+                    setSons(sonsImportados())
+                    if (nome) {
+                      mudarAjustes({ somAlarme: nome })
+                      void ouvirSom(nome)
+                    }
+                  })
+                  .finally(() => setImportandoSom(false))
+              }}
+            />
+            <Apoio cor={cores.texto3}>{t('ajustes.som_ajuda')}</Apoio>
+          </View>
+
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Apoio>{t('ajustes.adiar')}</Apoio>
+                <Apoio cor={cores.texto3}>{t('ajustes.adiar_desc')}</Apoio>
+              </View>
+              <CampoNumero
+                rotulo={t('ajustes.minutos')}
+                valor={ajustes.adiarMinutos}
+                aoConfirmar={(n) => mudarAjustes({ adiarMinutos: Math.max(0, Math.min(60, n)) })}
+              />
+            </Linha>
+          </View>
+
           {/* O estado do alarme fica AQUI, ao lado do contador de avisos, porque
               é diagnóstico: sem ele, alarme não autorizado é indistinguível de
               alarme quebrado — foi assim que este defeito passou despercebido. */}

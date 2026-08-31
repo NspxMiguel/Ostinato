@@ -1,5 +1,7 @@
 import ExpoModulesCore
+import ActivityKit
 import AlarmKit
+import AVFoundation
 import SwiftUI
 
 /**
@@ -68,7 +70,11 @@ public class AlarmeModule: Module {
      horario de verao.
      */
     AsyncFunction("agendar") {
-      (id: String, titulo: String, quandoEmSegundos: Double, promise: Promise) in
+      (
+        id: String, titulo: String, quandoEmSegundos: Double,
+        som: String?, adiarMinutos: Double, rotuloAdiar: String,
+        promise: Promise
+      ) in
       guard #available(iOS 26.1, *) else {
         promise.reject("alarme", "AlarmKit exige iOS 26.1")
         return
@@ -80,7 +86,9 @@ public class AlarmeModule: Module {
 
       Task {
         do {
-          _ = try await Self.armar(uuid: uuid, titulo: titulo, quando: quandoEmSegundos)
+          _ = try await Self.armar(
+            uuid: uuid, titulo: titulo, quando: quandoEmSegundos,
+            som: som, adiarMinutos: adiarMinutos, rotuloAdiar: rotuloAdiar)
           promise.resolve(true)
         } catch {
           promise.reject("alarme", error.localizedDescription)
@@ -192,12 +200,23 @@ extension AlarmeModule {
   }
 
   @available(iOS 26.1, *)
-  static func armar(uuid: UUID, titulo: String, quando: Double) async throws -> Alarm {
+  static func armar(
+    uuid: UUID, titulo: String, quando: Double,
+    som: String?, adiarMinutos: Double, rotuloAdiar: String
+  ) async throws -> Alarm {
     try await autorizar()
+
+    // O botao de adiar so aparece com `secondaryButtonBehavior: .countdown` —
+    // e ele so FUNCIONA se a configuracao trouxer um `postAlert`. Sem isso o
+    // botao existe e nao faz nada, que e pior que nao ter botao.
+    let adiar = adiarMinutos > 0
     let alerta = AlarmPresentation.Alert(
       title: LocalizedStringResource(stringLiteral: titulo),
-      secondaryButton: AlarmButton(text: "Adiar", textColor: .white, systemImageName: "clock"),
-      secondaryButtonBehavior: .countdown)
+      secondaryButton: adiar
+        ? AlarmButton(text: LocalizedStringResource(stringLiteral: rotuloAdiar),
+                      textColor: .white, systemImageName: "clock")
+        : nil,
+      secondaryButtonBehavior: adiar ? .countdown : nil)
 
     let atributos = AlarmAttributes<MetadadosDoOstinato>(
       presentation: AlarmPresentation(alert: alerta),
@@ -205,8 +224,16 @@ extension AlarmeModule {
       // O amarelo da marca: é a cor da tela cheia do alarme.
       tintColor: Color(red: 1, green: 0.839, blue: 0.039))
 
-    let config = AlarmManager.AlarmConfiguration.alarm(
-      schedule: .fixed(Date(timeIntervalSince1970: quando)), attributes: atributos)
+    // `.named` procura na bundle do app E em `Library/Sounds` do container —
+    // e e por isso que dá para tocar um arquivo que a pessoa importou depois
+    // de o app ja estar instalado.
+    let toque: AlertConfiguration.AlertSound = som.map { .named($0) } ?? .default
+
+    let config = AlarmManager.AlarmConfiguration(
+      countdownDuration: adiar ? .init(preAlert: nil, postAlert: adiarMinutos * 60) : nil,
+      schedule: .fixed(Date(timeIntervalSince1970: quando)),
+      attributes: atributos,
+      sound: toque)
 
     return try await AlarmManager.shared.schedule(id: uuid, configuration: config)
   }

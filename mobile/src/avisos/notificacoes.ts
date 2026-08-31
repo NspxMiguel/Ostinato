@@ -6,6 +6,7 @@
 
 import * as Notifications from 'expo-notifications'
 import { agendarAlarme, cancelarAlarme, temAlarmeDeSistema } from 'alarme-do-sistema'
+import { sonsImportados } from 'som-do-alarme'
 import { Platform } from 'react-native'
 import type { Ajustes, Base, Periodo } from '../../../nucleo/modelo.ts'
 import type { AvisoAgendado } from '../../../nucleo/planejador.ts'
@@ -77,6 +78,7 @@ function nivelDeInterrupcao(modo: AvisoAgendado['modo']): 'active' | 'timeSensit
 async function agendar(
   aviso: AvisoAgendado,
   base: Base,
+  ajustes: Ajustes,
   t: ReturnType<typeof criarT>,
 ): Promise<void> {
   const c = base.compromissos[aviso.compromissoId]
@@ -102,7 +104,17 @@ async function agendar(
     // pessoa entrar no app, e não deixa rastro na Central de Notificações —
     // quem dispensa o alarme meio dormindo fica sem nada para reencontrar
     // depois. A notificação é o registro; o alarme é o que acorda.
-    await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando)
+    // O som só vai se ele AINDA existir. Nome de arquivo apagado não dá erro:
+    // o iOS cai no som padrão calado, e quem apagou o som acharia que o alarme
+    // quebrou. Conferir aqui custa uma leitura de pasta e evita esse mistério.
+    const som = ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme)
+      ? ajustes.somAlarme
+      : null
+    await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando, {
+      som,
+      adiarMinutos: ajustes.adiarMinutos,
+      rotuloAdiar: t('notificacao.acao.adiar'),
+    })
   }
 
   await Notifications.scheduleNotificationAsync({
@@ -166,7 +178,7 @@ export async function sincronizarAvisos(
     // notificação deixaria o despertador armado para uma tarefa já feita.
     cancelarAlarmeDoAviso(chave)
   }
-  for (const aviso of d.criar) await agendar(aviso, base, t)
+  for (const aviso of d.criar) await agendar(aviso, base, ajustes, t)
 
   return {
     agendadas: plano.agendar.length,
