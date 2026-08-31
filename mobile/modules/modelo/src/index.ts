@@ -24,6 +24,25 @@ export function estadoDoModelo(): EstadoDoModelo {
   }
 }
 
+/** Uma aula como o modelo devolveu: dia 1..7, horas em HH:MM de 24h. */
+export type AulaDoModelo = { dia: number; inicio: string; fim: string; materia: string }
+
+/**
+ * Lê um horário escolar a partir do texto do OCR.
+ *
+ * `null` quando o modelo não está disponível ou falhou — e aí quem chama usa o
+ * algoritmo, que continua existindo justamente para isto.
+ */
+export async function lerGradeComModelo(texto: string): Promise<AulaDoModelo[] | null> {
+  if (!modulo) return null
+  try {
+    const r = (await modulo.lerGrade(texto)) as AulaDoModelo[]
+    return Array.isArray(r) ? r : null
+  } catch {
+    return null
+  }
+}
+
 /** `null` quando não deu — quem chama volta para o que o algoritmo já leu. */
 export async function perguntar(instrucoes: string, entrada: string): Promise<string | null> {
   if (!modulo) return null

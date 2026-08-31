@@ -628,6 +628,12 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   <Apoio>
                     {previaImportacao.materias.join(', ')}
                   </Apoio>
+                  {/* Quem leu isto: a IA ou o algoritmo. Sem dizer, uma leitura
+                      ruim parece defeito do app em vez de limite do método. */}
+                  <Apoio cor={usouIa ? cores.ok : cores.texto3}>
+                    {usouIa ? t('resgate.leu_ia') : t('resgate.leu_algoritmo')}
+                  </Apoio>
+                  {avisoIa ? <Apoio cor={cores.aviso}>{t(avisoIa as ChaveI18n)}</Apoio> : null}
                 </Cartao>
 
                 {previaImportacao.ignoradas.length > 0 ? (

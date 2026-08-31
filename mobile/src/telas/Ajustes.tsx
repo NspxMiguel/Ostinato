@@ -47,6 +47,7 @@ import {
   rotuloDoSom,
   sonsImportados,
 } from 'som-do-alarme'
+import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 
 function Campo({
@@ -245,6 +246,7 @@ export function Ajustes({ aoEscanearHorario }: {
   }, [])
   const [sons, setSons] = useState<string[]>(() => sonsImportados())
   const [importandoSom, setImportandoSom] = useState(false)
+  const estadoIa = estadoDoModelo()
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   /** O editor de período letivo abre em folha: ele é uma tela inteira. */
@@ -556,6 +558,14 @@ export function Ajustes({ aoEscanearHorario }: {
                 aoTocar={() => void pedirPermissaoDeAlarme().then(() => estadoDoAlarme().then(setEstadoAlarme))}
               />
             ) : null}
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.ia_local')}</Apoio>
+              <Apoio cor={estadoIa === 'pronto' ? cores.ok : cores.aviso}>
+                {t(`resgate.ia_${estadoIa === 'pronto' ? 'pronta' : estadoIa.replace(/-/g, '_')}` as ChaveI18n)}
+              </Apoio>
+            </Linha>
           </View>
           <View style={estilo.bloco}>
             <Linha entre>

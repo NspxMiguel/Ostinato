@@ -8,7 +8,11 @@
 // Modelo indisponível, modelo lento, modelo devolvendo bobagem — em todos os
 // casos volta o que o algoritmo já tinha lido, e a pessoa nem fica sabendo.
 
-import { importarGrade, type ResultadoImportacao } from '../../nucleo/importarGrade.ts'
+import {
+  importarGrade,
+  type AulaCrua,
+  type ResultadoImportacao,
+} from '../../nucleo/importarGrade.ts'
 import type { Idioma } from '../../nucleo/i18n.ts'
 import { interpretarMelhor, type Interpretacao } from '../../nucleo/linguagem.ts'
 import {
@@ -21,7 +25,7 @@ import {
   precisaDeResgateDeTarefa,
   vale,
 } from '../../nucleo/resgate.ts'
-import { estadoDoModelo, perguntar } from '../modules/modelo/src/index.ts'
+import { estadoDoModelo, lerGradeComModelo, perguntar } from '../modules/modelo/src/index.ts'
 
 /** Se a IA do aparelho está pronta agora. */
 export function temModelo(): boolean {
@@ -76,30 +80,61 @@ export type Analise = {
  * `confianca` é 1 quando o texto não veio de foto — sem OCR não há o que medir,
  * e a regra de "nenhuma aula lida" cobre esse caso sozinha.
  */
-export async function analisarGrade(texto: string, confianca = 1): Promise<Analise> {
-  const antes = importarGrade(texto)
-  const gatilho =
-    texto.trim().length >= 12 &&
-    precisaDeResgateDeGrade({
-      confianca,
-      aulas: antes.aulas.length,
-      ignoradas: antes.ignoradas.length,
-    })
-  if (!gatilho) return { resultado: antes, texto, usou: false, aviso: null }
-  if (!temModelo()) return { resultado: antes, texto, usou: false, aviso: motivoDaIa() }
-
-  const bruto = await perguntar(instrucoesDeGrade(), texto)
-  if (!bruto) return { resultado: antes, texto, usou: false, aviso: null }
-
-  const limpo = limparResposta(bruto)
-  const depois = importarGrade(limpo)
-  // O algoritmo continua sendo o juiz: o modelo só vence quando o resultado
-  // dele passa pelo MESMO parser e sai com mais aula.
-  if (!vale({ aulas: antes.aulas.length }, { aulas: depois.aulas.length })) {
-    return { resultado: antes, texto, usou: false, aviso: null }
+export async function analisarGrade(texto: string, _confianca = 1): Promise<Analise> {
+  const doAlgoritmo = importarGrade(texto)
+  if (texto.trim().length < 12) {
+    return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
   }
-  return { resultado: depois, texto: limpo, usou: true, aviso: null }
+  if (!temModelo()) {
+    return { resultado: doAlgoritmo, texto, usou: false, aviso: motivoDaIa() }
+  }
+
+  // A IA é o LEITOR agora, não o resgate.
+  //
+  // Pedido dele em 30/08/2026: *"coloca logo a merda da ia local para
+  // interpretar foto, n funciona por algoritmo nao"*. Ele tem razão, e o motivo
+  // é que horário escolar não tem formato: cada escola imprime do seu jeito, com
+  // célula mesclada, matéria abreviada e coluna que não fecha. Regex acerta o
+  // formato que eu previ e erra todo o resto — e quem usa não tem como saber em
+  // qual dos dois caiu. Condicionar a IA a "o algoritmo falhou de um jeito
+  // específico" era eu decidindo por ele, e ele já disse duas vezes que não.
+  const doModelo = await lerGradeComModelo(texto)
+  if (!doModelo || doModelo.length === 0) {
+    return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
+  }
+
+  const aulas = doModelo
+    .filter((a) => VALIDA_DIA(a.dia) && VALIDA_HORA(a.inicio) && VALIDA_HORA(a.fim) && a.materia.trim() !== '')
+    .map((a) => ({
+      diaSemana: ((a.dia % 7) as AulaCrua['diaSemana']),
+      inicio: a.inicio as AulaCrua['inicio'],
+      fim: a.fim as AulaCrua['fim'],
+      materia: a.materia.trim(),
+      // Alta de propósito: o que veio do modelo já passou pela peneira acima, e
+      // a prévia usa este número para decidir o que destacar como duvidoso.
+      confianca: 0.9,
+    }))
+
+  // O modelo pode inventar, e a peneira acima corta o que não é hora nem dia.
+  // Se sobrou menos do que o algoritmo já tinha lido, o algoritmo fica: o
+  // objetivo é ler MAIS, não trocar de método por trocar.
+  if (aulas.length < doAlgoritmo.aulas.length) {
+    return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
+  }
+
+  const materias = [...new Set(aulas.map((a) => a.materia))]
+  return {
+    resultado: { aulas, materias, ignoradas: [], formato: 'ia' },
+    texto,
+    usou: true,
+    aviso: null,
+  }
 }
+
+/** Dia 1..7 como o modelo foi instruído a devolver. */
+const VALIDA_DIA = (n: unknown) => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= 7
+/** "HH:MM" de verdade — o modelo às vezes escreve "8h" ou "das 8". */
+const VALIDA_HORA = (h: unknown) => typeof h === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(h)
 
 /**
  * Idem para a foto de uma anotação de tarefa.
