@@ -239,10 +239,16 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                     aoTocar={() => alternarConcluido(c)}
                   />
                   <View style={e.cartaoFlex}>
-                    <Cartao faixa={materia?.cor} aoTocar={() => aoAbrirCompromisso(c.id)}>
+                    <Cartao
+                      faixa={item.atrasado ? cores.atrasado : materia?.cor}
+                      aoTocar={() => aoAbrirCompromisso(c.id)}
+                    >
                       <View style={c.concluido ? e.concluido : undefined}>
                         <Linha>
                           <Titulo>{c.titulo}</Titulo>
+                          {item.atrasado ? (
+                            <Etiqueta texto={t('hoje.atrasado')} cor={cores.atrasado} />
+                          ) : null}
                           <Etiqueta texto={rotuloTipo(t, c.tipo)} />
                         </Linha>
                         {materia ? <Apoio>{materia.nome}</Apoio> : null}
@@ -253,7 +259,10 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                             <Apoio cor={item.atrasado ? cores.atrasado : undefined}>
                               {quandoPorExtenso(item.resolvido.data, item.resolvido.hora, hojeISO, t, idioma)}
                             </Apoio>
-                            {item.atrasado ? (
+                            {/* Mesma trava do Hoje: atrasado começa no início do
+                                dia da entrega, então a subtração pode dar
+                                negativo e virar "atrasado há -23 horas". */}
+                            {item.atrasado && item.resolvido.quando.getTime() < agora.getTime() ? (
                               <Apoio cor={cores.atrasado}>
                                 {t('hoje.atrasado_ha', {
                                   tempo: duracaoPorExtenso(
