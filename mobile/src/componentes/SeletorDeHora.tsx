@@ -20,6 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 import { horaDeTexto } from '../formato.ts'
 import { usarT } from '../i18n.ts'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const doisDigitos = (n: number) => String(n).padStart(2, '0')
 
@@ -43,6 +44,7 @@ export function SeletorDeHora({
 }) {
   const [aberto, setAberto] = useState(false)
   const t = usarT()
+  const margem = useSafeAreaInsets()
 
   return (
     <View style={{ gap: espaco.s, flex: 1 }}>
@@ -91,7 +93,10 @@ export function SeletorDeHora({
             borderTopLeftRadius: raio.g,
             borderTopRightRadius: raio.g,
             paddingHorizontal: espaco.g,
-            paddingBottom: espaco.ggg,
+            // A margem segura ENTRA na conta: 32pt fixos deixavam o botão de
+            // fechar por baixo da barra de gestos do iPhone. No simulador passa
+            // raspando, num aparelho com barra alta não passa.
+            paddingBottom: Math.max(margem.bottom, espaco.m) + espaco.m,
             paddingTop: espaco.m,
             gap: espaco.s,
           }}
