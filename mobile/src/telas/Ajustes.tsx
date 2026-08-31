@@ -535,6 +535,22 @@ export function Ajustes({ aoEscanearHorario }: {
           </View>
 
           <View style={estilo.bloco}>
+            <Apoio>{t('ajustes.silencio')}</Apoio>
+            <Apoio cor={cores.texto3}>{t('ajustes.silencio_desc')}</Apoio>
+            <Linha>
+              <SeletorDeHora
+                rotulo={t('ajustes.silencio_de')}
+                valor={ajustes.silencioDe}
+                aoMudar={(h) => mudarAjustes({ silencioDe: h as typeof ajustes.silencioDe })}
+              />
+              <SeletorDeHora
+                rotulo={t('ajustes.silencio_ate')}
+                valor={ajustes.silencioAte}
+                aoMudar={(h) => mudarAjustes({ silencioAte: h as typeof ajustes.silencioAte })}
+              />
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
             <Linha entre>
               <View style={{ flex: 1, gap: 2 }}>
                 <Apoio>{t('ajustes.adiar')}</Apoio>

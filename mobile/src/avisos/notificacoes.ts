@@ -71,8 +71,24 @@ export async function registrarCategoria(t: ReturnType<typeof criarT>): Promise<
   }
 }
 
-function nivelDeInterrupcao(modo: AvisoAgendado['modo']): 'active' | 'timeSensitive' {
-  return modo === 'normal' ? 'active' : 'timeSensitive'
+/**
+ * O nível de interrupção — hoje sempre `active`, e isso é uma decisão dele.
+ *
+ * Pedido em 30/08/2026: *"coloca pra nao furar modo sono, nao perturbe e etc.
+ * os focos em geral / nem alarme pode dar quando ta nesses modos"*.
+ *
+ * `timeSensitive` é exatamente o crachá que FURA Foco, Não Perturbe e Modo
+ * Sono — era o que os modos insistente e alarme usavam. Tirando ele, quem
+ * silencia passa a ser o iOS, com a regra que a pessoa configurou no próprio
+ * telefone: o aviso espera e chega no resumo.
+ *
+ * E é o mecanismo certo, não um remendo: um app não consegue LER o Foco na hora
+ * do disparo — a notificação é entregue pelo sistema com o app fechado, e o
+ * `INFocusStatusCenter` só responde com o app rodando. Deixar o nível correto e
+ * o iOS decidir é a única forma que funciona sempre.
+ */
+function nivelDeInterrupcao(_modo: AvisoAgendado['modo']): 'active' {
+  return 'active'
 }
 
 async function agendar(
@@ -213,7 +229,7 @@ export async function adiar(
       title: titulo,
       body: corpo,
       sound: SOM_INSISTENTE,
-      interruptionLevel: 'timeSensitive',
+      interruptionLevel: 'active',
       categoryIdentifier: CATEGORIA,
       data: { compromissoId, adiado: true },
     },

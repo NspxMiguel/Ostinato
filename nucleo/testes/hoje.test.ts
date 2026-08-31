@@ -49,3 +49,19 @@ test('o aviso ja tocado nao segura o item sozinho', () => {
 test('sem data resolvida nao entra por aqui', () => {
   assert.equal(ehAssuntoDeHoje({ quando: null }, AGORA), false)
 })
+
+import { estaAtrasado } from '../hoje.ts'
+
+test('vence amanha ainda NAO esta atrasado', () => {
+  assert.equal(estaAtrasado(instante('2026-08-31', '23:59'), AGORA), false)
+})
+
+test('depois da meia-noite, a mesma tarefa fica atrasada', () => {
+  // O dia da entrega comecou: a hora de fazer era a noite anterior.
+  const depoisDaMeiaNoite = instante('2026-08-31', '00:01')
+  assert.equal(estaAtrasado(instante('2026-08-31', '23:59'), depoisDaMeiaNoite), true)
+})
+
+test('passou da hora exata tambem conta', () => {
+  assert.equal(estaAtrasado(instante('2026-08-30', '20:00'), AGORA), true)
+})

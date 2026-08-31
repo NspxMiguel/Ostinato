@@ -9,10 +9,11 @@
 // data, corta nos 60 mais próximos (4 de reserva), e reabastece a janela sempre
 // que o app abre ou algo muda. O que ficou de fora é contado e mostrado na tela.
 
-import type { Ajustes, Base, Compromisso, ModoAviso, Periodo, RegraAviso } from './modelo.ts'
+import type { Ajustes, Base, Compromisso, Hora, ModoAviso, Periodo, RegraAviso } from './modelo.ts'
 import { avisosDe } from './modelo.ts'
 import { resolverVencimento } from './vencimento.ts'
 import { respeitarAula } from './silencioEmAula.ts'
+import { foraDoSilencio } from './silencioNoturno.ts'
 import { primeiraAulaDoDia } from './grade.ts'
 import { vivos } from './sync/registro.ts'
 import { instante, somarDias } from './tempo.ts'
@@ -93,6 +94,7 @@ function disparosDaRegra(
   base: Base,
   periodo: Periodo | undefined,
   inverterSemana: boolean,
+  silencio: { de: Hora; ate: Hora },
 ): AvisoAgendado[] {
   const inicio = primeiroDisparo(regra, venceEm, dataVencimento, base, periodo, inverterSemana)
   if (!inicio) return []
@@ -110,7 +112,23 @@ function disparosDaRegra(
     // O aviso é EMPURRADO para o primeiro instante livre depois do bloco, nunca
     // descartado: sumir com um aviso porque ele calhou numa hora ruim é a pior
     // falha que este app pode ter.
-    const t = respeitarAula(new Date(bruto), base, periodo, inverterSemana).getTime()
+    // Duas faixas proibidas, na ordem: a aula e a noite. A noite vem por
+    // último de propósito — empurrar para fora da aula pode jogar o aviso para
+    // as 22h30, e aí ele ainda precisa sair da faixa de silêncio.
+    //
+    // A EXCEÇÃO é a regra ancorada na primeira aula, e ela não é um jeitinho.
+    //
+    // Essa regra existe para ACORDAR: "duas horas antes da primeira aula" cai
+    // às 5h30 de quem tem aula às 7h30 — dentro de qualquer faixa de sono que
+    // se escolha. Empurrar ela para o fim do silêncio não protegeria o sono da
+    // pessoa; apagaria o despertador que ela mesma configurou, e ela perderia a
+    // entrega achando que o app tocou. Silenciar um aviso é diferente de
+    // silenciar um alarme que a pessoa pediu para tocar naquela hora.
+    const semAula = respeitarAula(new Date(bruto), base, periodo, inverterSemana)
+    const paraAcordar = regra.quando.tipo === 'antesDaPrimeiraAula'
+    const t = paraAcordar
+      ? semAula.getTime()
+      : foraDoSilencio(semAula, silencio.de, silencio.ate).getTime()
 
     // Aviso no passado não se agenda, e repetição depois do prazo não serve para nada.
     if (t <= agora) continue
@@ -166,6 +184,7 @@ export function planejar(
           base,
           periodo,
           ajustes.inverterSemanaAlternada,
+          { de: ajustes.silencioDe, ate: ajustes.silencioAte },
         ),
       )
     }

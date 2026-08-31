@@ -12,7 +12,7 @@ const { withDangerousMod, withXcodeProject, withEntitlementsPlist } = require('e
 
 // O time e o campo OU do certificado, nao o numero entre parenteses do nome
 // dele — confundir os dois faz o Xcode dizer "No Account for Team".
-const TIME = 'SW36PU2B3T' // OU do "Apple Development: Cleiton Giovanni Moretti"
+const TIME = 'SW36PU2B3T' // OU do certificado "Apple Development" da organizacao
 
 /** Aponta os alvos do app para o time, com assinatura automatica. */
 function comTime(config) {

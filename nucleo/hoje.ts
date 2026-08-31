@@ -45,3 +45,23 @@ export function ehAssuntoDeHoje(c: Candidato, agora: Date): boolean {
 
   return !!c.proximoAviso && dataDe(c.proximoAviso) === hoje
 }
+
+/**
+ * O compromisso está atrasado?
+ *
+ * Não é só "passou da hora". Pedido dele em 30/08/2026: *"quando passar meia
+ * noite, ainda aparece no hoje, mas aparece como ATRASADO vermelho chamando
+ * bastante atenção"*.
+ *
+ * A razão é o funcionamento real de tarefa escolar: o prazo formal é a aula do
+ * dia, mas a hora de FAZER era a noite anterior. Quando o dia da entrega
+ * começa, quem não fez está atrasado — esperar as 23:59 para ficar vermelho
+ * avisaria quando não dá mais para agir, que é o mesmo que não avisar.
+ *
+ * Então são dois gatilhos: passou da hora exata, ou o DIA da entrega chegou.
+ */
+export function estaAtrasado(quando: Date | null, agora: Date): boolean {
+  if (!quando) return false
+  if (quando.getTime() < agora.getTime()) return true
+  return dataDe(quando) <= dataDe(agora)
+}

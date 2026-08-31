@@ -216,6 +216,14 @@ export type Ajustes = {
    * que a pessoa já espera quando aperta adiar em qualquer alarme.
    */
   adiarMinutos: number
+  /**
+   * A faixa de horas em que nada toca — nem alarme.
+   *
+   * Existe porque o AlarmKit não tem como respeitar o Foco: ele foi feito para
+   * furar. Ver `silencioNoturno.ts`.
+   */
+  silencioDe: Hora
+  silencioAte: Hora
   limiteFaltasPadrao: number
   syncLigado: boolean
   /** Escola com semana A/B: qual semana do ano conta como "par". */
@@ -338,6 +346,8 @@ export function ajustesPadrao(): Ajustes {
     padroesAviso: PADROES_AVISO,
     somAlarme: null,
     adiarMinutos: 9,
+    silencioDe: '22:00',
+    silencioAte: '07:00',
     limiteFaltasPadrao: 25,
     syncLigado: false,
     inverterSemanaAlternada: false,
