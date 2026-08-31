@@ -56,6 +56,13 @@ class BarraView: ExpoView {
   private var indicador: UIVisualEffectView!
   private var itens: [(icone: UIImageView, rotulo: UILabel)] = []
   private var arrastando = false
+  /// A mola esta correndo agora.
+  ///
+  /// Existe porque `layoutSubviews` tambem escreve a posicao da bolha, e trocar
+  /// de aba pelo JavaScript dispara uma passada de layout: ela chegava no meio
+  /// da mola e cravava a bolha no destino, apagando a animacao. Enquanto isto
+  /// for verdade, quem manda no X e a animacao — o layout so cuida do tamanho.
+  private var animando = false
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -154,7 +161,8 @@ class BarraView: ExpoView {
     barra.clipsToBounds = true
 
     indicador.frame = CGRect(
-      x: xDoIndicador(ativa),
+      // O tamanho e sempre do layout; a posicao so quando nada esta em curso.
+      x: animando || arrastando ? indicador.frame.origin.x : xDoIndicador(ativa),
       y: RECUO,
       width: max(0, larguraDaAba - RECUO * 2),
       height: bounds.height - RECUO * 2)
@@ -185,9 +193,12 @@ class BarraView: ExpoView {
     guard animado else { aplicar(); pintar(); return }
     // Mola sem pressa de propósito: rápido demais vira teletransporte e o
     // movimento — que é o que faz o material parecer líquido — se perde.
+    animando = true
     UIView.animate(
       withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.78,
-      initialSpringVelocity: 0.4, options: [.allowUserInteraction], animations: aplicar)
+      initialSpringVelocity: 0.4, options: [.allowUserInteraction],
+      animations: aplicar,
+      completion: { _ in self.animando = false })
     pintar()
   }
 
@@ -198,8 +209,12 @@ class BarraView: ExpoView {
 
   @objc private func tocou(_ g: UITapGestureRecognizer) {
     let i = indiceEm(g.location(in: barra).x)
-    if i != ativa { aoTrocar(["indice": i]) }
-    moverIndicador(para: i, animado: true)
+    guard i != ativa else { return }
+    // A bolha anda na hora, sem esperar o JavaScript responder. E `ativa` muda
+    // aqui de propósito: quando o eco do React chegar com o mesmo valor, o
+    // `didSet` não dispara, e não existe uma segunda mola brigando com esta.
+    ativa = i
+    aoTrocar(["indice": i])
   }
 
   /// A bolha segue o dedo, e só decide a aba quando ele sai.
@@ -223,8 +238,9 @@ class BarraView: ExpoView {
     case .ended, .cancelled, .failed:
       arrastando = false
       let i = indiceEm(x)
-      aoTrocar(["indice": i])
+      // A mola sai de onde o dedo largou e vai para a aba mais próxima.
       moverIndicador(para: i, animado: true)
+      aoTrocar(["indice": i])
     default:
       break
     }
