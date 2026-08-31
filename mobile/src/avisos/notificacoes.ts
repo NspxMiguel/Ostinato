@@ -5,7 +5,12 @@
 // sistema tem agendado e o que o plano diz que deveria ter.
 
 import * as Notifications from 'expo-notifications'
-import { agendarAlarme, cancelarAlarme, temAlarmeDeSistema } from 'alarme-do-sistema'
+import {
+  agendarAlarme,
+  alarmesAgendados,
+  cancelarAlarme,
+  temAlarmeDeSistema,
+} from 'alarme-do-sistema'
 import { sonsImportados } from 'som-do-alarme'
 import { Platform } from 'react-native'
 import type { Ajustes, Base, Periodo } from '../../../nucleo/modelo.ts'
@@ -198,6 +203,26 @@ export async function sincronizarAvisos(
     cancelarAlarmeDoAviso(chave)
   }
   for (const aviso of d.criar) await agendar(aviso, base, ajustes, t)
+
+  // Varre os alarmes ÓRFÃOS.
+  //
+  // A conta acima compara o plano com a fila de NOTIFICAÇÕES, e o alarme de
+  // sistema não vive nela: ele é do iOS, sobrevive a reinstalação do app e não
+  // aparece em `getAllScheduledNotificationsAsync`. Basta uma notificação já
+  // entregue, ou o app reinstalado, para sobrar um despertador armado para uma
+  // tarefa que não existe mais — e um alarme tocando de madrugada por causa de
+  // uma tarefa apagada é o tipo de defeito que faz a pessoa desinstalar.
+  //
+  // Então a fonte da verdade aqui é o próprio AlarmKit: o que ele tem e o plano
+  // não pede, cai.
+  if (temAlarmeDeSistema()) {
+    const desejados = new Set(
+      plano.agendar.filter((a) => a.modo === 'alarme').map((a) => uuidDaChave(a.chave)),
+    )
+    for (const id of await alarmesAgendados()) {
+      if (!desejados.has(id)) void cancelarAlarme(id)
+    }
+  }
 
   return {
     agendadas: plano.agendar.length,
