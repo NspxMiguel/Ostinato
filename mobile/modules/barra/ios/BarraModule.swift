@@ -28,9 +28,23 @@ import UIKit
 
 private let ICONES = ["circle", "list.bullet", "square.grid.2x2", "slider.horizontal.3"]
 
+/// O recuo da bolha para dentro da barra, IGUAL nos quatro lados.
+///
+/// Ele estava assimetrico — 3pt nas laterais e 6pt em cima e embaixo — e o
+/// numero vivia cravado em tres lugares (o layout, a mola e o arrasto). Bastava
+/// um deles discordar para a bolha sentar torta, e foi o que aconteceu. Agora e
+/// uma constante so, e o recuo igual e o que faz a capsula ficar CONCENTRICA
+/// com a barra: raio de fora menos recuo da o raio de dentro.
+private let RECUO: CGFloat = 6
+
 class BarraView: ExpoView {
   /// Os rotulos das abas. A quantidade define a largura de cada uma.
   var rotulos: [String] = [] { didSet { remontar() } }
+  /// O simbolo de cada aba, na ordem delas.
+  ///
+  /// Vem de fora porque as abas SOMEM: quem desliga a grade fica com tres, e
+  /// escolher o icone pela posicao dava a Ajustes o icone de quem saiu.
+  var icones: [String] = [] { didSet { remontar() } }
   var ativa: Int = 0 { didSet { if !arrastando { moverIndicador(para: ativa, animado: true) } } }
   var corAtiva: UIColor = .white
   var corInativa: UIColor = UIColor.white.withAlphaComponent(0.4)
@@ -94,7 +108,7 @@ class BarraView: ExpoView {
 
     for (i, texto) in rotulos.enumerated() {
       let icone = UIImageView(
-        image: UIImage(systemName: ICONES[min(i, ICONES.count - 1)])?
+        image: UIImage(systemName: icones.indices.contains(i) ? icones[i] : ICONES[min(i, ICONES.count - 1)])?
           .withConfiguration(UIImage.SymbolConfiguration(pointSize: 19, weight: .regular)))
       icone.contentMode = .center
 
@@ -139,25 +153,34 @@ class BarraView: ExpoView {
     barra.layer.cornerCurve = .continuous
     barra.clipsToBounds = true
 
-    let respiro: CGFloat = 6
     indicador.frame = CGRect(
-      x: CGFloat(ativa) * larguraDaAba + respiro / 2,
-      y: respiro,
-      width: max(0, larguraDaAba - respiro),
-      height: bounds.height - respiro * 2)
+      x: xDoIndicador(ativa),
+      y: RECUO,
+      width: max(0, larguraDaAba - RECUO * 2),
+      height: bounds.height - RECUO * 2)
     indicador.layer.cornerRadius = indicador.bounds.height / 2
     indicador.layer.cornerCurve = .continuous
     indicador.clipsToBounds = true
 
+    // O bloco de icone e rotulo centrado na ALTURA da barra, e nao em numeros
+    // fixos: com 10 e 34 cravados ele subia dois pontos e a bolha parecia
+    // deslocada mesmo estando certa.
+    let alturaDoBloco: CGFloat = 40
+    let topo = (bounds.height - alturaDoBloco) / 2
     for (i, item) in itens.enumerated() {
       let x = CGFloat(i) * larguraDaAba
-      item.icone.frame = CGRect(x: x, y: 10, width: larguraDaAba, height: 22)
-      item.rotulo.frame = CGRect(x: x + 4, y: 34, width: larguraDaAba - 8, height: 16)
+      item.icone.frame = CGRect(x: x, y: topo, width: larguraDaAba, height: 22)
+      item.rotulo.frame = CGRect(x: x + 4, y: topo + 24, width: larguraDaAba - 8, height: 16)
     }
   }
 
+  /// A unica conta de posicao da bolha. Todo mundo passa por aqui.
+  private func xDoIndicador(_ indice: Int) -> CGFloat {
+    CGFloat(indice) * larguraDaAba + RECUO
+  }
+
   private func moverIndicador(para indice: Int, animado: Bool) {
-    let destino = CGFloat(indice) * larguraDaAba + 3
+    let destino = xDoIndicador(indice)
     let aplicar = { self.indicador.frame.origin.x = destino }
     guard animado else { aplicar(); pintar(); return }
     // Mola sem pressa de propósito: rápido demais vira teletransporte e o
@@ -190,7 +213,7 @@ class BarraView: ExpoView {
       // Preso à barra, e centrado no dedo: seguir sem limite deixaria a bolha
       // sair pela lateral, que é onde o efeito deixa de parecer físico.
       let meio = larguraDaAba / 2
-      let livre = min(max(x - meio, 0), barra.bounds.width - larguraDaAba) + 3
+      let livre = min(max(x - meio, 0), barra.bounds.width - larguraDaAba) + RECUO
       indicador.frame.origin.x = livre
       let sob = indiceEm(x)
       if sob != ativa {
@@ -215,6 +238,7 @@ public class BarraModule: Module {
     View(BarraView.self) {
       Events("aoTrocar")
       Prop("rotulos") { (view: BarraView, valor: [String]) in view.rotulos = valor }
+      Prop("icones") { (view: BarraView, valor: [String]) in view.icones = valor }
       Prop("ativa") { (view: BarraView, valor: Int) in view.ativa = valor }
     }
   }

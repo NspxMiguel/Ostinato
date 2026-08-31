@@ -7,6 +7,8 @@ import type { StyleProp, ViewStyle } from 'react-native'
 
 type Props = {
   rotulos: string[]
+  /** O SF Symbol de cada aba, na mesma ordem de `rotulos`. */
+  icones: string[]
   ativa: number
   aoTrocar: (e: { nativeEvent: { indice: number } }) => void
   style?: StyleProp<ViewStyle>

@@ -40,11 +40,16 @@ import { TelaDeAlarme } from './componentes/TelaDeAlarme.tsx'
 
 type Aba = 'hoje' | 'agenda' | 'grade' | 'ajustes'
 
-const ABAS: { id: Aba; chave: 'abas.hoje' | 'abas.agenda' | 'abas.grade' | 'abas.ajustes' }[] = [
-  { id: 'hoje', chave: 'abas.hoje' },
-  { id: 'agenda', chave: 'abas.agenda' },
-  { id: 'grade', chave: 'abas.grade' },
-  { id: 'ajustes', chave: 'abas.ajustes' },
+const ABAS: {
+  id: Aba
+  chave: 'abas.hoje' | 'abas.agenda' | 'abas.grade' | 'abas.ajustes'
+  /** O SF Symbol da aba. Anda junto dela, porque a Grade pode estar desligada. */
+  icone: string
+}[] = [
+  { id: 'hoje', chave: 'abas.hoje', icone: 'sun.max' },
+  { id: 'agenda', chave: 'abas.agenda', icone: 'list.bullet' },
+  { id: 'grade', chave: 'abas.grade', icone: 'calendar' },
+  { id: 'ajustes', chave: 'abas.ajustes', icone: 'slider.horizontal.3' },
 ]
 
 export function Raiz() {
@@ -361,6 +366,7 @@ function BarraDeAbas({
       <BarraNativa
         style={e.barra}
         rotulos={abas.map((a) => rotulo(a.chave))}
+        icones={abas.map((a) => a.icone)}
         ativa={Math.max(0, abas.findIndex((a) => a.id === aba))}
         aoTrocar={(ev: { nativeEvent: { indice: number } }) => {
           const alvo = abas[ev.nativeEvent.indice]
