@@ -249,7 +249,7 @@ function montarChegando(
       // Atrasado quando o DIA da entrega começou, não só quando a hora passou.
       // Ver `nucleo/hoje.ts`: o prazo formal é a aula, mas a hora de fazer era
       // a noite anterior.
-      atrasado: estaAtrasado(r.valor.quando, agora),
+      atrasado: estaAtrasado(r.valor.quando, agora, c.criadoEm),
       proximoAviso: proximoPorId.get(c.id),
     })
   }

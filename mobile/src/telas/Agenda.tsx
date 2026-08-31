@@ -88,7 +88,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
       }
       // A MESMA regra do Hoje. Duas definições de "atrasado" no mesmo app
       // fariam a tarefa aparecer vermelha numa tela e normal na outra.
-      const atrasado = !c.concluido && estaAtrasado(r.valor.quando, agora)
+      const atrasado = !c.concluido && estaAtrasado(r.valor.quando, agora, c.criadoEm)
       itens.push({ compromisso: c, resolvido: r.valor, semData: false, atrasado })
     }
 

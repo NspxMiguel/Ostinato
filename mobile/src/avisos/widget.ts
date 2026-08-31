@@ -51,7 +51,7 @@ export function atualizarWidget(
       // A MESMA regra do app, e não `quando < agora`: o dia da entrega chegou
       // basta. Uma terceira definição de "atrasado" faria a tarefa aparecer
       // vermelha no app e normal na tela de início.
-      atrasado: estaAtrasado(r.valor.quando, agora),
+      atrasado: estaAtrasado(r.valor.quando, agora, c.criadoEm),
       ordem: quandoMs,
     })
   }

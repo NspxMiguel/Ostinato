@@ -60,8 +60,22 @@ export function ehAssuntoDeHoje(c: Candidato, agora: Date): boolean {
  *
  * Então são dois gatilhos: passou da hora exata, ou o DIA da entrega chegou.
  */
-export function estaAtrasado(quando: Date | null, agora: Date): boolean {
+export function estaAtrasado(quando: Date | null, agora: Date, criadoEm?: number): boolean {
   if (!quando) return false
+  // Passou da hora exata: atrasado, sem discussão.
   if (quando.getTime() < agora.getTime()) return true
-  return dataDe(quando) <= dataDe(agora)
+  // O dia da entrega ainda não chegou.
+  if (dataDe(quando) > dataDe(agora)) return false
+
+  // O dia chegou. Mas só é atraso se a pessoa TEVE a noite anterior.
+  //
+  // Sem isto, anotar às 10h da manhã "trabalho para hoje às 23:59" pinta a
+  // tarefa de vermelho no segundo em que ela é criada — e aí o vermelho deixa
+  // de significar alguma coisa. A regra que ele descreveu é sobre a virada da
+  // meia-noite de uma tarefa que já existia, não sobre tarefa recém-anotada.
+  //
+  // Sem `criadoEm` (dado antigo), o comportamento é o de antes: o dia chegou,
+  // está atrasado.
+  if (criadoEm === undefined) return true
+  return dataDe(new Date(criadoEm)) < dataDe(agora)
 }

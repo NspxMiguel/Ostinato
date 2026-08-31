@@ -65,3 +65,18 @@ test('depois da meia-noite, a mesma tarefa fica atrasada', () => {
 test('passou da hora exata tambem conta', () => {
   assert.equal(estaAtrasado(instante('2026-08-30', '20:00'), AGORA), true)
 })
+
+test('tarefa anotada HOJE para hoje nao nasce vermelha', () => {
+  // Ela nunca teve a noite anterior; o vermelho perderia o sentido.
+  const criada = instante('2026-08-30', '10:00').getTime()
+  assert.equal(estaAtrasado(instante('2026-08-30', '23:59'), AGORA, criada), false)
+})
+
+test('a mesma tarefa, anotada ONTEM, esta atrasada', () => {
+  const criada = instante('2026-08-29', '10:00').getTime()
+  assert.equal(estaAtrasado(instante('2026-08-30', '23:59'), AGORA, criada), true)
+})
+
+test('sem criadoEm, o comportamento e o de antes', () => {
+  assert.equal(estaAtrasado(instante('2026-08-30', '23:59'), AGORA), true)
+})
