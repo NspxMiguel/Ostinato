@@ -127,10 +127,11 @@ export function Hoje({
             return (
               <Entrada key={item.compromisso.id} indice={i}>
               <Cartao
-                // A faixa vira VERMELHA quando está atrasado, e a cor da matéria
-                // cede o lugar. Ele pediu "chamando bastante atenção", e cor de
-                // matéria é informação; atraso é urgência.
-                faixa={item.atrasado ? cores.atrasado : materia?.cor}
+                faixa={materia?.cor}
+                // O cartão inteiro fica vermelho quando está atrasado. A bolinha
+                // da matéria continua: ela diz DE QUE é a tarefa, e essa
+                // informação não some por a tarefa estar atrasada.
+                alerta={item.atrasado ? cores.atrasado : undefined}
                 aoTocar={() => aoAbrirCompromisso(item.compromisso.id)}
               >
                 <Linha>

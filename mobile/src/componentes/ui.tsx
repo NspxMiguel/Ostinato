@@ -191,18 +191,28 @@ export function Cartao({
   children,
   aoTocar,
   faixa,
+  alerta,
   padding = 16,
 }: {
   children: ReactNode
   aoTocar?: () => void
   /** Cor da matéria. Vira bolinha, não tarja lateral. */
   faixa?: string
+  /**
+   * O cartão inteiro em estado de alerta: borda e fundo tingidos.
+   *
+   * Existe porque a bolinha da matéria é discreta DE PROPÓSITO — ela é
+   * informação, e informação não deve gritar. Atraso é outra coisa: ele pediu
+   * "chamando bastante atenção", e trocar a cor de uma bolinha de 8 pontos não
+   * é chamar atenção, é esperar que a pessoa repare.
+   */
+  alerta?: string
   padding?: number
 }) {
   return (
-    <Toque aoTocar={aoTocar} estilo={e.cartao}>
+    <Toque aoTocar={aoTocar} estilo={[e.cartao, alerta ? { borderWidth: 1, borderColor: alerta } : null]}>
       <LinearGradient
-        colors={[cores.cartaoDe, cores.cartaoAte]}
+        colors={alerta ? [`${alerta}22`, `${alerta}0A`] : [cores.cartaoDe, cores.cartaoAte]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.6, y: 1 }}
         style={{ padding, flexDirection: 'row', gap: espaco.m }}

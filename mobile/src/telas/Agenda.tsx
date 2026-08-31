@@ -240,7 +240,8 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                   />
                   <View style={e.cartaoFlex}>
                     <Cartao
-                      faixa={item.atrasado ? cores.atrasado : materia?.cor}
+                      faixa={materia?.cor}
+                      alerta={item.atrasado ? cores.atrasado : undefined}
                       aoTocar={() => aoAbrirCompromisso(c.id)}
                     >
                       <View style={c.concluido ? e.concluido : undefined}>
