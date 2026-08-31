@@ -102,6 +102,15 @@ async function agendar(
   const materia = c.materiaId ? base.materias[c.materiaId] : undefined
   const texto = textoDoAviso(aviso, c, materia, t)
 
+  // O som escolhido vale para o alarme E para a notificação: ele pediu para
+  // trocar "o som do alarme", e o modo insistente também faz barulho — dois
+  // sons diferentes para a mesma tarefa é o app falando com duas vozes.
+  //
+  // E só vai se o arquivo AINDA existir. Nome apagado não dá erro: o iOS cai no
+  // som padrão calado, e quem apagou acharia que a escolha foi ignorada.
+  const som =
+    ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme) ? ajustes.somAlarme : null
+
   // Modo alarme vira ALARME DE SISTEMA, não notificação.
   //
   // A diferença é a que ele descreveu: notificação chama e espera você tocar;
@@ -120,12 +129,6 @@ async function agendar(
     // pessoa entrar no app, e não deixa rastro na Central de Notificações —
     // quem dispensa o alarme meio dormindo fica sem nada para reencontrar
     // depois. A notificação é o registro; o alarme é o que acorda.
-    // O som só vai se ele AINDA existir. Nome de arquivo apagado não dá erro:
-    // o iOS cai no som padrão calado, e quem apagou o som acharia que o alarme
-    // quebrou. Conferir aqui custa uma leitura de pasta e evita esse mistério.
-    const som = ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme)
-      ? ajustes.somAlarme
-      : null
     await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando, {
       som,
       adiarMinutos: ajustes.adiarMinutos,
@@ -138,7 +141,7 @@ async function agendar(
     content: {
       title: texto.titulo,
       body: texto.corpo,
-      sound: aviso.modo === 'normal' ? true : SOM_INSISTENTE,
+      sound: som ?? (aviso.modo === 'normal' ? true : SOM_INSISTENTE),
       interruptionLevel: nivelDeInterrupcao(aviso.modo),
       categoryIdentifier: CATEGORIA,
       data: {
