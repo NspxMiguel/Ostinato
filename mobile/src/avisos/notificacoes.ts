@@ -241,5 +241,5 @@ export function uuidDaChave(chave: string): string {
 
 /** Desarma o despertador junto com o aviso. */
 export function cancelarAlarmeDoAviso(chave: string): void {
-  cancelarAlarme(uuidDaChave(chave))
+  void cancelarAlarme(uuidDaChave(chave))
 }

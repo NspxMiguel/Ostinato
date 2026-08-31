@@ -89,33 +89,59 @@ public class AlarmeModule: Module {
     }
 
     /// Cancela um alarme. Marcar a tarefa como feita tem que desarmar o despertador.
-    Function("cancelar") { (id: String) -> Bool in
-      guard #available(iOS 26.1, *), let uuid = UUID(uuidString: id) else { return false }
-      do {
-        try AlarmManager.shared.cancel(id: uuid)
-        return true
-      } catch {
-        return false
+    ///
+    /// Assincrono pelo mesmo motivo de `estadoDaPermissao`: o `AlarmManager` mora
+    /// no `MainActor` e nao pode ser tocado da thread do JavaScript.
+    AsyncFunction("cancelar") { (id: String, promise: Promise) in
+      guard #available(iOS 26.1, *), let uuid = UUID(uuidString: id) else {
+        promise.resolve(false)
+        return
+      }
+      Task { @MainActor in
+        do {
+          try AlarmManager.shared.cancel(id: uuid)
+          promise.resolve(true)
+        } catch {
+          promise.resolve(false)
+        }
       }
     }
 
-    /// O estado da autorizacao, em uma palavra.
-    ///
-    /// Existe para a tela conseguir mostrar "negado nos Ajustes" em vez de
-    /// simplesmente nao tocar. Falha calada foi o defeito daqui.
-    Function("estadoDaPermissao") { () -> String in
-      guard #available(iOS 26.1, *) else { return "sem-suporte" }
-      switch AlarmManager.shared.authorizationState {
-      case .authorized: return "autorizado"
-      case .denied: return "negado"
-      default: return "nao-perguntado"
+    /**
+     O estado da autorizacao, em uma palavra.
+
+     Existe para a tela conseguir mostrar "negado nos Ajustes" em vez de
+     simplesmente nao tocar. Falha calada foi o defeito daqui.
+
+     E ASSINCRONO, e isso nao e estilo: `AlarmManager` e isolado no `MainActor`,
+     enquanto um `Function` do Expo roda direto na thread do JavaScript. Ler a
+     propriedade de la derruba o processo na hora — foi o crash ao abrir Ajustes.
+     O `AsyncFunction` com o salto explicito para o main e o que torna a leitura
+     legal.
+     */
+    AsyncFunction("estadoDaPermissao") { (promise: Promise) in
+      guard #available(iOS 26.1, *) else {
+        promise.resolve("sem-suporte")
+        return
+      }
+      Task { @MainActor in
+        switch AlarmManager.shared.authorizationState {
+        case .authorized: promise.resolve("autorizado")
+        case .denied: promise.resolve("negado")
+        default: promise.resolve("nao-perguntado")
+        }
       }
     }
 
     /// Os ids agendados agora — é com isto que o app sincroniza sem duplicar.
-    Function("agendados") { () -> [String] in
-      guard #available(iOS 26.1, *) else { return [] }
-      return ((try? AlarmManager.shared.alarms) ?? []).map { $0.id.uuidString }
+    AsyncFunction("agendados") { (promise: Promise) in
+      guard #available(iOS 26.1, *) else {
+        promise.resolve([String]())
+        return
+      }
+      Task { @MainActor in
+        promise.resolve(((try? AlarmManager.shared.alarms) ?? []).map { $0.id.uuidString })
+      }
     }
   }
 }

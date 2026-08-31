@@ -224,7 +224,12 @@ export function Ajustes({ aoEscanearHorario }: {
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
   // seria mandar o usuário resolver o problema errado.
   const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
-  const [estadoAlarme, setEstadoAlarme] = useState<EstadoDoAlarme>(() => estadoDoAlarme())
+  // Lido num efeito, e nunca no corpo do render: chamar módulo nativo enquanto
+  // a tela monta foi o que derrubou o app ao abrir Ajustes.
+  const [estadoAlarme, setEstadoAlarme] = useState<EstadoDoAlarme>('sem-suporte')
+  useEffect(() => {
+    void estadoDoAlarme().then(setEstadoAlarme)
+  }, [])
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   /** O editor de período letivo abre em folha: ele é uma tela inteira. */
@@ -473,7 +478,7 @@ export function Ajustes({ aoEscanearHorario }: {
               <Botao
                 texto={t('ajustes.alarme_pedir')}
                 variante="vazado"
-                aoTocar={() => void pedirPermissaoDeAlarme().then(() => setEstadoAlarme(estadoDoAlarme()))}
+                aoTocar={() => void pedirPermissaoDeAlarme().then(() => estadoDoAlarme().then(setEstadoAlarme))}
               />
             ) : null}
           </View>

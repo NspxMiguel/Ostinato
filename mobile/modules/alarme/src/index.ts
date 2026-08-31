@@ -38,10 +38,10 @@ export async function agendarAlarme(id: string, titulo: string, quando: Date): P
 }
 
 /** Marcar a tarefa como feita tem que desarmar o despertador. */
-export function cancelarAlarme(id: string): boolean {
+export async function cancelarAlarme(id: string): Promise<boolean> {
   if (!modulo) return false
   try {
-    return modulo.cancelar(id) as boolean
+    return (await modulo.cancelar(id)) as boolean
   } catch {
     return false
   }
@@ -56,18 +56,19 @@ export type EstadoDoAlarme = 'autorizado' | 'negado' | 'nao-perguntado' | 'sem-s
  * simplesmente não tocar — que foi o defeito: o alarme falhava calado e só
  * chegava a notificação, sem nada indicando que faltava uma permissão.
  */
-export function estadoDoAlarme(): EstadoDoAlarme {
+export async function estadoDoAlarme(): Promise<EstadoDoAlarme> {
+  if (!modulo) return 'sem-suporte'
   try {
-    return (modulo?.estadoDaPermissao?.() as EstadoDoAlarme) ?? 'sem-suporte'
+    return ((await modulo.estadoDaPermissao()) as EstadoDoAlarme) ?? 'sem-suporte'
   } catch {
     return 'sem-suporte'
   }
 }
 
-export function alarmesAgendados(): string[] {
+export async function alarmesAgendados(): Promise<string[]> {
   if (!modulo) return []
   try {
-    return (modulo.agendados() as string[]) ?? []
+    return ((await modulo.agendados()) as string[]) ?? []
   } catch {
     return []
   }
