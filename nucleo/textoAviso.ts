@@ -33,6 +33,15 @@ export function textoDoAviso(
   const corpo = (chave: 'minuto' | 'minutos' | 'hora' | 'horas' | 'dia' | 'dias', n?: number) =>
     t(`notificacao.corpo.${chave}` as never, { n: n ?? 1, materia: sufixoMateria })
 
+  // Já passou do prazo.
+  //
+  // Ficou possível quando a faixa de silêncio passou a EMPURRAR avisos: um aviso
+  // das 5h de um trabalho das 6h vai para as 7h, e chega depois. Antes isso caía
+  // no ramo do "agora" — dizer "agora" sobre o que já passou é o app mentindo
+  // no momento em que a pessoa mais precisa da verdade.
+  if (faltamMin < 0) {
+    return { titulo, corpo: t('notificacao.corpo.passou', { materia: sufixoMateria }) }
+  }
   if (faltamMin <= 1) return { titulo, corpo: t('notificacao.corpo.agora', { materia: sufixoMateria }) }
   if (faltamMin < 60) return { titulo, corpo: corpo(faltamMin === 1 ? 'minuto' : 'minutos', faltamMin) }
   if (faltamMin < 60 * 20) {

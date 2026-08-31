@@ -62,3 +62,24 @@ test('o singular tem chave propria: nada de "Em 1 horas" no telefone', () => {
   assert.equal(textoDoAviso(aviso(60), c, undefined, en).corpo, 'In 1 hour')
   assert.equal(textoDoAviso(aviso(120), c, undefined, en).corpo, 'In 2 hours')
 })
+
+test('aviso que dispara DEPOIS do prazo nao diz "agora"', () => {
+  // Ficou possivel com a faixa de silencio empurrando avisos: um aviso das 5h
+  // de um trabalho das 6h vai para as 7h e chega depois.
+  const t = criarT('pt')
+  const texto = textoDoAviso(
+    {
+      chave: 'c|r|0',
+      compromissoId: 'c',
+      regraId: 'r',
+      repeticao: 0,
+      modo: 'normal',
+      quando: instante('2026-09-01', '07:00'),
+      vencimentoEm: instante('2026-09-01', '06:00'),
+    },
+    { titulo: 'entrega', tipo: 'trabalho' } as never,
+    undefined,
+    t,
+  )
+  assert.match(texto.corpo, /passou/i)
+})
