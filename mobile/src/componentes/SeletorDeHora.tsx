@@ -15,10 +15,11 @@
 // guarda deixam de ser a mesma coisa — e é isso que estava errado antes.
 
 import { useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Modal, Pressable, Text, View } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 import { horaDeTexto } from '../formato.ts'
+import { usarT } from '../i18n.ts'
 
 const doisDigitos = (n: number) => String(n).padStart(2, '0')
 
@@ -41,6 +42,7 @@ export function SeletorDeHora({
   aoMudar: (hhmm: string) => void
 }) {
   const [aberto, setAberto] = useState(false)
+  const t = usarT()
 
   return (
     <View style={{ gap: espaco.s, flex: 1 }}>
@@ -62,15 +64,32 @@ export function SeletorDeHora({
         <Text style={[fonte.corpo, { fontWeight: '600' }]}>{horaDeTexto(valor)}</Text>
       </Pressable>
 
-      {aberto ? (
+      {/* A roda vem numa FOLHA de baixo, e não embutida na linha.
+          
+          Embutida ela herda a largura de quem a contém — e aqui o campo divide a
+          linha com "Dias antes", então a roda saía espremida em metade da tela,
+          com a coluna de AM/PM cortada. Folha é também o que o iPhone faz quando
+          o seletor não cabe: a roda ganha a largura inteira e nada mais disputa
+          o toque com ela. */}
+      <Modal
+        visible={aberto}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAberto(false)}
+      >
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' }} onPress={() => setAberto(false)} />
         <View
           style={{
-            borderRadius: raio.g,
-            backgroundColor: cores.cartao,
-            borderWidth: 1,
-            borderColor: cores.borda,
+            backgroundColor: cores.cartaoAlto,
+            borderTopLeftRadius: raio.g,
+            borderTopRightRadius: raio.g,
+            paddingHorizontal: espaco.g,
+            paddingBottom: espaco.ggg,
+            paddingTop: espaco.m,
+            gap: espaco.s,
           }}
         >
+          <Text style={[fonte.secao, { textAlign: 'center' }]}>{rotulo}</Text>
           {/* Sem `locale`: passar um sobrescreve o ajuste de 12h/24h do iPhone,
               que é justamente o defeito que este componente veio consertar. */}
           <DateTimePicker
@@ -83,8 +102,22 @@ export function SeletorDeHora({
             }}
             accessibilityLabel={rotulo}
           />
+          <Pressable
+            onPress={() => setAberto(false)}
+            style={{
+              backgroundColor: cores.destaque,
+              borderRadius: raio.m,
+              paddingVertical: espaco.m,
+              alignItems: 'center',
+            }}
+            accessibilityRole="button"
+          >
+            <Text style={[fonte.corpo, { color: cores.sobreDestaque, fontWeight: '600' }]}>
+              {t('acao.fechar')}
+            </Text>
+          </Pressable>
         </View>
-      ) : null}
+      </Modal>
     </View>
   )
 }

@@ -133,7 +133,7 @@ const traducoes = {
     'avisos.modo.alarme': 'Alarme',
     'avisos.expl.normal': 'Uma notificação comum que aparece na tela e faz o som padrão.',
     'avisos.expl.insistente': 'Toca e vibra algumas vezes em intervalos curtos para garantir que você veja.',
-    'avisos.expl.alarme': 'Com o app fechado e o telefone no silencioso, nenhum app do iOS toca som sem uma permissão especial da Apple; nesse caso ele fura o Foco, vibra e repete até você responder.',
+    'avisos.expl.alarme': 'O alarme do próprio iPhone: toca alto, em tela cheia, com o app fechado, no silencioso e com Foco ligado. Precisa da permissão de alarme, que fica nos Ajustes. Em iPhone abaixo do iOS 26.1 vira o modo insistente.',
 
     // 6. Grade
     'dia.completo.0': 'Domingo',
@@ -475,7 +475,7 @@ const traducoes = {
     'avisos.modo.alarme': 'Alarm',
     'avisos.expl.normal': 'A standard notification that appears on screen and plays the default sound.',
     'avisos.expl.insistente': 'Plays and vibrates a few times at short intervals to make sure you see it.',
-    'avisos.expl.alarme': 'With the app closed and the phone on silent, no iOS app plays sound without a special Apple permission; in this case it overrides Focus, vibrates, and repeats until you respond.',
+    'avisos.expl.alarme': 'The iPhone\u2019s own alarm: loud, full screen, with the app closed, on silent and with a Focus on. It needs the alarm permission, which lives in Settings. Below iOS 26.1 it falls back to persistent mode.',
 
     // 6. Grade
     'dia.completo.0': 'Sunday',
@@ -817,7 +817,7 @@ const traducoes = {
     'avisos.modo.alarme': 'Alarma',
     'avisos.expl.normal': 'Una notificación normal que aparece en pantalla y hace el sonido estándar.',
     'avisos.expl.insistente': 'Suena y vibra unas cuantas veces a intervalos cortos para asegurarse de que lo veas.',
-    'avisos.expl.alarme': 'Con la app cerrada y el teléfono en modo silencio, ninguna app de iOS emite sonido sin un permiso especial de Apple; en ese caso, la alarma rompe el modo Concentración, vibra y se repite hasta que respondas.',
+    'avisos.expl.alarme': 'La alarma del propio iPhone: suena fuerte, a pantalla completa, con la app cerrada, en silencio y con un Foco activo. Necesita el permiso de alarma, que est\u00e1 en Ajustes. Por debajo de iOS 26.1 pasa a modo insistente.',
 
     // 6. Grade
     'dia.completo.0': 'Domingo',
@@ -1159,7 +1159,7 @@ const traducoes = {
     'avisos.modo.alarme': 'Alarme',
     'avisos.expl.normal': 'Une notification classique qui apparaît à l\u2019écran et joue le son par défaut.',
     'avisos.expl.insistente': 'Joue et vibre plusieurs fois à intervalles courts pour s\u2019assurer que vous la voyiez.',
-    'avisos.expl.alarme': 'App fermée et téléphone en mode silencieux, aucune app iOS ne joue de son sans une autorisation spéciale d\u2019Apple ; dans ce cas, elle sort du mode Concentration, vibre et se répète jusqu\u2019à ce que vous répondiez.',
+    'avisos.expl.alarme': 'L\u2019alarme de l\u2019iPhone\u00a0: forte, en plein \u00e9cran, app ferm\u00e9e, en silencieux et avec un Focus actif. Elle demande l\u2019autorisation d\u2019alarme, dans les R\u00e9glages. En dessous d\u2019iOS\u00a026.1, elle devient le mode insistant.',
 
     // 6. Grade
     'dia.completo.0': 'Dimanche',

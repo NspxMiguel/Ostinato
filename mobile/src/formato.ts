@@ -128,10 +128,12 @@ export function rotuloDeRegra(regra: RegraAviso, t: T): string {
   }
   if (regra.quando.tipo === 'diasAntes') {
     const n = regra.quando.dias
-    if (n === 0) return t('avisos.no_dia', { hora: regra.quando.aHora })
-    return n === 1
-      ? t('avisos.dia_antes', { hora: regra.quando.aHora })
-      : t('avisos.dias_antes', { n, hora: regra.quando.aHora })
+    // Formatada pelo aparelho, e não crua: o cabeçalho dizia "às 22:11"
+    // enquanto o campo logo abaixo dizia "10:11 PM". A mesma hora em dois
+    // formatos na mesma tela faz a pessoa desconfiar de qual delas vale.
+    const hora = horaDeTexto(regra.quando.aHora)
+    if (n === 0) return t('avisos.no_dia', { hora })
+    return n === 1 ? t('avisos.dia_antes', { hora }) : t('avisos.dias_antes', { n, hora })
   }
   const min = regra.quando.minutos
   if (min < 60) return t('avisos.minutos_antes', { n: min })
