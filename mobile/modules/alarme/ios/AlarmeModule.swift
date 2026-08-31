@@ -26,10 +26,15 @@ public class AlarmeModule: Module {
   public func definition() -> ModuleDefinition {
     Name("AlarmeDoSistema")
 
-    /// Se o aparelho tem AlarmKit. Abaixo do iOS 26 nao tem, e o app cai no
-    /// caminho antigo — que avisa, mas nao acorda.
+    /// Se o aparelho tem AlarmKit.
+    ///
+    /// 26.1, e nao 26.0: o `AlarmManager` nasceu no 26.0, mas o inicializador
+    /// da tela do alarme (`AlarmPresentation.Alert` com botao secundario) so
+    /// chegou no 26.1 — e sem ele nao da para agendar nada. Marcar o modulo
+    /// inteiro pela versao da peca que falta e mais honesto que marcar pela
+    /// mais permissiva e quebrar na compilacao.
     Function("disponivel") { () -> Bool in
-      if #available(iOS 26.0, *) { return true }
+      if #available(iOS 26.1, *) { return true }
       return false
     }
 
@@ -41,7 +46,7 @@ public class AlarmeModule: Module {
      abertura do app, e o que faz a pessoa entender o que esta concedendo.
      */
     AsyncFunction("permissao") { (promise: Promise) in
-      guard #available(iOS 26.0, *) else {
+      guard #available(iOS 26.1, *) else {
         promise.resolve(false)
         return
       }
@@ -64,8 +69,8 @@ public class AlarmeModule: Module {
      */
     AsyncFunction("agendar") {
       (id: String, titulo: String, quandoEmSegundos: Double, promise: Promise) in
-      guard #available(iOS 26.0, *) else {
-        promise.reject("alarme", "AlarmKit exige iOS 26")
+      guard #available(iOS 26.1, *) else {
+        promise.reject("alarme", "AlarmKit exige iOS 26.1")
         return
       }
       guard let uuid = UUID(uuidString: id) else {
@@ -85,7 +90,7 @@ public class AlarmeModule: Module {
 
     /// Cancela um alarme. Marcar a tarefa como feita tem que desarmar o despertador.
     Function("cancelar") { (id: String) -> Bool in
-      guard #available(iOS 26.0, *), let uuid = UUID(uuidString: id) else { return false }
+      guard #available(iOS 26.1, *), let uuid = UUID(uuidString: id) else { return false }
       do {
         try AlarmManager.shared.cancel(id: uuid)
         return true
@@ -96,13 +101,13 @@ public class AlarmeModule: Module {
 
     /// Os ids agendados agora — é com isto que o app sincroniza sem duplicar.
     Function("agendados") { () -> [String] in
-      guard #available(iOS 26.0, *) else { return [] }
+      guard #available(iOS 26.1, *) else { return [] }
       return ((try? AlarmManager.shared.alarms) ?? []).map { $0.id.uuidString }
     }
   }
 }
 
-@available(iOS 26.0, *)
+@available(iOS 26.1, *)
 struct MetadadosDoOstinato: AlarmMetadata {
   init() {}
 }
@@ -115,7 +120,7 @@ extension AlarmeModule {
    quem o criou: o compilador o trata como contexto novo, e recusa a API. Marcar
    a função é o que devolve a disponibilidade para dentro do laço assíncrono.
    */
-  @available(iOS 26.0, *)
+  @available(iOS 26.1, *)
   static func armar(uuid: UUID, titulo: String, quando: Double) async throws -> Alarm {
     let alerta = AlarmPresentation.Alert(
       title: LocalizedStringResource(stringLiteral: titulo),
