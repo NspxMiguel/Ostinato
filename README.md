@@ -68,8 +68,25 @@ silently with the first subject, and can be adjusted afterwards.
 | Mode | What happens |
 | --- | --- |
 | Normal | A regular notification with the default sound. |
-| Insistent | Time Sensitive, so it breaks through Focus and Do Not Disturb, with a custom sound and a burst that repeats until you answer. Actions on the notification itself: **Done** and **Snooze 10 min**. |
-| Alarm | Everything above, plus a looping sound and a full-screen dismiss when the app is running — including with the phone on silent. |
+| Insistent | A custom sound and a burst that repeats until you answer. Actions on the notification itself: **Done** and **Snooze 10 min**. |
+| Alarm | The iPhone's own alarm, through AlarmKit: loud, full screen, with the app closed, on silent and with a Focus on. Needs the alarm permission, which lives in Settings. Below iOS 26.1 it falls back to insistent. |
+
+Reminders do **not** claim Time Sensitive. That level is the badge that punches
+through Focus, Do Not Disturb and Sleep, and using it would override the rules
+you set on your own phone. Without it, iOS decides — a silenced reminder waits
+and arrives in the summary.
+
+An app cannot read Focus at fire time: the notification is delivered by the
+system with the app closed, and `INFocusStatusCenter` only answers while the app
+runs. Setting the correct level and letting iOS decide is the only approach that
+works every time.
+
+AlarmKit has no equivalent, because ringing despite Focus is what separates an
+alarm from a reminder. So there is a **quiet window** instead — 22:00 to 07:00 by
+default, adjustable — and anything falling inside it waits until the window ends.
+The before-first-class alarm is the one exception: two hours before a 07:30 class
+is 05:30, inside any sleep window worth setting, and silencing it would delete
+the alarm you configured rather than protect your sleep.
 
 Every kind of work except an exam also gets a **last-chance alarm**, anchored to
 the start of the school day rather than to the deadline: two hours before the
@@ -85,11 +102,6 @@ An exam does not get it. There is no doing the exam before leaving the house, an
 an exam **completes itself** once its day has passed — nobody marks "I sat the
 test". Tasks and submissions stay: those can be forgotten, and the app has no way
 to know they were handed in.
-
-With the app closed **and** the phone on silent, no iOS app plays sound without
-Apple's Critical Alerts entitlement, which this app does not request. In that case
-the alarm behaves like the insistent mode. The app says so on the screen where you
-configure it, not just here.
 
 ## Why the reminder engine is the hard part
 
@@ -143,11 +155,15 @@ npm run teste:i18n   # fails the build on any untranslated string
 
 ## What it uses from the iPhone
 
-Liquid Glass on the tab bar (iOS 26, with a blur fallback) · Live Activity and
-Dynamic Island counting down to the next deadline · Time Sensitive notifications
-that break through Focus, with **Done** and **Snooze** on the notification itself
-· a custom 29-second alarm sound · on-device dictation through the Speech
-framework · on-device text recognition through Vision · Spotlight, so a task is
+The system tab bar (`UITabBarController`), so Liquid Glass, the sliding
+selection and the shrink-on-scroll come from UIKit rather than from an imitation
+· AlarmKit for a real system alarm · the on-device language model
+(`FoundationModels`) reading a photographed timetable, with typed output ·
+Live Activity and Dynamic Island counting down to the next deadline · **Done**
+and **Snooze** on the notification itself · a custom alarm sound, or one you
+import — converted to CAF and trimmed to the 30 seconds iOS accepts ·
+on-device dictation through the Speech framework · on-device text recognition
+through Vision · Spotlight, so a task is
 findable from the home screen · background refresh to keep the reminder window
 armed · and a URL scheme for Siri and Shortcuts.
 
