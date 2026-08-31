@@ -115,11 +115,12 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
   return (
     <Tela>
       <Botao texto={t('materia.fechar')} variante="discreto" aoTocar={aoFechar} />
+      {/* Uma bolinha só. O `Cartao` já desenha a da matéria pela `faixa`, e
+          havia outra escrita à mão logo ao lado do nome — duas bolinhas
+          idênticas coladas, que é o tipo de coisa que ninguém reporta e todo
+          mundo repara. */}
       <Cartao faixa={materia.cor}>
-        <View style={{ flexDirection: 'row', gap: espaco.s, alignItems: 'center' }}>
-          <View style={[estilo.dot, { backgroundColor: materia.cor }]} />
-          <Titulo>{materia.nome}</Titulo>
-        </View>
+        <Titulo>{materia.nome}</Titulo>
         {materia.professor ? <Apoio>{`${t('materia.professor')}: ${materia.professor}`}</Apoio> : null}
         {materia.sala ? <Apoio>{`${t('materia.sala')}: ${materia.sala}`}</Apoio> : null}
       </Cartao>
@@ -318,7 +319,6 @@ const estilo = StyleSheet.create({
     color: cores.texto,
     fontSize: fonte.corpo.fontSize,
   },
-  dot: { width: 12, height: 12, borderRadius: raio.pilula },
 })
 
 /**
