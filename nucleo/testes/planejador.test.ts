@@ -188,3 +188,28 @@ test('nenhum aviso é agendado dentro de uma aula', () => {
     assert.equal(dentro, false, `avisou às ${aviso.quando.toISOString()}, dentro da aula`)
   }
 })
+
+test('a faixa de silencio empurra o aviso, e nao o apaga', () => {
+  // O pedido dele: nada toca de madrugada, nem alarme. Mas EMPURRAR, nunca
+  // descartar — sumir com um aviso porque ele calhou numa hora ruim e a pessoa
+  // perde a prova.
+  reiniciarIds()
+  const p = periodo({ inicio: '2026-08-01', fim: '2026-12-20' })
+  const m = materia({ periodoId: p.id, nome: 'mat' })
+  const c = compromisso(
+    'lista de exercicios',
+    { tipo: 'data', data: '2026-09-10', hora: '23:59' },
+    {
+      materiaId: m.id,
+      tipo: 'tarefa',
+      avisos: [{ id: 'x', quando: { tipo: 'antesDe', minutos: 60 }, modo: 'alarme' }],
+    },
+  )
+  const b = base({ periodos: [p], materias: [m], compromissos: [c] })
+
+  const plano = planejar(b, ajustesSimples(), instante('2026-09-01', '08:00'), p)
+  const meus = plano.agendar.filter((a) => a.compromissoId === c.id)
+  assert.equal(meus.length, 1, 'o aviso continua existindo')
+  // 22:59 cai dentro de 22:00-07:00, entao vai para as 07:00 do dia seguinte.
+  assert.equal(meus[0]!.quando.getTime(), instante('2026-09-11', '07:00').getTime())
+})
