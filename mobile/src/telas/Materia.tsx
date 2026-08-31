@@ -10,6 +10,7 @@ import { situacaoDeFaltas } from '../../../nucleo/faltas.ts'
 import { Apoio, Botao, Cartao, Linha, Pilula, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
+import { horaDeTexto } from '../formato.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 
 /** Formata um número sem decimais desnecessários, sempre com ponto decimal. */
@@ -136,7 +137,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
             <Cartao key={a.id}>
               <Linha entre>
                 <Apoio>{t(`dia.completo.${a.diaSemana}` as ChaveI18n)}</Apoio>
-                <Apoio>{`${a.inicio}–${a.fim}`}</Apoio>
+                <Apoio>{`${horaDeTexto(a.inicio)}–${horaDeTexto(a.fim)}`}</Apoio>
               </Linha>
             </Cartao>
           ))

@@ -190,6 +190,12 @@ function CampoNumero({
   )
 }
 
+/**
+ * A hora do aviso, na roda do sistema.
+ *
+ * Era um campo de texto com uma validação `\d{1,2}:\d{2}` — que aceita "9:5" e,
+ * pior, assume 24h num telefone que pode estar em 12h. Ver `SeletorDeHora`.
+ */
 function CampoHora({
   rotulo,
   valor,
@@ -199,19 +205,7 @@ function CampoHora({
   valor: string
   aoMudar: (h: string) => void
 }) {
-  const [txt, setTxt] = useState(valor)
-  useEffect(() => setTxt(valor), [valor])
-  return (
-    <Campo
-      rotulo={rotulo}
-      valor={txt}
-      aoMudar={setTxt}
-      aoBlur={() => {
-        if (/^\d{1,2}:\d{2}$/.test(txt.trim())) aoMudar(txt.trim())
-        else setTxt(valor)
-      }}
-    />
-  )
+  return <SeletorDeHora rotulo={rotulo} valor={valor} aoMudar={aoMudar} />
 }
 
 export function Ajustes({ aoEscanearHorario }: {

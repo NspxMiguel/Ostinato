@@ -94,11 +94,15 @@ async function agendar(
   // no silencioso e com Foco ligado, sem o app estar aberto e sem precisar do
   // entitlement de Critical Alerts que ele decidiu não pedir.
   if (aviso.modo === 'alarme' && temAlarmeDeSistema()) {
-    const ok = await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando)
-    // Só devolve se conseguiu. Falhou — permissão negada, por exemplo — cai na
-    // notificação insistente, que avisa mesmo sem acordar. Perder o aviso porque
-    // o alarme não pôde ser armado seria trocar um defeito por um pior.
-    if (ok) return
+    // Os DOIS, e não um ou outro. Pedido dele em 30/08/2026: "ele tem q toca
+    // alarme e manda msg".
+    //
+    // Antes o alarme dava `return` e cancelava a notificação, o que parecia
+    // limpo e não era: a tela cheia do alarme não diz QUAL tarefa é sem a
+    // pessoa entrar no app, e não deixa rastro na Central de Notificações —
+    // quem dispensa o alarme meio dormindo fica sem nada para reencontrar
+    // depois. A notificação é o registro; o alarme é o que acorda.
+    await agendarAlarme(uuidDaChave(aviso.chave), texto.titulo, aviso.quando)
   }
 
   await Notifications.scheduleNotificationAsync({

@@ -3,9 +3,50 @@
 import type { DataISO, Idioma, RegraAviso } from '../../nucleo/modelo.ts'
 import { LOCALE_DO_IDIOMA } from '../../nucleo/modelo.ts'
 import { criarT } from '../../nucleo/i18n.ts'
+import { getCalendars } from 'expo-localization'
 import { dataDe, diferencaEmDias, instante, somarDias } from '../../nucleo/tempo.ts'
 
 type T = ReturnType<typeof criarT>
+
+/**
+ * O iPhone está em 12h ou 24h?
+ *
+ * `null` quando o sistema não diz — e aí a resposta certa é `undefined`, que
+ * manda o `Intl` decidir pelo locale em vez de eu chutar.
+ *
+ * Isto existe porque formato de relógio é ajuste do APARELHO, não do app. O
+ * idioma escolhido na interface decide as PALAVRAS ("quinta-feira", "setembro");
+ * o interruptor "Hora de 24 horas" dos Ajustes do iPhone decide o RELÓGIO. Eu
+ * tinha juntado os dois em `LOCALE_DO_IDIOMA`, e `pt-BR` força 24h: quem tem o
+ * telefone em 12h lia 22:08 na tela e digitava 10:08 achando que era a mesma
+ * coisa. Um alarme doze horas fora do lugar, sem nenhum erro à vista.
+ */
+function usa12Horas(): boolean | undefined {
+  try {
+    const usa24 = getCalendars()[0]?.uses24hourClock
+    return usa24 === null || usa24 === undefined ? undefined : !usa24
+  } catch {
+    return undefined
+  }
+}
+
+/** "22:08" ou "10:08 PM", conforme o iPhone. */
+export function horaDoAparelho(quando: Date): string {
+  return quando.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: usa12Horas(),
+  })
+}
+
+/** Idem, a partir de "HH:MM" — o formato em que a grade e as regras guardam. */
+export function horaDeTexto(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number)
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return hhmm
+  const d = new Date()
+  d.setHours(h ?? 0, m ?? 0, 0, 0)
+  return horaDoAparelho(d)
+}
 
 /** "3 dias", "2 horas", "40 min" — a maior unidade que ainda diz algo. */
 export function distancia(deMs: number, ateMs: number, t: T): string {
@@ -31,20 +72,19 @@ export function diaPorExtenso(data: DataISO, idioma: Idioma, t: T, hoje = dataDe
 
 /** "quinta, 3 de setembro, 13:30" — o formato longo, com hora. */
 export function momentoPorExtenso(quando: Date, idioma: Idioma): string {
+  // Palavras no idioma do app, relógio no formato do aparelho.
   return quando.toLocaleString(LOCALE_DO_IDIOMA[idioma], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
+    hour12: usa12Horas(),
   })
 }
 
-export function horaCurta(quando: Date, idioma: Idioma): string {
-  return quando.toLocaleTimeString(LOCALE_DO_IDIOMA[idioma], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+export function horaCurta(quando: Date, _idioma: Idioma): string {
+  return horaDoAparelho(quando)
 }
 
 /**

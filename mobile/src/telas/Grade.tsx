@@ -36,6 +36,8 @@ import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { analisarGrade } from '../resgatar.ts'
+import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
+import { horaDeTexto } from '../formato.ts'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -409,8 +411,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                 return (
                   <Toque key={aula.id} aoTocar={() => abrirEdicaoAula(aula)} estilo={e.linhaAula}>
                     <View style={e.horaAula}>
-                      <Text style={e.horaInicio}>{aula.inicio}</Text>
-                      <Text style={e.horaFim}>{aula.fim}</Text>
+                      <Text style={e.horaInicio}>{horaDeTexto(aula.inicio)}</Text>
+                      <Text style={e.horaFim}>{horaDeTexto(aula.fim)}</Text>
                     </View>
                     <Bolinha cor={materia?.cor ?? cores.texto3} />
                     <View style={{ flex: 1, gap: 3 }}>
@@ -513,26 +515,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
             {/* Horários */}
             <Linha entre>
-              <View style={[e.campo, { flex: 1 }]}>
-                <Text style={fonte.secao}>{t('grade.hora_inicio')}</Text>
-                <TextInput
-                  style={e.input}
-                  value={inicio}
-                  onChangeText={setInicio}
-                  placeholder="08:00"
-                  placeholderTextColor={cores.textoFraco}
-                />
-              </View>
-              <View style={[e.campo, { flex: 1 }]}>
-                <Text style={fonte.secao}>{t('grade.hora_fim')}</Text>
-                <TextInput
-                  style={e.input}
-                  value={fim}
-                  onChangeText={setFim}
-                  placeholder="09:40"
-                  placeholderTextColor={cores.textoFraco}
-                />
-              </View>
+              <SeletorDeHora rotulo={t('grade.hora_inicio')} valor={inicio} aoMudar={setInicio} />
+              <SeletorDeHora rotulo={t('grade.hora_fim')} valor={fim} aoMudar={setFim} />
             </Linha>
 
             {/* Sala */}
