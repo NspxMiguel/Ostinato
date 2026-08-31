@@ -21,7 +21,7 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { comInicialMinuscula, dataPorExtenso, horaDeTexto, quandoPorExtenso } from '../formato.ts'
-import { ehAssuntoDeHoje } from '../../../nucleo/hoje.ts'
+import { ehAssuntoDeHoje, estaAtrasado } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco } from '../tema.ts'
@@ -227,7 +227,10 @@ function montarChegando(
       compromisso: c,
       resolvido: r.valor,
       semData: false,
-      atrasado: r.valor.quando.getTime() < agora.getTime(),
+      // Atrasado quando o DIA da entrega começou, não só quando a hora passou.
+      // Ver `nucleo/hoje.ts`: o prazo formal é a aula, mas a hora de fazer era
+      // a noite anterior.
+      atrasado: estaAtrasado(r.valor.quando, agora),
       proximoAviso: proximoPorId.get(c.id),
     })
   }

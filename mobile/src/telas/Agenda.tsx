@@ -21,6 +21,7 @@ import { criarT } from '../../../nucleo/i18n.ts'
 import { Apoio, Cartao, Etiqueta, Fileira, Linha, Pilula, Secao, Tela, Titulo, Vazio } from '../componentes/ui.tsx'
 import { Deslizar } from '../componentes/Deslizar.tsx'
 import { dataPorExtenso, quandoPorExtenso } from '../formato.ts'
+import { estaAtrasado } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco } from '../tema.ts'
@@ -85,7 +86,9 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
         itens.push({ compromisso: c, semData: true, atrasado: false })
         continue
       }
-      const atrasado = !c.concluido && r.valor.quando.getTime() < agora.getTime()
+      // A MESMA regra do Hoje. Duas definições de "atrasado" no mesmo app
+      // fariam a tarefa aparecer vermelha numa tela e normal na outra.
+      const atrasado = !c.concluido && estaAtrasado(r.valor.quando, agora)
       itens.push({ compromisso: c, resolvido: r.valor, semData: false, atrasado })
     }
 
