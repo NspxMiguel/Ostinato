@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Animated, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { BarraNativa } from 'barra'
+import { Tabs } from 'react-native-screens'
 import { dataDe } from '../../nucleo/tempo.ts'
 import { periodoAtivo } from '../../nucleo/grade.ts'
 import { usarLoja } from './estado/loja.ts'
@@ -197,30 +197,71 @@ export function Raiz() {
 
   return (
     <View style={{ flex: 1, backgroundColor: cores.fundo }}>
-      {/* A aba inteira reaparece a cada troca; a chave faz o React remontar e a
-          `Entrada` de cada item rodar de novo, o que dá a transição. */}
-      <View style={{ flex: 1 }} key={aba}>
-        {aba === 'hoje' ? <Hoje aoAbrirCompromisso={setCompromissoAberto} aoIrParaGrade={() => setAba('grade')} /> : null}
-        {aba === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
-        {aba === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
-        {aba === 'ajustes' ? (
-          <Ajustes
-            aoEscanearHorario={() => {
-              mudarAjustes({ recursos: { ...recursos, grade: true } })
-              setAba('grade')
-            }}
-          />
-        ) : null}
-      </View>
+      {/* A barra de abas é a do PRÓPRIO iOS — `UITabBarController`, através do
+          `react-native-screens`.
+          
+          Isto substitui uma barra que eu desenhava à mão com `UIGlassEffect`
+          dentro. O material aparecia, e todo o resto era imitação: a bolha não
+          refratava o que estava embaixo dela, não virava lente ao arrastar, a
+          barra não encolhia ao rolar, e o recuo do conteúdo era chute meu.
+          
+          Nada disso se reproduz por fora — são comportamentos do controlador da
+          Apple, e é por isso que a barra do LootFlow parece de verdade: ela É a
+          de verdade. Eu já tinha aprendido isso lá e refiz o erro aqui. */}
+      <Tabs.Host
+        // Os ajustes de iOS vão DENTRO de `ios`. Soltos no topo são ignorados
+        // em silêncio — foi o que fez os ícones sumirem no LootFlow.
+        ios={{
+          tabBarTintColor: cores.destaque,
+          // Encolher ao rolar é comportamento do iOS 26, não animação minha.
+          tabBarMinimizeBehavior: 'onScrollDown',
+        }}
+        onTabSelected={({ nativeEvent }: { nativeEvent: { selectedScreenKey?: string } }) => {
+          const id = nativeEvent.selectedScreenKey as Aba | undefined
+          if (id) setAba(id)
+        }}
+        style={{ flex: 1 }}
+      >
+        {abasVisiveis.map((a) => (
+          <Tabs.Screen
+            key={a.id}
+            tabKey={a.id}
+            screenKey={a.id}
+            title={t(a.chave)}
+            ios={{ icon: { type: 'sfSymbol', name: a.icone } }}
+          >
+            <View style={{ flex: 1, backgroundColor: cores.fundo }}>
+              {a.id === 'hoje' ? (
+                <Hoje aoAbrirCompromisso={setCompromissoAberto} aoIrParaGrade={() => setAba('grade')} />
+              ) : null}
+              {a.id === 'agenda' ? <Agenda aoAbrirCompromisso={setCompromissoAberto} /> : null}
+              {a.id === 'grade' ? <Grade aoAbrirMateria={setMateriaAberta} /> : null}
+              {a.id === 'ajustes' ? (
+                <Ajustes
+                  aoEscanearHorario={() => {
+                    mudarAjustes({ recursos: { ...recursos, grade: true } })
+                    setAba('grade')
+                  }}
+                />
+              ) : null}
+            </View>
+          </Tabs.Screen>
+        ))}
+      </Tabs.Host>
 
-      <BarraDeAbas
-        abas={abasVisiveis}
-        aba={aba}
-        aoTrocar={setAba}
-        aoCriar={aba === 'ajustes' ? undefined : () => setCapturando(true)}
-        rotulo={(chave) => t(chave)}
-        alturaSegura={margem.bottom}
-      />
+      {/* O + flutua ACIMA da barra nativa. Ele não pode entrar na `Tabs.Host`:
+          lá dentro ele viraria conteúdo de uma aba e sumiria nas outras. */}
+      {aba === 'ajustes' ? null : (
+        <Pressable
+          style={[e.mais, { bottom: margem.bottom + 96 }]}
+          onPress={() => setCapturando(true)}
+          accessibilityRole="button"
+        >
+          <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
+            +
+          </Text>
+        </Pressable>
+      )}
 
       <Modal
         visible={capturando}
@@ -340,65 +381,19 @@ function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
   )
 }
 
-function BarraDeAbas({
-  abas,
-  aba,
-  aoTrocar,
-  aoCriar,
-  rotulo,
-  alturaSegura,
-}: {
-  abas: typeof ABAS
-  aba: Aba
-  aoTrocar: (a: Aba) => void
-  aoCriar?: () => void
-  rotulo: (chave: 'abas.hoje' | 'abas.agenda' | 'abas.grade' | 'abas.ajustes') => string
-  alturaSegura: number
-}) {
-  // No iOS 26 a barra é vidro de verdade; nos outros o `Vidro` vira View e a cor
-  // de fundo abaixo é que aparece.
-  // A barra inteira é nativa. Montar Liquid Glass do lado do JavaScript não
-  // funciona: o `UIGlassContainerEffect` exige as peças de vidro como IRMÃS no
-  // `contentView` dele, e uma árvore React aninha — arranjo em que o `spacing`
-  // não funde nada e o arrasto não existe. Ver `modules/barra/ios`.
-  return (
-    <View style={[e.ancora, { paddingBottom: Math.max(alturaSegura, espaco.m) }]} pointerEvents="box-none">
-      {aoCriar ? (
-        <Pressable style={e.mais} onPress={aoCriar} accessibilityRole="button">
-          <Text style={{ color: cores.sobreDestaque, fontSize: 28, fontWeight: '400', marginTop: -3 }}>
-            +
-          </Text>
-        </Pressable>
-      ) : null}
-
-      <BarraNativa
-        style={e.barra}
-        rotulos={abas.map((a) => rotulo(a.chave))}
-        icones={abas.map((a) => a.icone)}
-        ativa={Math.max(0, abas.findIndex((a) => a.id === aba))}
-        aoTrocar={(ev: { nativeEvent: { indice: number } }) => {
-          const alvo = abas[ev.nativeEvent.indice]
-          if (alvo) aoTrocar(alvo.id)
-        }}
-      />
-    </View>
-  )
-}
-
 const e = StyleSheet.create({
-  // O FAB fica ACIMA da barra e alinhado à direita dela, não solto no canto: o
-  // botão flutuando sozinho passava por cima do texto da lista.
-  ancora: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: espaco.m },
-  barra: { height: 60, marginHorizontal: espaco.m },
+  // O + flutua sobre o conteúdo, acima da barra nativa. `bottom` é calculado no
+  // uso, a partir da margem segura: a barra do iOS 26 muda de altura sozinha
+  // quando encolhe ao rolar, e cravar um número aqui erraria nos dois estados.
   mais: {
+    position: 'absolute',
+    right: espaco.m,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: cores.destaque,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'flex-end',
-    marginRight: espaco.m,
   },
 })
 
