@@ -127,11 +127,17 @@ export function Hoje({
             return (
               <Entrada key={item.compromisso.id} indice={i}>
               <Cartao
-                faixa={materia?.cor}
+                // A faixa vira VERMELHA quando está atrasado, e a cor da matéria
+                // cede o lugar. Ele pediu "chamando bastante atenção", e cor de
+                // matéria é informação; atraso é urgência.
+                faixa={item.atrasado ? cores.atrasado : materia?.cor}
                 aoTocar={() => aoAbrirCompromisso(item.compromisso.id)}
               >
                 <Linha>
                   <Titulo>{item.compromisso.titulo}</Titulo>
+                  {item.atrasado ? (
+                    <Etiqueta texto={t('hoje.atrasado')} cor={cores.atrasado} />
+                  ) : null}
                   <Etiqueta texto={rotuloTipo(t, item.compromisso.tipo)} />
                 </Linha>
                 {materia ? <Apoio>{materia.nome}</Apoio> : null}
@@ -150,7 +156,14 @@ export function Hoje({
                     >
                       {quandoPorExtenso(item.resolvido.data, item.resolvido.hora, hojeISO, t, idioma)}
                     </Apoio>
-                    {item.atrasado ? (
+                    {/* "atrasado há X" só quando a HORA passou de verdade.
+                        
+                        Desde que atrasado passou a valer no começo do dia da
+                        entrega, uma tarefa das 23:59 já está atrasada às 00:01 —
+                        e a conta `agora - vencimento` daria um número negativo,
+                        que viraria "atrasado há -23 horas" na tela. A etiqueta
+                        vermelha acima já diz o que precisa ser dito nesse caso. */}
+                    {item.atrasado && item.resolvido.quando.getTime() < agora.getTime() ? (
                       <Apoio cor={cores.atrasado}>
                         {t('hoje.atrasado_ha', {
                           tempo: duracaoPorExtenso(agora.getTime() - item.resolvido.quando.getTime(), t),

@@ -80,6 +80,7 @@ const traducoes = {
     'hoje.nada_entregar': 'Nada entregando nos próximos dias',
     'hoje.aviso_quando': 'Avisa você {quando}',
     'hoje.daqui_a': 'Daqui a {tempo}',
+    'hoje.atrasado': 'ATRASADO',
     'hoje.atrasado_ha': 'Atrasado há {tempo}',
 
     // 3. Tipos de compromisso
@@ -440,6 +441,7 @@ const traducoes = {
     'hoje.nada_entregar': 'Nothing due in the next few days',
     'hoje.aviso_quando': 'Alerts you {quando}',
     'hoje.daqui_a': 'In {tempo}',
+    'hoje.atrasado': 'OVERDUE',
     'hoje.atrasado_ha': 'Overdue by {tempo}',
 
     // 3. Tipos de compromisso
@@ -800,6 +802,7 @@ const traducoes = {
     'hoje.nada_entregar': 'Nada que entregar en los próximos días',
     'hoje.aviso_quando': 'Te avisa {quando}',
     'hoje.daqui_a': 'Dentro de {tempo}',
+    'hoje.atrasado': 'ATRASADO',
     'hoje.atrasado_ha': 'Lleva {tempo} de retraso',
 
     // 3. Tipos de compromisso
@@ -1160,6 +1163,7 @@ const traducoes = {
     'hoje.nada_entregar': 'Rien à rendre dans les prochains jours',
     'hoje.aviso_quando': 'Vous prévient {quando}',
     'hoje.daqui_a': 'Dans {tempo}',
+    'hoje.atrasado': 'EN RETARD',
     'hoje.atrasado_ha': 'En retard de {tempo}',
 
     // 3. Tipos de compromisso
