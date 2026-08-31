@@ -295,6 +295,41 @@ export function uuidDaChave(chave: string): string {
   return `${bruto.slice(0, 8)}-${bruto.slice(8, 12)}-4${bruto.slice(13, 16)}-a${bruto.slice(17, 20)}-${bruto.slice(20, 32)}`
 }
 
+/**
+ * Adia um aviso: repete a mesma mensagem daqui a `minutos`.
+ *
+ * O botão "Adiar" existia na notificação e NÃO FAZIA NADA — o tratador só
+ * devolvia. Botão que aparece e não age é pior que botão ausente: a pessoa
+ * confia que adiou, larga o telefone e não é avisada de novo.
+ *
+ * O identificador novo NÃO leva `|`, e isso é de propósito: a sincronização
+ * cancela tudo o que tem `|` e não está no plano, e o adiado não está no plano
+ * — ele é uma decisão que a pessoa acabou de tomar. Sem o prefixo próprio, o
+ * próximo rearme apagaria o adiamento no mesmo segundo.
+ */
+export async function adiarAviso(
+  notificacao: Notifications.NotificationRequest,
+  minutos: number,
+): Promise<void> {
+  const c = notificacao.content
+  await Notifications.scheduleNotificationAsync({
+    identifier: `adiado.${notificacao.identifier.replace(/\|/g, '.')}.${Date.now()}`,
+    content: {
+      title: c.title ?? '',
+      body: c.body ?? '',
+      sound: c.sound ?? true,
+      interruptionLevel: 'active',
+      categoryIdentifier: CATEGORIA,
+      data: c.data,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: Math.max(60, minutos * 60),
+      repeats: false,
+    },
+  })
+}
+
 /** Desarma o despertador junto com o aviso. */
 export function cancelarAlarmeDoAviso(chave: string): void {
   void cancelarAlarme(uuidDaChave(chave))

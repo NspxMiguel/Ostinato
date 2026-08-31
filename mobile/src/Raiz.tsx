@@ -15,6 +15,7 @@ import { usarT } from './i18n.ts'
 import { cores, espaco, fonte, raio } from './tema.ts'
 import {
   ACAO_ADIAR,
+  adiarAviso,
   ACAO_FEITO,
   calarCompromisso,
   pedirPermissao,
@@ -167,7 +168,11 @@ export function Raiz() {
         void calarCompromisso(id)
         return
       }
-      if (resposta.actionIdentifier === ACAO_ADIAR) return
+      if (resposta.actionIdentifier === ACAO_ADIAR) {
+        // Adiar de verdade. O botão existia e não fazia nada.
+        void adiarAviso(resposta.notification.request, ajustes.adiarMinutos || 10)
+        return
+      }
 
       if (dados.alarme) {
         setAlarmeDe(id)
@@ -177,7 +182,7 @@ export function Raiz() {
       }
     })
     return () => inscricao.remove()
-  }, [guardar])
+  }, [guardar, ajustes.adiarMinutos])
 
   // Alarme com o app ABERTO na hora do disparo. Quem acorda a pessoa com o app
   // fechado é o AlarmKit; isto é o som da tela do alarme dentro do app.
