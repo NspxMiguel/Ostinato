@@ -195,7 +195,7 @@ test('a faixa de silencio empurra o aviso, e nao o apaga', () => {
   // perde a prova.
   reiniciarIds()
   const p = periodo({ inicio: '2026-08-01', fim: '2026-12-20' })
-  const m = materia({ periodoId: p.id, nome: 'mat' })
+  const m = materia('mat', { periodoId: p.id })
   const c = compromisso(
     'lista de exercicios',
     { tipo: 'data', data: '2026-09-10', hora: '23:59' },
