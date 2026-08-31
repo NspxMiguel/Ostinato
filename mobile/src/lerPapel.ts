@@ -8,7 +8,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { lerTexto, temLeitura } from '../modules/leitura/src/index.ts'
 
 export type Papel =
-  | { tipo: 'lido'; texto: string; linhas: number }
+  | { tipo: 'lido'; texto: string; linhas: number; confianca: number }
   | { tipo: 'cancelado' }
   | { tipo: 'indisponivel' }
   | { tipo: 'sem-permissao' }
@@ -41,7 +41,7 @@ export async function lerPapel(de: 'camera' | 'galeria' = 'camera'): Promise<Pap
   if (escolha.canceled || !uri) return { tipo: 'cancelado' }
 
   const r = await lerTexto(uri)
-  return { tipo: 'lido', texto: r.texto, linhas: r.linhas }
+  return { tipo: 'lido', texto: r.texto, linhas: r.linhas, confianca: r.confianca ?? 1 }
 }
 
 export { temLeitura }

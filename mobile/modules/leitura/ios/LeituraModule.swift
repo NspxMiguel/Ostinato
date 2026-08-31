@@ -39,16 +39,27 @@ public class LeituraModule: Module {
         // TABELA: sem reagrupar por linha, "07:00", "MAT" e "PORT" chegam como
         // tres resultados soltos e o parser nao tem como saber que sao a mesma
         // linha do quadro.
-        let pedacos: [(texto: String, y: CGFloat, x: CGFloat)] = observacoes.compactMap {
-          guard let melhor = $0.topCandidates(1).first else { return nil }
-          let caixa = $0.boundingBox
-          return (melhor.string, caixa.midY, caixa.minX)
-        }
+        let pedacos: [(texto: String, y: CGFloat, x: CGFloat, confianca: Float)] =
+          observacoes.compactMap {
+            guard let melhor = $0.topCandidates(1).first else { return nil }
+            let caixa = $0.boundingBox
+            return (melhor.string, caixa.midY, caixa.minX, melhor.confidence)
+          }
+
+        // A confianca media, ponderada pelo TAMANHO do pedaco.
+        //
+        // E ela que separa "print de computador" de "letra de mao ou rasura", que
+        // e a condicao que ele deu para a IA local entrar. Ponderar pelo tamanho
+        // importa: uma tabela boa costuma ter um ou dois respingos ilegiveis de
+        // uma letra so, e a media simples afundaria por causa deles.
+        let peso = pedacos.reduce(0) { $0 + $1.texto.count }
+        let soma = pedacos.reduce(Float(0)) { $0 + $1.confianca * Float($1.texto.count) }
+        let confianca = peso > 0 ? soma / Float(peso) : 0
 
         // Tolerancia vertical proporcional: 1,2% da altura junta o que esta na
         // mesma linha sem colar duas linhas vizinhas de uma tabela apertada.
         let tolerancia: CGFloat = 0.012
-        var linhas: [[(texto: String, y: CGFloat, x: CGFloat)]] = []
+        var linhas: [[(texto: String, y: CGFloat, x: CGFloat, confianca: Float)]] = []
         for pedaco in pedacos.sorted(by: { $0.y > $1.y }) {
           if let ultimaY = linhas.last?.first?.y, abs(ultimaY - pedaco.y) < tolerancia {
             linhas[linhas.count - 1].append(pedaco)
@@ -67,6 +78,7 @@ public class LeituraModule: Module {
           "texto": texto,
           "linhas": linhas.count,
           "pedacos": pedacos.count,
+          "confianca": Double(confianca),
         ])
       }
 

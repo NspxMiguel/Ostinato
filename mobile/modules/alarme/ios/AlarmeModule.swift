@@ -75,23 +75,7 @@ public class AlarmeModule: Module {
 
       Task {
         do {
-          let alerta = AlarmPresentation.Alert(
-            title: LocalizedStringResource(stringLiteral: titulo),
-            secondaryButton: AlarmButton(
-              text: "Adiar", textColor: .white, systemImageName: "clock"),
-            secondaryButtonBehavior: .countdown)
-
-          let atributos = AlarmAttributes<MetadadosDoOstinato>(
-            presentation: AlarmPresentation(alert: alerta),
-            metadata: MetadadosDoOstinato(),
-            // O amarelo da marca. É a cor da tela cheia do alarme.
-            tintColor: Color(red: 1, green: 0.839, blue: 0.039))
-
-          let config = AlarmManager.AlarmConfiguration.alarm(
-            schedule: .fixed(Date(timeIntervalSince1970: quandoEmSegundos)),
-            attributes: atributos)
-
-          _ = try await AlarmManager.shared.schedule(id: uuid, configuration: config)
+          _ = try await Self.armar(uuid: uuid, titulo: titulo, quando: quandoEmSegundos)
           promise.resolve(true)
         } catch {
           promise.reject("alarme", error.localizedDescription)
@@ -121,4 +105,32 @@ public class AlarmeModule: Module {
 @available(iOS 26.0, *)
 struct MetadadosDoOstinato: AlarmMetadata {
   init() {}
+}
+
+extension AlarmeModule {
+  /**
+   O agendamento em si, numa função marcada.
+
+   Fica separado porque o corpo de um `Task { }` NÃO herda o `#available` de
+   quem o criou: o compilador o trata como contexto novo, e recusa a API. Marcar
+   a função é o que devolve a disponibilidade para dentro do laço assíncrono.
+   */
+  @available(iOS 26.0, *)
+  static func armar(uuid: UUID, titulo: String, quando: Double) async throws -> Alarm {
+    let alerta = AlarmPresentation.Alert(
+      title: LocalizedStringResource(stringLiteral: titulo),
+      secondaryButton: AlarmButton(text: "Adiar", textColor: .white, systemImageName: "clock"),
+      secondaryButtonBehavior: .countdown)
+
+    let atributos = AlarmAttributes<MetadadosDoOstinato>(
+      presentation: AlarmPresentation(alert: alerta),
+      metadata: MetadadosDoOstinato(),
+      // O amarelo da marca: é a cor da tela cheia do alarme.
+      tintColor: Color(red: 1, green: 0.839, blue: 0.039))
+
+    let config = AlarmManager.AlarmConfiguration.alarm(
+      schedule: .fixed(Date(timeIntervalSince1970: quando)), attributes: atributos)
+
+    return try await AlarmManager.shared.schedule(id: uuid, configuration: config)
+  }
 }

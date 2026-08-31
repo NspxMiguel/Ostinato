@@ -37,6 +37,7 @@ import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio, CORES_DE_MATERIA } from '../tema.ts'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
+import { resgatarTarefa } from '../resgatar.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
 export function Captura({ textoInicial, aoFechar, aoAjustar }: {
@@ -52,6 +53,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   const guardar = usarLoja((e) => e.guardar)
 
   const [texto, setTexto] = useState(textoInicial ?? '')
+  const [usouIa, setUsouIa] = useState(false)
   const [ouvindo, setOuvindo] = useState(false)
   const [lendoFoto, setLendoFoto] = useState(false)
   const [avisoDeVoz, setAvisoDeVoz] = useState<string | null>(null)
@@ -192,7 +194,12 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       // A foto de um papel costuma trazer várias tarefas. O texto inteiro entra
       // no campo para a pessoa ver e editar — melhor do que gravar cinco coisas
       // que ela não leu.
-      if (r.tipo === 'lido') setTexto(r.texto.split('\n').filter((l) => l.trim() !== '').join('\n'))
+      if (r.tipo === 'lido') {
+        const cru = r.texto.split('\n').filter((l) => l.trim() !== '').join('\n')
+        const { texto: bom, usou } = await resgatarTarefa(cru, r.confianca)
+        setTexto(bom)
+        setUsouIa(usou)
+      }
     } finally {
       setLendoFoto(false)
     }
@@ -217,6 +224,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         autoCorrect={false}
         spellCheck={false}
       />
+      {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}
       </Cartao>
 
       {/* As três entradas na MESMA fileira de pílulas, e sem `flex: 1`.
@@ -323,6 +331,9 @@ function EscolherMateria({
 }
 
 const e = StyleSheet.create({
+  // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
+  // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
+  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.p, lineHeight: 18 },
   // Sem fundo nem contorno próprios: o cartão em volta já é a superfície, e
   // caixa dentro de caixa é o que fazia esta tela parecer formulário.
   campo: {

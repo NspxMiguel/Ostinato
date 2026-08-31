@@ -5,6 +5,13 @@ export type TextoLido = {
   texto: string
   linhas: number
   pedacos: number
+  /**
+   * A confiança média do Vision, de 0 a 1, ponderada pelo tamanho do pedaço.
+   *
+   * É o que separa print de computador (alta) de letra de mão e rasura (baixa),
+   * e é com ela que `nucleo/resgate.ts` decide chamar a IA do aparelho.
+   */
+  confianca: number
 }
 
 const modulo = moduloOpcional<any>('Leitura')

@@ -1,0 +1,120 @@
+// Quando a IA do aparelho entra — e, mais importante, quando ela NÃO entra.
+//
+// Ele desenhou a condição em 30/08/2026: *"ia local. pensei em colocar em 2
+// ocasioes, no colar horario, e no enviar foto de tarefa, mas com uma condição,
+// letra manuscrita ou texto rasurado. pq isso nao da pra ler direito. ja letra
+// de computador, prints eu imagino q de de boa."*
+//
+// A condição está certa e é a parte difícil deste arquivo. Para print e texto
+// de computador o Vision já acerta, é determinístico e instantâneo; passar isso
+// por um modelo só adiciona chance de ele INVENTAR uma aula que não estava na
+// foto — e uma aula inventada num horário escolar é pior que uma aula faltando,
+// porque ninguém confere o que parece certo.
+//
+// O sinal que separa os dois casos é a CONFIANÇA do Vision, que o módulo de
+// leitura agora devolve. Letra de mão e texto rasurado derrubam ela; print não.
+// É medição, não adivinhação sobre o que a pessoa fotografou.
+//
+// E o modelo nunca devolve estrutura: ele devolve TEXTO NORMALIZADO, que volta
+// para o mesmo `importarGrade` de sempre. O algoritmo continua sendo o dono da
+// leitura, e o modelo vira só um tradutor de bagunça para tabela.
+//
+// Puro, sem I/O: dá para testar a decisão inteira sem aparelho e sem modelo.
+
+/** Abaixo disto o OCR está claramente apanhando da letra. */
+export const CONFIANCA_BAIXA = 0.62
+
+/**
+ * Vale chamar o modelo para este horário?
+ *
+ * Duas portas, e as duas precisam estar abertas:
+ *
+ *  1. o OCR sofreu (confiança baixa) — é a condição dele, letra de mão ou rasura;
+ *  2. o algoritmo REALMENTE não deu conta — poucas aulas, muita linha ignorada.
+ *
+ * A segunda porta existe porque foto ruim que ainda assim foi lida certa não
+ * precisa de resgate: gastar o modelo ali só atrasa e arrisca.
+ */
+export function precisaDeResgateDeGrade(sinais: {
+  confianca: number
+  aulas: number
+  ignoradas: number
+}): boolean {
+  const { confianca, aulas, ignoradas } = sinais
+  if (confianca >= CONFIANCA_BAIXA) return false
+  if (aulas === 0) return true
+  // Mais lixo que aula lida: a tabela não fechou.
+  return ignoradas > aulas
+}
+
+/**
+ * Vale chamar o modelo para esta foto de tarefa?
+ *
+ * Aqui não há "aulas lidas" para medir, então sobra a confiança e o tamanho: um
+ * texto de duas palavras mal lido não tem o que resgatar, e um vazio menos ainda.
+ */
+export function precisaDeResgateDeTarefa(sinais: { confianca: number; texto: string }): boolean {
+  if (sinais.confianca >= CONFIANCA_BAIXA) return false
+  return sinais.texto.trim().length >= 8
+}
+
+/**
+ * O que o modelo pode fazer, dito no negativo.
+ *
+ * Modelo pequeno obedece proibição melhor do que obedece descrição, e a
+ * proibição que importa é uma só: não inventar o que não estava na imagem.
+ */
+export function instrucoesDeGrade(): string {
+  return [
+    'Você conserta texto de OCR de um horário escolar fotografado.',
+    'A foto tinha letra de mão ou rasura, então o texto chegou quebrado.',
+    'Devolva SOMENTE a tabela corrigida, uma aula por linha, colunas separadas por TAB:',
+    'DIA<TAB>HH:MM<TAB>HH:MM<TAB>MATÉRIA',
+    'Regras absolutas:',
+    '- não invente aula, matéria nem horário que não esteja no texto;',
+    '- linha que você não entender, apague em vez de chutar;',
+    '- não escreva explicação, comentário, título nem marcação de código.',
+  ].join('\n')
+}
+
+/** Idem para a foto de tarefa: uma tarefa por linha, sem enfeite. */
+export function instrucoesDeTarefa(): string {
+  return [
+    'Você conserta texto de OCR de uma anotação escolar fotografada.',
+    'A foto tinha letra de mão ou rasura, então o texto chegou quebrado.',
+    'Devolva SOMENTE as tarefas, uma por linha, em português, na forma:',
+    'matéria — o que fazer — quando',
+    'Regras absolutas:',
+    '- não invente tarefa, data nem matéria que não esteja no texto;',
+    '- linha que você não entender, apague em vez de chutar;',
+    '- não escreva explicação, comentário, título nem marcação de código.',
+  ].join('\n')
+}
+
+/**
+ * Limpa o que o modelo devolveu.
+ *
+ * Modelo instruído a não escrever marcação escreve marcação assim mesmo, e uma
+ * cerca de código sobrando faz o `importarGrade` ignorar a primeira e a última
+ * linha sem dizer por quê.
+ */
+export function limparResposta(bruto: string): string {
+  return bruto
+    .replace(/^\s*```[a-z]*\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .split('\n')
+    .filter((l) => !/^\s*(aqui está|here is|segue|resultado:)/i.test(l))
+    .join('\n')
+    .trim()
+}
+
+/**
+ * O resgate melhorou de verdade?
+ *
+ * O modelo só vence quando lê MAIS aula que o algoritmo sozinho. Empate fica
+ * com o algoritmo — ele é determinístico, e determinístico é o que dá para
+ * depurar quando ele erra.
+ */
+export function vale(antes: { aulas: number }, depois: { aulas: number }): boolean {
+  return depois.aulas > antes.aulas
+}

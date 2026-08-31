@@ -36,6 +36,7 @@ import {
 import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
+import { resgatarGrade } from '../resgatar.ts'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -116,11 +117,18 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     setLendoFoto(true)
     try {
       const r = await lerPapel(de)
-      if (r.tipo === 'lido') setTextoColado(r.texto)
+      if (r.tipo === 'lido') {
+        // Letra de mão e rasura derrubam a confiança do OCR, e é só nesse caso
+        // que a IA do aparelho entra — print de computador o Vision já acerta.
+        const { texto, usou } = await resgatarGrade(r.texto, r.confianca)
+        setTextoColado(texto)
+        setUsouIa(usou)
+      }
     } finally {
       setLendoFoto(false)
     }
   }
+  const [usouIa, setUsouIa] = useState(false)
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
 
   // O período letivo é OPCIONAL. Ele serve para uma coisa só — saber quais dias
@@ -582,6 +590,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   placeholder="Ex: Segunda 08:00 - 10:00 Cálculo 1..."
                   placeholderTextColor={cores.textoFraco}
                 />
+                {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}
                 {temLeitura() ? (
                   <Botao
                     texto={lendoFoto ? t('captura.lendo') : t('grade.tirar_foto')}
@@ -644,6 +653,9 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 }
 
 const e = StyleSheet.create({
+  // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
+  // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
+  ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.p, lineHeight: 18 },
   linhaAula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
   horaAula: { minWidth: 46, paddingTop: 1 },
   horaInicio: { fontSize: 15, fontWeight: '600', color: cores.texto, fontVariant: ['tabular-nums'] },

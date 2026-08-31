@@ -11,6 +11,7 @@ const traducoes = {
   pt: {
     // 1. Abas
     'captura.titulo': 'Anotar',
+    'resgate.usou': 'A IA do seu iPhone ajudou a ler — confira antes de salvar.',
     'captura.dica': 'Diga a matéria e o dia. Ex.: "tarefa de física para quarta" ou "prova de biologia sexta 14h". Sem dia, ele usa a próxima aula da matéria.',
     'captura.falar': 'Falar',
     'captura.ouvindo': 'Ouvindo… solte para parar',
@@ -340,6 +341,7 @@ const traducoes = {
   en: {
     // 1. Abas
     'captura.titulo': 'Jot down',
+    'resgate.usou': 'Your iPhone\u2019s AI helped read this \u2014 check it before saving.',
     'captura.dica': 'Say the subject and the day. E.g. "physics homework for wednesday" or "biology exam friday 2pm". With no day, it uses the subject\'s next class.',
     'captura.falar': 'Speak',
     'captura.ouvindo': 'Listening… release to stop',
@@ -669,6 +671,7 @@ const traducoes = {
   es: {
     // 1. Abas
     'captura.titulo': 'Apuntar',
+    'resgate.usou': 'La IA de tu iPhone ayud\u00f3 a leer: rev\u00edsalo antes de guardar.',
     'captura.dica': 'Di la asignatura y el día. Ej.: "tarea de física para el miércoles". Sin día, usa la próxima clase de esa asignatura.',
     'captura.falar': 'Hablar',
     'captura.ouvindo': 'Escuchando… suelta para parar',
@@ -998,6 +1001,7 @@ const traducoes = {
   fr: {
     // 1. Abas
     'captura.titulo': 'Noter',
+    'resgate.usou': 'L\u2019IA de votre iPhone a aid\u00e9 \u00e0 lire \u2014 v\u00e9rifiez avant d\u2019enregistrer.',
     'captura.dica': 'Dites la matière et le jour. Ex. : "devoir de physique pour mercredi". Sans jour, il prend le prochain cours.',
     'captura.falar': 'Parler',
     'captura.ouvindo': 'Écoute… relâchez pour arrêter',
