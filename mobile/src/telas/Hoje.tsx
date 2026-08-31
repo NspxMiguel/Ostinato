@@ -171,7 +171,12 @@ export function Hoje({
                         })}
                       </Apoio>
                     ) : null}
-                    {aviso ? (
+                    {/* O "avisa você em..." some quando já está atrasado.
+                        
+                        O que sobra ali é uma repetição da insistência, e ler
+                        "avisa você amanhã às 20:00" embaixo de ATRASADO faz o
+                        app parecer que ainda tem tempo. */}
+                    {aviso && !item.atrasado ? (
                       <View style={e.aviso}>
                         <View style={e.marcaDeAviso} />
                         <Apoio cor={cores.texto3}>
