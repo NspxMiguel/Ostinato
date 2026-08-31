@@ -111,7 +111,15 @@ export function quandoPorExtenso(
   t: T,
   idioma: Idioma,
 ): string {
-  return t('data.com_hora', { data: dataPorExtenso(iso, hojeISO, t, idioma), hora })
+  // A hora passa pelo formatador do APARELHO, como em todo o resto.
+  //
+  // Ela chegava crua e ia direto para a tela: o Hoje mostrava a aula às
+  // "8:00 AM" e, três linhas abaixo, a tarefa "amanhã às 23:59". Dois relógios
+  // na mesma tela é o tipo de coisa que a pessoa nota sem saber nomear.
+  return t('data.com_hora', {
+    data: dataPorExtenso(iso, hojeISO, t, idioma),
+    hora: horaDeTexto(hora),
+  })
 }
 
 /**
