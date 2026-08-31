@@ -15,6 +15,7 @@
           "fetch",
           "processing"
         ],
+        "NSAlarmKitUsageDescription": "Para tocar o alarme do iPhone na hora de um compromisso, mesmo com o telefone no silencioso.",
         "NSCameraUsageDescription": "Para ler o horário das aulas a partir de uma foto, no próprio aparelho.",
         "NSPhotoLibraryUsageDescription": "Para ler o horário das aulas a partir de uma imagem que você já tem.",
         "NSSupportsLiveActivities": true,

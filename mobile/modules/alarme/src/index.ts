@@ -47,6 +47,23 @@ export function cancelarAlarme(id: string): boolean {
   }
 }
 
+export type EstadoDoAlarme = 'autorizado' | 'negado' | 'nao-perguntado' | 'sem-suporte'
+
+/**
+ * O estado da permissão de alarme.
+ *
+ * A tela precisa disto para dizer "negado nos Ajustes do iPhone" em vez de
+ * simplesmente não tocar — que foi o defeito: o alarme falhava calado e só
+ * chegava a notificação, sem nada indicando que faltava uma permissão.
+ */
+export function estadoDoAlarme(): EstadoDoAlarme {
+  try {
+    return (modulo?.estadoDaPermissao?.() as EstadoDoAlarme) ?? 'sem-suporte'
+  } catch {
+    return 'sem-suporte'
+  }
+}
+
 export function alarmesAgendados(): string[] {
   if (!modulo) return []
   try {

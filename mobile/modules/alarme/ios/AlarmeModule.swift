@@ -99,6 +99,19 @@ public class AlarmeModule: Module {
       }
     }
 
+    /// O estado da autorizacao, em uma palavra.
+    ///
+    /// Existe para a tela conseguir mostrar "negado nos Ajustes" em vez de
+    /// simplesmente nao tocar. Falha calada foi o defeito daqui.
+    Function("estadoDaPermissao") { () -> String in
+      guard #available(iOS 26.1, *) else { return "sem-suporte" }
+      switch AlarmManager.shared.authorizationState {
+      case .authorized: return "autorizado"
+      case .denied: return "negado"
+      default: return "nao-perguntado"
+      }
+    }
+
     /// Os ids agendados agora — é com isto que o app sincroniza sem duplicar.
     Function("agendados") { () -> [String] in
       guard #available(iOS 26.1, *) else { return [] }
@@ -120,8 +133,41 @@ extension AlarmeModule {
    quem o criou: o compilador o trata como contexto novo, e recusa a API. Marcar
    a função é o que devolve a disponibilidade para dentro do laço assíncrono.
    */
+  /**
+   Garante a autorizacao antes de agendar.
+
+   Isto e o conserto do defeito que ele viu: o alarme nunca tocava, so chegava a
+   notificacao. `AlarmManager.schedule` LANCA quando o app nao foi autorizado, o
+   embrulho do lado do JavaScript engolia o erro e devolvia `false`, e o app caia
+   no aviso normal — sem prompt, sem erro, sem nada na tela. Ninguem tinha como
+   descobrir que faltava uma permissao que jamais foi pedida.
+
+   Pedir aqui, e nao na abertura do app, e o certo pelo mesmo motivo de sempre:
+   a pessoa entende o que esta concedendo quando o pedido chega junto do que ela
+   acabou de fazer.
+   */
+  @available(iOS 26.1, *)
+  static func autorizar() async throws {
+    switch AlarmManager.shared.authorizationState {
+    case .authorized:
+      return
+    case .denied:
+      throw NSError(
+        domain: "alarme", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "alarme negado nos Ajustes do iPhone"])
+    default:
+      let estado = try await AlarmManager.shared.requestAuthorization()
+      guard estado == .authorized else {
+        throw NSError(
+          domain: "alarme", code: 2,
+          userInfo: [NSLocalizedDescriptionKey: "alarme nao autorizado"])
+      }
+    }
+  }
+
   @available(iOS 26.1, *)
   static func armar(uuid: UUID, titulo: String, quando: Double) async throws -> Alarm {
+    try await autorizar()
     let alerta = AlarmPresentation.Alert(
       title: LocalizedStringResource(stringLiteral: titulo),
       secondaryButton: AlarmButton(text: "Adiar", textColor: .white, systemImageName: "clock"),

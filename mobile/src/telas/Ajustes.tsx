@@ -224,6 +224,7 @@ export function Ajustes({ aoEscanearHorario }: {
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
   // seria mandar o usuário resolver o problema errado.
   const [nuvem, setNuvem] = useState<{ ligada: boolean; motivo: string } | null>(null)
+  const [estadoAlarme, setEstadoAlarme] = useState<EstadoDoAlarme>(() => estadoDoAlarme())
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
   /** O editor de período letivo abre em folha: ele é uma tela inteira. */
@@ -457,6 +458,24 @@ export function Ajustes({ aoEscanearHorario }: {
                 {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
               </Apoio>
             </Linha>
+          </View>
+          {/* O estado do alarme fica AQUI, ao lado do contador de avisos, porque
+              é diagnóstico: sem ele, alarme não autorizado é indistinguível de
+              alarme quebrado — foi assim que este defeito passou despercebido. */}
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.alarme_permissao')}</Apoio>
+              <Apoio cor={estadoAlarme === 'autorizado' ? cores.ok : cores.aviso}>
+                {t(`ajustes.alarme_${estadoAlarme.replace(/-/g, '_')}` as ChaveI18n)}
+              </Apoio>
+            </Linha>
+            {estadoAlarme === 'nao-perguntado' ? (
+              <Botao
+                texto={t('ajustes.alarme_pedir')}
+                variante="vazado"
+                aoTocar={() => void pedirPermissaoDeAlarme().then(() => setEstadoAlarme(estadoDoAlarme()))}
+              />
+            ) : null}
           </View>
           <View style={estilo.bloco}>
             <Linha entre>
