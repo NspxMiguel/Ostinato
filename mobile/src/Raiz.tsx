@@ -225,7 +225,16 @@ export function Raiz() {
         // estado que o nativo confirmou, e é isso que deixa o iOS recusar um
         // pedido velho — o caso real é a pessoa tocar numa aba enquanto um
         // `setAba` nosso ainda está no caminho.
-        navStateRequest={{ selectedScreenKey: aba, baseProvenance: procedencia.current }}
+        navStateRequest={{
+          // Nunca pedir uma aba que não está na barra.
+          //
+          // A Grade some quando o recurso está desligado, e o botão "Escanear"
+          // dos Ajustes liga o recurso e troca de aba no MESMO render. Pedir uma
+          // tela que o controlador ainda não recebeu é convite para o pedido ser
+          // recusado — ou pior, aceito contra um índice que não existe.
+          selectedScreenKey: abasVisiveis.some((a) => a.id === aba) ? aba : 'hoje',
+          baseProvenance: procedencia.current,
+        }}
         onTabSelected={({ nativeEvent }: {
           nativeEvent: { selectedScreenKey?: string; provenance?: number }
         }) => {
