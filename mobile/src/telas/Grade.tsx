@@ -37,6 +37,8 @@ import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { analisarGrade } from '../resgatar.ts'
 import { tabelaComoTexto } from '../../../nucleo/resgate.ts'
+import { NOTA_MINIMA, qualidadeDaGrade } from '../../../nucleo/qualidadeDaGrade.ts'
+import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { horaDeTexto } from '../formato.ts'
 
@@ -293,6 +295,25 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
       remover('aulas', aulaEdicao.id)
     }
     setModalAulaVisivel(false)
+  }
+
+  const qualidade = previaImportacao
+    ? qualidadeDaGrade(previaImportacao.aulas)
+    : { nota: 1, suspeitas: [], aulas: 0 }
+
+  /** Refaz a leitura com o modelo, quando a regra deixou dúvida. */
+  const analisarComModelo = async () => {
+    setAnalisando(true)
+    try {
+      // Sem a tabela: forçar o caminho do modelo é justamente pular a regra que
+      // acabou de produzir o resultado duvidoso.
+      const a = await analisarGrade(textoColado, confiancaDaFoto, [])
+      setUsouIa(a.usou)
+      setAvisoIa(a.aviso)
+      setPreviaImportacao(a.resultado)
+    } finally {
+      setAnalisando(false)
+    }
   }
 
   const analisarTextoColado = async () => {
@@ -691,6 +712,44 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   </Apoio>
                   {avisoIa ? <Apoio cor={cores.aviso}>{t(avisoIa as ChaveI18n)}</Apoio> : null}
                 </Cartao>
+
+                {/* O app dizendo que NÃO está confiante.
+                    
+                    Ideia dele, e ela resolve o problema certo: não dá para
+                    garantir leitura perfeita em toda escola do mundo, e gravar
+                    quinze aulas erradas com cara de certeza é pior do que
+                    admitir a dúvida. Aqui ele vê o que ficou suspeito e escolhe
+                    o que fazer — inclusive não usar. */}
+                {qualidade.nota < NOTA_MINIMA ? (
+                  <Cartao alerta={cores.aviso}>
+                    <Titulo>{t('grade.duvida_titulo')}</Titulo>
+                    <Apoio>{t('grade.duvida_texto')}</Apoio>
+                    {qualidade.suspeitas.slice(0, 4).map((sus, i) => (
+                      <Apoio key={i} cor={cores.aviso}>
+                        • {t(`grade.suspeita.${sus.tipo}` as ChaveI18n, { onde: sus.onde })}
+                      </Apoio>
+                    ))}
+                    {estadoDoModelo() === 'pronto' ? (
+                      <Botao
+                        texto={analisando ? t('resgate.pensando') : t('grade.duvida_tentar_ia')}
+                        variante="vazado"
+                        aoTocar={() => void analisarComModelo()}
+                      />
+                    ) : (
+                      // A IA local do iPhone é a Apple Intelligence, e ela é um
+                      // download de alguns gigas que a pessoa liga nos Ajustes
+                      // do sistema. É exatamente a opção que ele descreveu — e
+                      // é honesto dizer onde ela mora em vez de fingir que o
+                      // app baixa um modelo próprio.
+                      <Apoio cor={cores.texto3}>{t('grade.duvida_sem_ia')}</Apoio>
+                    )}
+                    <Botao
+                      texto={t('grade.duvida_corrigir')}
+                      variante="vazado"
+                      aoTocar={() => setPreviaImportacao(null)}
+                    />
+                  </Cartao>
+                ) : null}
 
                 {previaImportacao.ignoradas.length > 0 ? (
                   <View style={{ gap: espaco.xs }}>

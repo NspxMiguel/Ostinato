@@ -14,6 +14,34 @@ import UIKit
  horario e o `importarGrade` do nucleo, que e TypeScript puro e tem teste. O
  Swift aqui so enxerga.
  */
+/**
+ A orientacao EXIF da foto, no formato que o Vision entende.
+
+ Isto e o conserto do defeito que quebrava a leitura inteira no APARELHO e nao
+ no Mac: `UIImage(data:).cgImage` devolve os pixels crus e DESCARTA a orientacao.
+ Foto de iPhone em retrato costuma ser guardada girada com a rotacao so no
+ metadado — entao o Vision lia o horario deitado, e as colunas do quadro viravam
+ linhas. O resultado no aparelho dele foi exatamente isso: "ALE TER | FIS ALE |
+ MAT MAT FIS", que e uma COLUNA lida como linha.
+
+ No Mac nao aparecia porque `NSImage` aplica a rotacao ao rasterizar. Foi por
+ isso que a mesma foto saiu certa aqui e torta la — e por isso eu consertei tres
+ vezes a coisa errada.
+ */
+private func orientacaoDoVision(_ imagem: UIImage) -> CGImagePropertyOrientation {
+  switch imagem.imageOrientation {
+  case .up: return .up
+  case .down: return .down
+  case .left: return .left
+  case .right: return .right
+  case .upMirrored: return .upMirrored
+  case .downMirrored: return .downMirrored
+  case .leftMirrored: return .leftMirrored
+  case .rightMirrored: return .rightMirrored
+  @unknown default: return .up
+  }
+}
+
 public class LeituraModule: Module {
   /**
    Os limites das colunas, a partir do X de todos os pedacos da pagina.
@@ -85,7 +113,7 @@ public class LeituraModule: Module {
           pedido.textRecognitionOptions.recognitionLanguages = [
             Locale.Language(identifier: "pt-BR"), Locale.Language(identifier: "en-US"),
           ]
-          let documentos = try await pedido.perform(on: cg)
+          let documentos = try await pedido.perform(on: cg, orientation: orientacaoDoVision(imagem))
 
           // A MAIOR tabela da pagina. Uma foto de horario costuma trazer o
           // quadro e, as vezes, um bloco de legenda que tambem vira tabela.
@@ -205,7 +233,9 @@ public class LeituraModule: Module {
 
       DispatchQueue.global(qos: .userInitiated).async {
         do {
-          try VNImageRequestHandler(cgImage: cg, options: [:]).perform([pedido])
+          try VNImageRequestHandler(
+            cgImage: cg, orientation: orientacaoDoVision(imagem), options: [:]
+          ).perform([pedido])
         } catch {
           promise.reject("vision", error.localizedDescription)
         }
