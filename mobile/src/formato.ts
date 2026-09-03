@@ -75,14 +75,15 @@ export function diaPorExtenso(data: DataISO, idioma: Idioma, t: T, hoje = dataDe
 
 /** "quinta, 3 de setembro, 13:30" — o formato longo, com hora. */
 export function momentoPorExtenso(quando: Date, idioma: Idioma): string {
+  // Mesma regra do `quandoPorExtenso`: 23:59 é o fim do dia que o app usa
+  // quando ninguém escolheu hora, e imprimir isso é inventar informação.
+  const semHora = quando.getHours() === 23 && quando.getMinutes() === 59
   // Palavras no idioma do app, relógio no formato do aparelho.
   return quando.toLocaleString(LOCALE_DO_IDIOMA[idioma], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: usa12Horas(),
+    ...(semHora ? {} : { hour: 'numeric', minute: '2-digit', hour12: usa12Horas() }),
   })
 }
 
