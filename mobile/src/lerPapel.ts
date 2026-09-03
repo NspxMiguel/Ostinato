@@ -50,7 +50,12 @@ export async function lerPapel(de: 'camera' | 'galeria' = 'camera'): Promise<Pap
   const r = await lerTexto(uri)
   // As duas leituras, sempre. A tabela é a boa quando existe; o texto solto é a
   // rede embaixo dela, e custa pouco porque a imagem já está decodificada.
-  const tabela = await lerTabela(uri)
+  // Duas fontes de grade, nesta ordem: a tabela que o Vision DETECTOU, e a que
+  // eu reconstruo das coordenadas. A primeira é melhor quando existe — ela veio
+  // de um detector treinado; a segunda é a que salva a foto sem linha de grade
+  // desenhada, que é justamente onde a primeira desiste.
+  const detectada = await lerTabela(uri)
+  const tabela = detectada.length > 1 ? detectada : (r.grade ?? [])
   return {
     tipo: 'lido',
     texto: r.texto,

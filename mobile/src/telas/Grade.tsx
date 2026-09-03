@@ -36,6 +36,7 @@ import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { analisarGrade } from '../resgatar.ts'
+import { tabelaComoTexto } from '../../../nucleo/resgate.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { horaDeTexto } from '../formato.ts'
 
@@ -119,7 +120,12 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     try {
       const r = await lerPapel(de)
       if (r.tipo === 'lido') {
-        setTextoColado(r.texto)
+        // O campo mostra a GRADE quando ela existe, e não o texto achatado.
+        //
+        // Ele viu "SEXMAT MAT LPO LPO GEO GEO" no campo e concluiu, com razão,
+        // que era isso que a IA recebia. Mostrar o que o modelo vê é o que
+        // torna o erro corrigível: dá para consertar uma célula na mão.
+        setTextoColado(r.tabela.length > 1 ? tabelaComoTexto(r.tabela) : r.texto)
         // A confiança do OCR fica guardada para a análise: é um dos sinais que
         // decidem chamar a IA, e ela só existe quando o texto veio de foto.
         setConfiancaDaFoto(r.confianca)

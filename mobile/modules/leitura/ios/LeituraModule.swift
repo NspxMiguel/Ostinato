@@ -15,6 +15,39 @@ import UIKit
  Swift aqui so enxerga.
  */
 public class LeituraModule: Module {
+  /**
+   Os limites das colunas, a partir do X de todos os pedacos da pagina.
+
+   Um horario e uma grade: as celulas de uma coluna comecam todas mais ou menos
+   no mesmo X, pagina inteira. Entao juntar os X proximos revela as colunas, e
+   isso funciona mesmo quando nao ha linha desenhada no papel — que e o caso em
+   que o detector de tabela do Vision desiste.
+
+   4% da largura como distancia de corte: abaixo disso duas colunas estreitas
+   viram uma; acima, uma coluna larga se parte em duas.
+   */
+  static func colunas(de pedacos: [(texto: String, y: CGFloat, x: CGFloat, confianca: Float)])
+    -> [CGFloat]
+  {
+    let xs = pedacos.map(\.x).sorted()
+    guard let primeiro = xs.first else { return [] }
+    var centros: [CGFloat] = [primeiro]
+    for x in xs.dropFirst() where x - (centros.last ?? 0) > 0.04 { centros.append(x) }
+    return centros
+  }
+
+  /// Em qual coluna este X cai. A mais proxima, sempre — nunca fora da grade.
+  static func colunaDe(x: CGFloat, colunas: [CGFloat]) -> Int {
+    guard !colunas.isEmpty else { return 0 }
+    var melhor = 0
+    var menor = CGFloat.greatestFiniteMagnitude
+    for (i, c) in colunas.enumerated() where abs(x - c) < menor {
+      menor = abs(x - c)
+      melhor = i
+    }
+    return melhor
+  }
+
   public func definition() -> ModuleDefinition {
     /**
      Le a imagem como DOCUMENTO, devolvendo a tabela em linhas e celulas.
@@ -132,11 +165,37 @@ public class LeituraModule: Module {
           .map { $0.sorted { $0.x < $1.x }.map(\.texto).joined(separator: "\t") }
           .joined(separator: "\n")
 
+        // A GRADE, reconstruida das posicoes.
+        //
+        // Ele reclamou pela terceira vez em 31/08/2026: *"bota a porra da ia pra
+        // ler a tabela. ela ve so dps, onde o texto ja ta fudido e n da pra ler
+        // nada"*. Tem razao, e o print prova: "SEXMAT MAT LPO LPO GEO GEO" — o
+        // dia colou na primeira materia e as colunas sumiram.
+        //
+        // O `RecognizeDocumentsRequest` resolve quando ele ACHA a tabela, mas
+        // horario fotografado torto, sem linha de grade desenhada, ele nao acha.
+        // E ai caia no texto solto, que e o que o modelo recebia.
+        //
+        // Entao a grade e montada aqui, das coordenadas: agrupa por Y para achar
+        // as linhas, agrupa os X de TODOS os pedacos para achar as colunas, e
+        // encaixa cada pedaco na celula dele. Coluna vazia vira vazio de
+        // verdade, e nao um pedaco que escorregou para o vizinho.
+        let colunas = Self.colunas(de: pedacos)
+        let grade: [[String]] = linhas.map { linha in
+          var celulas = [String](repeating: "", count: max(1, colunas.count))
+          for pedaco in linha {
+            let i = Self.colunaDe(x: pedaco.x, colunas: colunas)
+            celulas[i] = celulas[i].isEmpty ? pedaco.texto : celulas[i] + " " + pedaco.texto
+          }
+          return celulas
+        }
+
         promise.resolve([
           "texto": texto,
           "linhas": linhas.count,
           "pedacos": pedacos.count,
           "confianca": Double(confianca),
+          "grade": grade,
         ])
       }
 

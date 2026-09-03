@@ -12,6 +12,14 @@ export type TextoLido = {
    * e é com ela que `nucleo/resgate.ts` decide chamar a IA do aparelho.
    */
   confianca: number
+  /**
+   * A grade reconstruída das posições: uma linha por linha do quadro, uma
+   * célula por coluna, vazia quando não há nada ali.
+   *
+   * Isto é o que vai para o modelo. O `texto` acima é a mesma leitura achatada,
+   * e serve só para a pessoa conferir e corrigir à mão.
+   */
+  grade: string[][]
 }
 
 const modulo = moduloOpcional<any>('Leitura')
