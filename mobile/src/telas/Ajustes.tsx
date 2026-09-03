@@ -227,6 +227,215 @@ function CampoHora({
   return <SeletorDeHora rotulo={rotulo} valor={valor} aoMudar={aoMudar} />
 }
 
+/**
+ * As sete categorias da raiz — o mesmo desenho dos Ajustes do iPhone: uma
+ * lista curta na raiz, cada linha abrindo a própria tela.
+ *
+ * "dados" é a zona de risco. Ela continua a última e com o título tingido de
+ * aviso, mas agora é uma categoria como as outras — antes era um botão solto
+ * no meio da rolagem infinita, que é justamente o problema que esta tela
+ * resolve.
+ */
+type Categoria = 'perfil' | 'recursos' | 'avisos' | 'alarme' | 'escola' | 'sobre' | 'dados'
+
+/**
+ * O selo de cada categoria — formas geométricas simples, no mesmo espírito dos
+ * ícones da barra de abas em `Raiz.tsx`.
+ *
+ * Sem biblioteca de ícones de propósito: Lucide em tudo é um dos sinais mais
+ * confiáveis de tela gerada, e sete formas não justificam uma dependência.
+ */
+function Selo({ tipo, perigo }: { tipo: Categoria; perigo?: boolean }) {
+  const cor = perigo ? cores.aviso : cores.texto
+  return (
+    <View style={[estilo.selo, perigo ? { backgroundColor: `${cores.aviso}1F` } : null]}>
+      <Glifo tipo={tipo} cor={cor} />
+    </View>
+  )
+}
+
+function Glifo({ tipo, cor }: { tipo: Categoria; cor: string }) {
+  switch (tipo) {
+    case 'perfil':
+      return (
+        <View style={{ alignItems: 'center', gap: 1 }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: cor }} />
+          <View
+            style={{
+              width: 14,
+              height: 7,
+              borderTopLeftRadius: 7,
+              borderTopRightRadius: 7,
+              backgroundColor: cor,
+            }}
+          />
+        </View>
+      )
+    case 'recursos':
+      return (
+        <View style={{ gap: 3 }}>
+          {[14, 8, 11].map((l, i) => (
+            <View key={i} style={{ height: 2, width: l, borderRadius: 1, backgroundColor: cor }} />
+          ))}
+        </View>
+      )
+    case 'avisos':
+      return (
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              width: 13,
+              height: 10,
+              borderWidth: 1.6,
+              borderColor: cor,
+              borderBottomWidth: 0,
+              borderTopLeftRadius: 7,
+              borderTopRightRadius: 7,
+            }}
+          />
+          <View style={{ width: 15, height: 1.6, backgroundColor: cor, marginTop: 1, borderRadius: 1 }} />
+        </View>
+      )
+    case 'alarme':
+      return (
+        <View
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+            borderWidth: 1.6,
+            borderColor: cor,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View
+            style={{ position: 'absolute', width: 1.6, height: 5, top: 2.6, backgroundColor: cor, borderRadius: 1 }}
+          />
+          <View
+            style={{ position: 'absolute', width: 4, height: 1.6, left: 7.4, top: 6.8, backgroundColor: cor, borderRadius: 1 }}
+          />
+        </View>
+      )
+    case 'escola':
+      return (
+        <View style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              width: 0,
+              height: 0,
+              borderLeftWidth: 8,
+              borderRightWidth: 8,
+              borderBottomWidth: 6,
+              borderLeftColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderBottomColor: cor,
+            }}
+          />
+          <View style={{ width: 14, height: 6, backgroundColor: cor, marginTop: 1, borderRadius: 1 }} />
+        </View>
+      )
+    case 'sobre':
+      return (
+        <View
+          style={{
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+            borderWidth: 1.6,
+            borderColor: cor,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View style={{ width: 2, height: 2, borderRadius: 1, backgroundColor: cor, marginBottom: 1 }} />
+          <View style={{ width: 2, height: 6, backgroundColor: cor, borderRadius: 1 }} />
+        </View>
+      )
+    case 'dados':
+      return (
+        <View style={{ alignItems: 'center' }}>
+          <View style={{ width: 12, height: 2, backgroundColor: cor, borderRadius: 1 }} />
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              marginTop: 1,
+              borderWidth: 1.6,
+              borderTopWidth: 0,
+              borderColor: cor,
+              borderBottomLeftRadius: 2,
+              borderBottomRightRadius: 2,
+            }}
+          />
+        </View>
+      )
+  }
+}
+
+/** Uma linha de categoria na raiz: selo, título, resumo do estado, seta. */
+function LinhaCategoria({
+  tipo,
+  titulo,
+  valor,
+  perigo,
+  aoTocar,
+}: {
+  tipo: Categoria
+  titulo: string
+  valor?: string
+  perigo?: boolean
+  aoTocar: () => void
+}) {
+  return (
+    <LinhaDeMenu
+      titulo={titulo}
+      valor={valor}
+      perigo={perigo}
+      icone={<Selo tipo={tipo} perigo={perigo} />}
+      aoTocar={aoTocar}
+    />
+  )
+}
+
+/**
+ * O resumo de Recursos na raiz: os nomes dos que estão ligados, separados por
+ * vírgula — é o "Som > Sino" do iOS, e evita entrar na categoria só para
+ * conferir o que está ativo.
+ */
+function resumoRecursos(
+  t: ReturnType<typeof usarT>,
+  recursos: { grade: boolean; notas: boolean; semanaAlternada: boolean },
+): string {
+  const nomes: string[] = []
+  if (recursos.grade) nomes.push(t('ajustes.recurso_grade'))
+  if (recursos.notas) nomes.push(t('ajustes.recurso_notas'))
+  if (recursos.grade && recursos.semanaAlternada) nomes.push(t('ajustes.recurso_semana'))
+  return nomes.length > 0 ? nomes.join(', ') : t('ajustes.recurso_nenhum')
+}
+
+/**
+ * O resumo de Avisos na raiz: quando os seis tipos estão no mesmo nível, esse
+ * nível; quando divergem, "Personalizado" — a mesma palavra que a folha de
+ * cada tipo já usa para o mesmo caso.
+ */
+function resumoAvisos(
+  t: ReturnType<typeof usarT>,
+  padroesAviso: Record<string, RegraAviso[] | undefined>,
+): string {
+  const niveis = TIPOS_COMPROMISSO.map((tipo) => intensidadeDe(tipo, padroesAviso[tipo] ?? []))
+  const iguais = niveis.every((n) => n === niveis[0])
+  return t(`ajustes.nivel.${iguais ? niveis[0] : 'personalizado'}` as ChaveI18n)
+}
+
+/** O resumo de Alarme na raiz: o nome do som escolhido, ou "Padrão do iPhone". */
+function rotuloSomAtual(t: ReturnType<typeof usarT>, somAlarme: string | null): string {
+  if (!somAlarme) return t('ajustes.som_padrao')
+  const doApp = SONS_DO_APP.find((s) => s.arquivo === somAlarme)
+  if (doApp) return t(doApp.chave)
+  return rotuloDoSom(somAlarme)
+}
+
 export function Ajustes({ aoEscanearHorario }: {
   /**
    * Liga a grade e abre a aba dela.
@@ -259,9 +468,14 @@ export function Ajustes({ aoEscanearHorario }: {
   const [importandoSom, setImportandoSom] = useState(false)
   const [confirmandoTudo, setConfirmandoTudo] = useState(false)
   const estadoIa = estadoDoModelo()
-  /** Qual tipo de compromisso está com as regras abertas na folha. */
+  /** Qual categoria está aberta na raiz — é o que troca a coluna única pelas
+      telas do padrão "Ajustes do iPhone". */
+  const [categoria, setCategoria] = useState<Categoria | null>(null)
+  /** Qual tipo de compromisso está com as regras abertas na folha, dentro da
+      categoria Avisos. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
-  /** O editor de período letivo abre em folha: ele é uma tela inteira. */
+  /** O editor de período letivo abre em folha, dentro da categoria Escola: ele
+      é uma tela inteira. */
   const [periodoAberto, setPeriodoAberto] = useState(false)
   const [importando, setImportando] = useState(false)
   useEffect(() => {
@@ -317,313 +531,481 @@ export function Ajustes({ aoEscanearHorario }: {
 
   return (
     <Tela titulo={t('abas.ajustes')}>
-      {/* A ordem é o desenho desta tela, e ela não é arbitrária: primeiro QUEM é
-          a pessoa, porque isso muda o que o resto significa; depois o idioma, que
-          muda o que ela lê; então os avisos, que são o produto; a escola, que são
-          os dados; e por último o diagnóstico, que ninguém procura mas precisa
-          existir.
+      {/* A raiz é uma lista de CATEGORIAS, no padrão dos Ajustes do iPhone: cada
+          linha traz um resumo do estado atual à direita — "Som > Sino" — e é
+          esse resumo que evita entrar na categoria só para conferir.
 
-          Todo grupo é um `Grupo`, sem exceção. Antes cada seção usava um
-          invólucro diferente — uma solta, outra em cartão, outra em grupo — e era
-          isso que fazia a tela parecer montada por três pessoas. */}
-      <Secao titulo={t('ajustes.perfil')}>
+          A ordem dos grupos ainda é o desenho da tela, herdada de antes: primeiro
+          QUEM é a pessoa, porque isso muda o que o resto significa; depois os
+          avisos e o alarme, que são o produto; a escola e o diagnóstico, que são
+          dados; e a zona de risco, sozinha, por último. */}
+      <Grupo>
+        <LinhaCategoria
+          tipo="perfil"
+          titulo={t('ajustes.perfil')}
+          valor={t(`ajustes.papel.${ajustes.papel}` as ChaveI18n)}
+          aoTocar={() => setCategoria('perfil')}
+        />
+        <LinhaCategoria
+          tipo="recursos"
+          titulo={t('ajustes.recursos')}
+          valor={resumoRecursos(t, ajustes.recursos)}
+          aoTocar={() => setCategoria('recursos')}
+        />
+      </Grupo>
+
+      <Grupo>
+        <LinhaCategoria
+          tipo="avisos"
+          titulo={t('ajustes.avisos')}
+          valor={resumoAvisos(t, ajustes.padroesAviso)}
+          aoTocar={() => setCategoria('avisos')}
+        />
+        <LinhaCategoria
+          tipo="alarme"
+          titulo={t('ajustes.alarme')}
+          valor={rotuloSomAtual(t, ajustes.somAlarme)}
+          aoTocar={() => setCategoria('alarme')}
+        />
+      </Grupo>
+
+      <Grupo>
+        <LinhaCategoria
+          tipo="escola"
+          titulo={t('ajustes.escola')}
+          valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
+          aoTocar={() => setCategoria('escola')}
+        />
+        <LinhaCategoria
+          tipo="sobre"
+          titulo={t('ajustes.sobre')}
+          valor={VERSAO}
+          aoTocar={() => setCategoria('sobre')}
+        />
+      </Grupo>
+
+      {/* A zona de risco fica no FIM, sozinha e tingida de aviso.
+
+          Não é decoração: um botão que apaga tudo no meio da tela é apertado
+          sem querer enquanto se procura outra coisa. Como categoria, ela só
+          abre para quem foi atrás dela — e a confirmação continua exigindo
+          dois toques depois desse. */}
+      <Secao titulo={t('ajustes.zona_de_risco')}>
         <Grupo>
-          <View style={estilo.bloco}>
-            <Apoio>{t('ajustes.papel_pergunta')}</Apoio>
-            <Fileira>
-              <Pilula
-                texto={t('ajustes.papel.aluno')}
-                ativa={ajustes.papel === 'aluno'}
-                aoTocar={() => mudarAjustes({ papel: 'aluno' })}
-              />
-              <Pilula
-                texto={t('ajustes.papel.responsavel')}
-                ativa={ajustes.papel === 'responsavel'}
-                aoTocar={() => mudarAjustes({ papel: 'responsavel' })}
-              />
-            </Fileira>
-          </View>
-          <View style={estilo.bloco}>
-            {/* O rótulo vem ANTES do controle. Estava depois, e rótulo embaixo
-                do que ele nomeia é o tipo de erro que a pessoa não sabe apontar
-                mas que faz a tela parecer errada. */}
-            <Apoio>{t('ajustes.minhas_series')}</Apoio>
-            <Fileira>
-              {SERIES.map((s) => (
-                <Pilula
-                  key={s}
-                  texto={t(`serie.${s.replace(/ /g, '_')}` as ChaveI18n)}
-                  ativa={ajustes.minhasSeries.includes(s)}
-                  aoTocar={() =>
-                    mudarAjustes({
-                      minhasSeries: ajustes.minhasSeries.includes(s)
-                        ? ajustes.minhasSeries.filter((x) => x !== s)
-                        : [...ajustes.minhasSeries, s],
-                    })
-                  }
-                />
-              ))}
-            </Fileira>
-          </View>
+          <LinhaCategoria
+            tipo="dados"
+            titulo={t('ajustes.apagar_tudo')}
+            perigo
+            aoTocar={() => setCategoria('dados')}
+          />
         </Grupo>
       </Secao>
 
-      {/* O que a pessoa usa. Ninguém é obrigado a cadastrar a grade da escola
-          para anotar uma prova — quem quer só o lembrete desliga o resto e o app
-          some com ele: a aba fecha e a seção sai da tela Hoje. */}
-      <Secao titulo={t('ajustes.recursos')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Apoio>{t('ajustes.recurso_grade')}</Apoio>
-                <Apoio cor={cores.texto3}>{t('ajustes.recurso_grade_desc')}</Apoio>
-              </View>
-              <Switch
-                value={ajustes.recursos.grade}
-                onValueChange={(v) =>
-                  mudarAjustes({ recursos: { ...ajustes.recursos, grade: v } })
-                }
-                trackColor={{ false: cores.borda, true: cores.destaque }}
-                thumbColor={cores.texto}
-              />
-            </Linha>
-            {!ajustes.recursos.grade && aoEscanearHorario ? (
-              <Botao
-                texto={t('ajustes.escanear_horario')}
-                variante="vazado"
-                aoTocar={aoEscanearHorario}
-              />
-            ) : null}
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Apoio>{t('ajustes.recurso_notas')}</Apoio>
-                <Apoio cor={cores.texto3}>{t('ajustes.recurso_notas_desc')}</Apoio>
-              </View>
-              <Switch
-                value={ajustes.recursos.notas}
-                onValueChange={(v) =>
-                  mudarAjustes({ recursos: { ...ajustes.recursos, notas: v } })
-                }
-                trackColor={{ false: cores.borda, true: cores.destaque }}
-                thumbColor={cores.texto}
-              />
-            </Linha>
-          </View>
-          {/* Só aparece com a grade ligada: semana alternada é uma propriedade
-              da grade, e oferecer a chave sem ela é oferecer nada. */}
-          {ajustes.recursos.grade ? (
+      {/* ————— Perfil ————— */}
+      <Modal
+        visible={categoria === 'perfil'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.perfil')}>
+          <Grupo>
+            <View style={estilo.bloco}>
+              <Apoio>{t('ajustes.papel_pergunta')}</Apoio>
+              <Fileira>
+                <Pilula
+                  texto={t('ajustes.papel.aluno')}
+                  ativa={ajustes.papel === 'aluno'}
+                  aoTocar={() => mudarAjustes({ papel: 'aluno' })}
+                />
+                <Pilula
+                  texto={t('ajustes.papel.responsavel')}
+                  ativa={ajustes.papel === 'responsavel'}
+                  aoTocar={() => mudarAjustes({ papel: 'responsavel' })}
+                />
+              </Fileira>
+            </View>
+            <View style={estilo.bloco}>
+              {/* O rótulo vem ANTES do controle. Estava depois, e rótulo embaixo
+                  do que ele nomeia é o tipo de erro que a pessoa não sabe apontar
+                  mas que faz a tela parecer errada. */}
+              <Apoio>{t('ajustes.minhas_series')}</Apoio>
+              <Fileira>
+                {SERIES.map((s) => (
+                  <Pilula
+                    key={s}
+                    texto={t(`serie.${s.replace(/ /g, '_')}` as ChaveI18n)}
+                    ativa={ajustes.minhasSeries.includes(s)}
+                    aoTocar={() =>
+                      mudarAjustes({
+                        minhasSeries: ajustes.minhasSeries.includes(s)
+                          ? ajustes.minhasSeries.filter((x) => x !== s)
+                          : [...ajustes.minhasSeries, s],
+                      })
+                    }
+                  />
+                ))}
+              </Fileira>
+            </View>
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
+
+      {/* ————— Recursos ————— */}
+      <Modal
+        visible={categoria === 'recursos'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.recursos')}>
+          {/* O que a pessoa usa. Ninguém é obrigado a cadastrar a grade da
+              escola para anotar uma prova — quem quer só o lembrete desliga o
+              resto e o app some com ele: a aba fecha e a seção sai da tela
+              Hoje. */}
+          <Grupo>
             <View style={estilo.bloco}>
               <Linha entre>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Apoio>{t('ajustes.recurso_semana')}</Apoio>
-                  <Apoio cor={cores.texto3}>{t('ajustes.recurso_semana_desc')}</Apoio>
+                  <Apoio>{t('ajustes.recurso_grade')}</Apoio>
+                  <Apoio cor={cores.texto3}>{t('ajustes.recurso_grade_desc')}</Apoio>
                 </View>
                 <Switch
-                  value={ajustes.recursos.semanaAlternada}
+                  value={ajustes.recursos.grade}
                   onValueChange={(v) =>
-                    mudarAjustes({ recursos: { ...ajustes.recursos, semanaAlternada: v } })
+                    mudarAjustes({ recursos: { ...ajustes.recursos, grade: v } })
+                  }
+                  trackColor={{ false: cores.borda, true: cores.destaque }}
+                  thumbColor={cores.texto}
+                />
+              </Linha>
+              {!ajustes.recursos.grade && aoEscanearHorario ? (
+                <Botao
+                  texto={t('ajustes.escanear_horario')}
+                  variante="vazado"
+                  aoTocar={() => {
+                    // Fecha a folha antes de trocar de aba: senão ela continua
+                    // flutuando por cima da Grade, que é a aba de destino.
+                    setCategoria(null)
+                    aoEscanearHorario()
+                  }}
+                />
+              ) : null}
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Apoio>{t('ajustes.recurso_notas')}</Apoio>
+                  <Apoio cor={cores.texto3}>{t('ajustes.recurso_notas_desc')}</Apoio>
+                </View>
+                <Switch
+                  value={ajustes.recursos.notas}
+                  onValueChange={(v) =>
+                    mudarAjustes({ recursos: { ...ajustes.recursos, notas: v } })
                   }
                   trackColor={{ false: cores.borda, true: cores.destaque }}
                   thumbColor={cores.texto}
                 />
               </Linha>
             </View>
-          ) : null}
-        </Grupo>
-      </Secao>
+            {/* Só aparece com a grade ligada: semana alternada é uma
+                propriedade da grade, e oferecer a chave sem ela é oferecer
+                nada. */}
+            {ajustes.recursos.grade ? (
+              <View style={estilo.bloco}>
+                <Linha entre>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Apoio>{t('ajustes.recurso_semana')}</Apoio>
+                    <Apoio cor={cores.texto3}>{t('ajustes.recurso_semana_desc')}</Apoio>
+                  </View>
+                  <Switch
+                    value={ajustes.recursos.semanaAlternada}
+                    onValueChange={(v) =>
+                      mudarAjustes({ recursos: { ...ajustes.recursos, semanaAlternada: v } })
+                    }
+                    trackColor={{ false: cores.borda, true: cores.destaque }}
+                    thumbColor={cores.texto}
+                  />
+                </Linha>
+              </View>
+            ) : null}
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
 
-      {/* Um tipo por linha, e as regras dele abrem numa folha. */}
-      <Secao titulo={t('ajustes.avisos')}>
-        <Grupo>
-          {IDs.map((tipo) => (
-            <LinhaDeMenu
-              key={tipo}
-              titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
-              valor={t(
-                `ajustes.nivel.${intensidadeDe(tipo, ajustes.padroesAviso[tipo] ?? [])}` as ChaveI18n,
-              )}
-              aoTocar={() => setTipoAberto(tipo)}
-            />
-          ))}
-        </Grupo>
-      </Secao>
-
-      {/* O alarme é uma SEÇÃO, e não um apêndice de "Sobre".
-          
-          Ele morava lá dentro, junto de versão e diagnóstico, porque foi onde
-          coube quando eu o escrevi. Mas "Sobre" é para o que o app INFORMA;
-          som, faixa de silêncio e adiar são o que a pessoa DECIDE — e ele já
-          reclamou de ajuste que dá preguiça de olhar. Ajuste enterrado em
-          diagnóstico é a mesma doença. */}
-      <Secao titulo={t('ajustes.alarme')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            <Apoio>{t('ajustes.som_do_alarme')}</Apoio>
-            <Fileira>
-              <Pilula
-                texto={t('ajustes.som_padrao')}
-                ativa={!ajustes.somAlarme}
-                aoTocar={() => mudarAjustes({ somAlarme: null })}
+      {/* ————— Avisos ————— */}
+      {/* Um tipo por linha, e as regras dele abrem numa folha por cima desta. */}
+      <Modal
+        visible={categoria === 'avisos'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.avisos')}>
+          <Grupo>
+            {IDs.map((tipo) => (
+              <LinhaDeMenu
+                key={tipo}
+                titulo={t(`compromisso.tipo.singular.${tipo}` as ChaveI18n)}
+                valor={t(
+                  `ajustes.nivel.${intensidadeDe(tipo, ajustes.padroesAviso[tipo] ?? [])}` as ChaveI18n,
+                )}
+                aoTocar={() => setTipoAberto(tipo)}
               />
-              {/* Os sons do próprio app. Os toques do iPhone não podem entrar
-                  aqui — são arquivos do sistema, da Apple, e copiá-los para
-                  dentro do pacote reprova na revisão da loja. Quem quer
-                  exatamente aquele toque usa a importação, logo abaixo. */}
-              {SONS_DO_APP.map((som) => (
+            ))}
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
+
+      {/* ————— Alarme ————— */}
+      <Modal
+        visible={categoria === 'alarme'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.alarme')}>
+          <Grupo>
+            <View style={estilo.bloco}>
+              <Apoio>{t('ajustes.som_do_alarme')}</Apoio>
+              <Fileira>
                 <Pilula
-                  key={som.arquivo}
-                  texto={t(som.chave)}
-                  ativa={ajustes.somAlarme === som.arquivo}
-                  aoTocar={() => {
-                    mudarAjustes({ somAlarme: som.arquivo })
-                    // `ouvirSom` lê de `Library/Sounds`; estes moram na bundle.
-                    // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
-                    // num som parece som quebrado.
-                    void ouvirSomDoAppUmaVez(som.arquivo)
-                  }}
+                  texto={t('ajustes.som_padrao')}
+                  ativa={!ajustes.somAlarme}
+                  aoTocar={() => mudarAjustes({ somAlarme: null })}
                 />
-              ))}
-              {sons.map((nome) => (
-                <Pilula
-                  key={nome}
-                  texto={rotuloDoSom(nome)}
-                  ativa={ajustes.somAlarme === nome}
-                  // Tocar já escolhe E toca: escolher som sem ouvir é apostar,
-                  // e a única prova viria no meio da madrugada.
-                  aoTocar={() => {
-                    mudarAjustes({ somAlarme: nome })
-                    void ouvirSom(nome)
-                  }}
-                  aoSegurar={() => {
-                    removerSom(nome)
-                    if (ajustes.somAlarme === nome) mudarAjustes({ somAlarme: null })
-                    setSons(sonsImportados())
-                  }}
-                />
-              ))}
-            </Fileira>
-            <Botao
-              texto={importandoSom ? t('ajustes.som_importando') : t('ajustes.som_importar')}
-              variante="vazado"
-              aoTocar={() => {
-                setImportandoSom(true)
-                void importarSom()
-                  .then((nome) => {
-                    setSons(sonsImportados())
-                    if (nome) {
+                {/* Os sons do próprio app. Os toques do iPhone não podem entrar
+                    aqui — são arquivos do sistema, da Apple, e copiá-los para
+                    dentro do pacote reprova na revisão da loja. Quem quer
+                    exatamente aquele toque usa a importação, logo abaixo. */}
+                {SONS_DO_APP.map((som) => (
+                  <Pilula
+                    key={som.arquivo}
+                    texto={t(som.chave)}
+                    ativa={ajustes.somAlarme === som.arquivo}
+                    aoTocar={() => {
+                      mudarAjustes({ somAlarme: som.arquivo })
+                      // `ouvirSom` lê de `Library/Sounds`; estes moram na bundle.
+                      // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
+                      // num som parece som quebrado.
+                      void ouvirSomDoAppUmaVez(som.arquivo)
+                    }}
+                  />
+                ))}
+                {sons.map((nome) => (
+                  <Pilula
+                    key={nome}
+                    texto={rotuloDoSom(nome)}
+                    ativa={ajustes.somAlarme === nome}
+                    // Tocar já escolhe E toca: escolher som sem ouvir é apostar,
+                    // e a única prova viria no meio da madrugada.
+                    aoTocar={() => {
                       mudarAjustes({ somAlarme: nome })
                       void ouvirSom(nome)
-                    }
-                  })
-                  .finally(() => setImportandoSom(false))
-              }}
-            />
-            <Apoio cor={cores.texto3}>{t('ajustes.som_ajuda')}</Apoio>
-          </View>
-
-          <View style={estilo.bloco}>
-            <Apoio>{t('ajustes.silencio')}</Apoio>
-            <Apoio cor={cores.texto3}>{t('ajustes.silencio_desc')}</Apoio>
-            <Linha>
-              <SeletorDeHora
-                rotulo={t('ajustes.silencio_de')}
-                valor={ajustes.silencioDe}
-                aoMudar={(h) => mudarAjustes({ silencioDe: h as typeof ajustes.silencioDe })}
-              />
-              <SeletorDeHora
-                rotulo={t('ajustes.silencio_ate')}
-                valor={ajustes.silencioAte}
-                aoMudar={(h) => mudarAjustes({ silencioAte: h as typeof ajustes.silencioAte })}
-              />
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Apoio>{t('ajustes.adiar')}</Apoio>
-                <Apoio cor={cores.texto3}>{t('ajustes.adiar_desc')}</Apoio>
-              </View>
-              <CampoNumero
-                rotulo={t('ajustes.minutos')}
-                valor={ajustes.adiarMinutos}
-                aoConfirmar={(n) => mudarAjustes({ adiarMinutos: Math.max(0, Math.min(60, n)) })}
-              />
-            </Linha>
-          </View>
-
-          {/* O estado do alarme fica AQUI, ao lado do contador de avisos, porque
-              é diagnóstico: sem ele, alarme não autorizado é indistinguível de
-              alarme quebrado — foi assim que este defeito passou despercebido. */}
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.alarme_permissao')}</Apoio>
-              <Apoio cor={estadoAlarme === 'autorizado' ? cores.ok : cores.aviso}>
-                {t(`ajustes.alarme_${estadoAlarme.replace(/-/g, '_')}` as ChaveI18n)}
-              </Apoio>
-            </Linha>
-            {estadoAlarme === 'nao-perguntado' ? (
+                    }}
+                    aoSegurar={() => {
+                      removerSom(nome)
+                      if (ajustes.somAlarme === nome) mudarAjustes({ somAlarme: null })
+                      setSons(sonsImportados())
+                    }}
+                  />
+                ))}
+              </Fileira>
               <Botao
-                texto={t('ajustes.alarme_pedir')}
+                texto={importandoSom ? t('ajustes.som_importando') : t('ajustes.som_importar')}
                 variante="vazado"
-                aoTocar={() => void pedirPermissaoDeAlarme().then(() => estadoDoAlarme().then(setEstadoAlarme))}
+                aoTocar={() => {
+                  setImportandoSom(true)
+                  void importarSom()
+                    .then((nome) => {
+                      setSons(sonsImportados())
+                      if (nome) {
+                        mudarAjustes({ somAlarme: nome })
+                        void ouvirSom(nome)
+                      }
+                    })
+                    .finally(() => setImportandoSom(false))
+                }}
               />
-            ) : null}
-          </View>
-        </Grupo>
-      </Secao>
+              <Apoio cor={cores.texto3}>{t('ajustes.som_ajuda')}</Apoio>
+            </View>
 
-      <Secao titulo={t('ajustes.escola')}>
-        <Grupo>
-          <LinhaDeMenu
-            titulo={t('ajustes.importar_calendario')}
-            aoTocar={() => setImportando(true)}
-          />
-          <LinhaDeMenu
-            titulo={t('ajustes.periodo_letivo')}
-            valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
-            aoTocar={() => setPeriodoAberto(true)}
-          />
-          <View style={estilo.bloco}>
-            {/* Um rótulo só. O campo trazia o próprio ("Porcentagem") empilhado
-                acima do número, ao lado de "Limite de faltas" à esquerda — dois
-                rótulos desalinhados para uma coisa só, e a linha parecia
-                quebrada. O sufixo % diz o que o rótulo repetia. */}
-            <Linha entre>
-              <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
-                <CampoNumero
-                  valor={ajustes.limiteFaltasPadrao}
-                  aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+            <View style={estilo.bloco}>
+              <Apoio>{t('ajustes.silencio')}</Apoio>
+              <Apoio cor={cores.texto3}>{t('ajustes.silencio_desc')}</Apoio>
+              <Linha>
+                <SeletorDeHora
+                  rotulo={t('ajustes.silencio_de')}
+                  valor={ajustes.silencioDe}
+                  aoMudar={(h) => mudarAjustes({ silencioDe: h as typeof ajustes.silencioDe })}
                 />
-                <Apoio>%</Apoio>
-              </View>
-            </Linha>
-          </View>
-        </Grupo>
-      </Secao>
+                <SeletorDeHora
+                  rotulo={t('ajustes.silencio_ate')}
+                  valor={ajustes.silencioAte}
+                  aoMudar={(h) => mudarAjustes({ silencioAte: h as typeof ajustes.silencioAte })}
+                />
+              </Linha>
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Apoio>{t('ajustes.adiar')}</Apoio>
+                  <Apoio cor={cores.texto3}>{t('ajustes.adiar_desc')}</Apoio>
+                </View>
+                <CampoNumero
+                  rotulo={t('ajustes.minutos')}
+                  valor={ajustes.adiarMinutos}
+                  aoConfirmar={(n) => mudarAjustes({ adiarMinutos: Math.max(0, Math.min(60, n)) })}
+                />
+              </Linha>
+            </View>
 
-      {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com o
-          número no título, o que dava a um contador o mesmo peso de "Escola". */}
-      {/* A zona de risco fica no FIM e sozinha.
-          
-          Não é decoração: um botão que apaga tudo no meio da tela é apertado
-          sem querer enquanto se procura outra coisa. Ele fica depois de tudo,
-          onde só chega quem foi atrás dele. */}
-      <Secao titulo={t('ajustes.zona_de_risco')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            <Apoio cor={cores.texto3}>{t('ajustes.apagar_tudo_desc')}</Apoio>
-            <Botao
-              texto={t('ajustes.apagar_tudo')}
-              variante="discreto"
-              aoTocar={() => setConfirmandoTudo(true)}
+            {/* O estado do alarme fica AQUI, ao lado do som e do adiar, porque
+                é diagnóstico: sem ele, alarme não autorizado é indistinguível
+                de alarme quebrado — foi assim que este defeito passou
+                despercebido. */}
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.alarme_permissao')}</Apoio>
+                <Apoio cor={estadoAlarme === 'autorizado' ? cores.ok : cores.aviso}>
+                  {t(`ajustes.alarme_${estadoAlarme.replace(/-/g, '_')}` as ChaveI18n)}
+                </Apoio>
+              </Linha>
+              {estadoAlarme === 'nao-perguntado' ? (
+                <Botao
+                  texto={t('ajustes.alarme_pedir')}
+                  variante="vazado"
+                  aoTocar={() => void pedirPermissaoDeAlarme().then(() => estadoDoAlarme().then(setEstadoAlarme))}
+                />
+              ) : null}
+            </View>
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
+
+      {/* ————— Escola ————— */}
+      <Modal
+        visible={categoria === 'escola'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.escola')}>
+          <Grupo>
+            <LinhaDeMenu
+              titulo={t('ajustes.importar_calendario')}
+              aoTocar={() => setImportando(true)}
             />
-          </View>
-        </Grupo>
-      </Secao>
+            <LinhaDeMenu
+              titulo={t('ajustes.periodo_letivo')}
+              valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
+              aoTocar={() => setPeriodoAberto(true)}
+            />
+            <View style={estilo.bloco}>
+              {/* Um rótulo só. O campo trazia o próprio ("Porcentagem") empilhado
+                  acima do número, ao lado de "Limite de faltas" à esquerda — dois
+                  rótulos desalinhados para uma coisa só, e a linha parecia
+                  quebrada. O sufixo % diz o que o rótulo repetia. */}
+              <Linha entre>
+                <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
+                  <CampoNumero
+                    valor={ajustes.limiteFaltasPadrao}
+                    aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+                  />
+                  <Apoio>%</Apoio>
+                </View>
+              </Linha>
+            </View>
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
+
+      {/* ————— Sobre ————— */}
+      {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com
+          o número no título, o que dava a um contador o mesmo peso de
+          "Escola". */}
+      <Modal
+        visible={categoria === 'sobre'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.sobre')}>
+          <Grupo>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.versao')}</Apoio>
+                <Apoio cor={cores.texto3}>{VERSAO}</Apoio>
+              </Linha>
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.sincronizacao')}</Apoio>
+                <Apoio cor={cores.texto3}>{textoDaNuvem}</Apoio>
+              </Linha>
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.vidro')}</Apoio>
+                <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.texto3}>
+                  {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
+                </Apoio>
+              </Linha>
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.ia_local')}</Apoio>
+                <Apoio cor={estadoIa === 'pronto' ? cores.ok : cores.aviso}>
+                  {t(`resgate.ia_${estadoIa === 'pronto' ? 'pronta' : estadoIa.replace(/-/g, '_')}` as ChaveI18n)}
+                </Apoio>
+              </Linha>
+            </View>
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <Apoio>{t('ajustes.avisos_armados')}</Apoio>
+                <Apoio cor={cores.texto3}>{String(plano.agendar.length)}</Apoio>
+              </Linha>
+              {plano.cortados > 0 ? (
+                <Apoio cor={cores.aviso}>{t('ajustes.avisos_cortados', { n: plano.cortados })}</Apoio>
+              ) : null}
+              {plano.semData.length > 0 ? (
+                <Apoio cor={cores.texto3}>
+                  {t('ajustes.sem_data')}: {plano.semData.length}
+                </Apoio>
+              ) : null}
+            </View>
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
+
+      {/* ————— Dados (zona de risco) ————— */}
+      <Modal
+        visible={categoria === 'dados'}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setCategoria(null)}
+      >
+        <Tela titulo={t('ajustes.zona_de_risco')}>
+          <Grupo>
+            <View style={estilo.bloco}>
+              <Apoio cor={cores.texto3}>{t('ajustes.apagar_tudo_desc')}</Apoio>
+              <Botao
+                texto={t('ajustes.apagar_tudo')}
+                variante="discreto"
+                aoTocar={() => setConfirmandoTudo(true)}
+              />
+            </View>
+          </Grupo>
+          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
+        </Tela>
+      </Modal>
 
       <Modal
         visible={confirmandoTudo}
@@ -647,6 +1029,7 @@ export function Ajustes({ aoEscanearHorario }: {
                   for (const r of vivosDe(base, tabela)) remover(tabela, r.id)
                 }
                 setConfirmandoTudo(false)
+                setCategoria(null)
               }}
             />
             <Botao
@@ -657,53 +1040,6 @@ export function Ajustes({ aoEscanearHorario }: {
           </View>
         </Pressable>
       </Modal>
-
-      <Secao titulo={t('ajustes.sobre')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.versao')}</Apoio>
-              <Apoio cor={cores.texto3}>{VERSAO}</Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.sincronizacao')}</Apoio>
-              <Apoio cor={cores.texto3}>{textoDaNuvem}</Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.vidro')}</Apoio>
-              <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.texto3}>
-                {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
-              </Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.ia_local')}</Apoio>
-              <Apoio cor={estadoIa === 'pronto' ? cores.ok : cores.aviso}>
-                {t(`resgate.ia_${estadoIa === 'pronto' ? 'pronta' : estadoIa.replace(/-/g, '_')}` as ChaveI18n)}
-              </Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.avisos_armados')}</Apoio>
-              <Apoio cor={cores.texto3}>{String(plano.agendar.length)}</Apoio>
-            </Linha>
-            {plano.cortados > 0 ? (
-              <Apoio cor={cores.aviso}>{t('ajustes.avisos_cortados', { n: plano.cortados })}</Apoio>
-            ) : null}
-            {plano.semData.length > 0 ? (
-              <Apoio cor={cores.texto3}>
-                {t('ajustes.sem_data')}: {plano.semData.length}
-              </Apoio>
-            ) : null}
-          </View>
-        </Grupo>
-      </Secao>
 
       <Modal
         visible={tipoAberto !== null}
@@ -901,6 +1237,16 @@ const estilo = StyleSheet.create({
     paddingVertical: espaco.s,
     color: cores.texto,
     fontSize: fonte.corpo.fontSize,
+  },
+  // O selo de 30pt das linhas de categoria da raiz — o mesmo tamanho do ícone
+  // de app dentro de uma linha de Ajustes do iOS.
+  selo: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: cores.cartaoAlto,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })
 
