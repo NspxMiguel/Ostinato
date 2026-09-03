@@ -63,3 +63,15 @@ test('hora escrita de varios jeitos', () => {
   assert.equal(horasDaCelula('07:25'), null, 'uma hora so nao define aula')
   assert.equal(horasDaCelula('LPO'), null)
 })
+
+import { tabelaDoTexto } from '../resgate.ts'
+
+test('texto colado com | volta a ser tabela', () => {
+  const t = tabelaDoTexto('- | SEG | TER\n07:25 - 08:00 | ERE | ALE')
+  assert.deepEqual(t, [['', 'SEG', 'TER'], ['07:25 - 08:00', 'ERE', 'ALE']])
+  assert.equal(aulasDaTabela(t).length, 2)
+})
+
+test('frase solta com uma barra NAO vira tabela', () => {
+  assert.deepEqual(tabelaDoTexto('prova de mat | sexta'), [])
+})

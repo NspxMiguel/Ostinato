@@ -21,6 +21,7 @@ import {
   horaValida,
   instrucoesDeFrase,
   tabelaComoTexto,
+  tabelaDoTexto,
   instrucoesDeGrade,
   instrucoesDeTarefa,
   limparResposta,
@@ -96,8 +97,11 @@ export async function analisarGrade(
   // uma linha de dias, uma coluna de horas, e o resto são células. O modelo
   // estava compensando uma entrada que eu tinha quebrado — e para o caminho
   // normal ele é pior: mais lento, e capaz de inventar aula que não existe.
-  if (tabela.length > 1) {
-    const daTabela = aulasDaTabela(tabela)
+  // Texto colado que JÁ é grade conta como tabela: é o mesmo dado, e mandar
+  // para o modelo o que a regra resolve na hora é só desperdício com risco.
+  const grade = tabela.length > 1 ? tabela : tabelaDoTexto(texto)
+  if (grade.length > 1) {
+    const daTabela = aulasDaTabela(grade)
     if (daTabela.length > 0) {
       return {
         resultado: {

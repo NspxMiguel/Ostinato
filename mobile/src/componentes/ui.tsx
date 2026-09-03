@@ -229,7 +229,16 @@ export function Cartao({
       ]}
     >
       <LinearGradient
-        colors={alerta ? [`${alerta}22`, `${alerta}0A`] : [cores.cartaoDe, cores.cartaoAte]}
+        // Dentro do `Deslizar` (`semCantos`) quem pinta o alerta é a LINHA, e o
+        // cartão fica transparente: pintar os dois deixava a faixa do círculo
+        // preta e o cartão vermelho, dentro da mesma moldura.
+        colors={
+          alerta && !semCantos
+            ? [`${alerta}22`, `${alerta}0A`]
+            : semCantos
+              ? ['transparent', 'transparent']
+              : [cores.cartaoDe, cores.cartaoAte]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 0.6, y: 1 }}
         style={{ padding, flexDirection: 'row', gap: espaco.m }}

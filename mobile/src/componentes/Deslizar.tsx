@@ -165,7 +165,10 @@ export function Deslizar({
       // com o texto boiando dentro. O mesmo motivo da folha da roda, que já
       // apanhou disso: superfície translúcida só funciona sobre o que ela foi
       // feita para cobrir.
-      childrenContainerStyle={e.conteudo}
+      childrenContainerStyle={[
+        e.conteudo,
+        destaque ? { backgroundColor: cores.fundoAlerta } : null,
+      ]}
     >
       {children}
     </ReanimatedSwipeable>

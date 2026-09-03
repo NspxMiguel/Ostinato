@@ -228,3 +228,24 @@ export function horaValida(h: unknown): boolean {
 export function diaDoModeloParaApp(dia: number): number {
   return dia % 7
 }
+
+/**
+ * O caminho de volta: texto com `|` vira tabela outra vez.
+ *
+ * Existe por um defeito que só apareceu ao TESTAR o colar no simulador. A
+ * grade que a foto produz é mostrada no campo como `07:25 | ERE | ALE`, e a
+ * pessoa pode colar exatamente isso — mas a regra fechada só era consultada
+ * quando a grade vinha no vetor da leitura. Texto colado, ainda que fosse a
+ * mesma grade, ia direto para o modelo: mais lento, e capaz de inventar.
+ *
+ * Duas colunas no mínimo, senão qualquer frase com uma barra viraria tabela.
+ */
+export function tabelaDoTexto(texto: string): string[][] {
+  const linhas = texto
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.includes('|'))
+  if (linhas.length < 2) return []
+  const tabela = linhas.map((l) => l.split('|').map((c) => (c.trim() === '-' ? '' : c.trim())))
+  return tabela.every((l) => l.length >= 2) ? tabela : []
+}

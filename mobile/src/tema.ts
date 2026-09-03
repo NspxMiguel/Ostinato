@@ -31,6 +31,16 @@ export const paletaEscura = {
    * tela vaza através da folha.
    */
   fundoElevado: '#1C1C1E',
+  /**
+   * Fundo da linha em alerta, OPACO.
+   *
+   * É o vermelho de atraso a 8% sobre preto, já resolvido em um valor único —
+   * e não uma camada translúcida. Dentro do arrastar a linha precisa ser opaca
+   * para não deixar o painel da ação atravessar, e duas superfícies diferentes
+   * ali (preto no círculo, vermelho no cartão) desenham uma faixa preta dentro
+   * da moldura vermelha, que foi o que ele viu.
+   */
+  fundoAlerta: '#1A0908',
   borda: 'rgba(255,255,255,0.09)',
   texto: '#FFFFFF',
   textoFraco: 'rgba(255,255,255,0.62)',
@@ -68,6 +78,7 @@ export const paletaClara = {
   cartao: 'rgba(0,0,0,0.045)',
   cartaoAlto: 'rgba(0,0,0,0.07)',
   fundoElevado: '#F2F2F7',
+  fundoAlerta: '#FFF1F0',
   borda: 'rgba(0,0,0,0.09)',
   texto: '#000000',
   textoFraco: 'rgba(0,0,0,0.62)',
