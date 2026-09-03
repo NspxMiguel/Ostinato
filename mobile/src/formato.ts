@@ -8,6 +8,9 @@ import { dataDe, diferencaEmDias, instante, somarDias } from '../../nucleo/tempo
 
 type T = ReturnType<typeof criarT>
 
+/** O fim do dia que o app usa quando ninguém escolheu hora. */
+const FIM_DO_DIA = '23:59'
+
 /**
  * O iPhone está em 12h ou 24h?
  *
@@ -111,6 +114,18 @@ export function quandoPorExtenso(
   t: T,
   idioma: Idioma,
 ): string {
+  // 23:59 NÃO é hora: é o app dizendo "algum momento daquele dia".
+  //
+  // Ele reclamou em 31/08/2026: *"pq tem horario? eu nem cadastrei horario"*.
+  // Estava certo. Quem anota "tarefa para amanhã" não escolheu 23:59 — esse é
+  // o fim do dia que o app usa como padrão. Imprimir isso como "amanhã às
+  // 11:59 PM" faz o app parecer que sabe algo que ninguém disse, e enche a
+  // linha com um número que não quer dizer nada.
+  //
+  // Quem marca de propósito uma entrega às 23:59 vê "amanhã" — e é o certo:
+  // para essa pessoa a informação também é o DIA.
+  if (hora === FIM_DO_DIA) return dataPorExtenso(iso, hojeISO, t, idioma)
+
   // A hora passa pelo formatador do APARELHO, como em todo o resto.
   //
   // Ela chegava crua e ia direto para a tela: o Hoje mostrava a aula às

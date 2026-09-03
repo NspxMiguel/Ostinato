@@ -130,6 +130,15 @@ export function Deslizar({
         }
       }}
       containerStyle={e.recipiente}
+      // O conteúdo que desliza precisa ser OPACO.
+      //
+      // É o defeito do print verde: o cartão é um degradê com alfa, desenhado
+      // para assentar no preto da tela. Deslizando por cima do painel da ação,
+      // a cor dela atravessa o cartão inteiro — e o que se vê é um bloco verde
+      // com o texto boiando dentro. O mesmo motivo da folha da roda, que já
+      // apanhou disso: superfície translúcida só funciona sobre o que ela foi
+      // feita para cobrir.
+      childrenContainerStyle={e.conteudo}
     >
       {children}
     </ReanimatedSwipeable>
@@ -141,6 +150,7 @@ const e = StyleSheet.create({
   // isso o painel da ação é um retângulo vermelho com cantos próprios,
   // flutuando por cima do cartão em vez de viver dentro da linha.
   recipiente: { borderRadius: raio.cartao, overflow: 'hidden' },
+  conteudo: { backgroundColor: cores.fundo },
   acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g },
   rotulo: { color: cores.fundo, fontWeight: '600', fontSize: 15 },
 })
