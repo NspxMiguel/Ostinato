@@ -31,6 +31,7 @@ import {
   vale,
 } from '../../nucleo/resgate.ts'
 import { aulasDaTabela } from '../../nucleo/gradeDaTabela.ts'
+import { NOTA_MINIMA, qualidadeDaGrade } from '../../nucleo/qualidadeDaGrade.ts'
 import { estadoDoModelo, lerGradeComModelo, perguntar } from '../modules/modelo/src/index.ts'
 
 /** Se a IA do aparelho está pronta agora. */
@@ -102,7 +103,17 @@ export async function analisarGrade(
   const grade = tabela.length > 1 ? tabela : tabelaDoTexto(texto)
   if (grade.length > 1) {
     const daTabela = aulasDaTabela(grade)
-    if (daTabela.length > 0) {
+    // A regra só encerra quando o resultado dela se sustenta.
+    //
+    // Ele apontou o buraco: *"mas tem q passar pela ia, vai q o cara escreve na
+    // mao"*. Grade escrita à mão, ou em prosa, produz uma tabela torta que a
+    // regra às vezes lê PELA METADE — e meia leitura encerrando o caminho é
+    // pior que nenhuma, porque nunca chega no modelo, que é quem sabe ler
+    // texto solto.
+    //
+    // Então a qualidade decide: boa, a regra ganha e é instantânea; ruim, o
+    // modelo tenta, e fica quem ler melhor.
+    if (daTabela.length > 0 && (qualidadeDaGrade(daTabela).nota >= NOTA_MINIMA || !temModelo())) {
       return {
         resultado: {
           aulas: daTabela,
@@ -162,8 +173,25 @@ export async function analisarGrade(
   // O modelo pode inventar, e a peneira acima corta o que não é hora nem dia.
   // Se sobrou menos do que o algoritmo já tinha lido, o algoritmo fica: o
   // objetivo é ler MAIS, não trocar de método por trocar.
-  if (aulas.length < doAlgoritmo.aulas.length) {
-    return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
+  // O modelo compete com o MELHOR que veio antes — a regra ou o parser antigo —
+  // e vence por qualidade, não por quantidade: quinze aulas erradas não valem
+  // mais que cinco certas.
+  const daRegra = grade.length > 1 ? aulasDaTabela(grade) : []
+  const anterior = daRegra.length > doAlgoritmo.aulas.length ? daRegra : doAlgoritmo.aulas
+  if (qualidadeDaGrade(aulas).nota <= qualidadeDaGrade(anterior).nota) {
+    return {
+      resultado: daRegra.length > doAlgoritmo.aulas.length
+        ? {
+            aulas: daRegra,
+            materias: [...new Set(daRegra.map((a) => a.materia))],
+            ignoradas: [],
+            formato: 'tabela',
+          }
+        : doAlgoritmo,
+      texto,
+      usou: false,
+      aviso: null,
+    }
   }
 
   const materias = [...new Set(aulas.map((a) => a.materia))]
