@@ -29,3 +29,23 @@ export async function lerTexto(uri: string): Promise<TextoLido> {
   if (!modulo) throw new Error('leitura indisponível nesta plataforma')
   return (await modulo.lerTexto(uri)) as TextoLido
 }
+
+/**
+ * Lê a imagem como TABELA: linhas de células, como o Vision as viu.
+ *
+ * Vazio quando o iPhone é anterior ao iOS 26 ou quando não há tabela nenhuma na
+ * foto — e aí quem chama volta para `lerTexto`, que continua existindo.
+ *
+ * A diferença em relação a `lerTexto` é a que ele apontou: aqui a grade vem de
+ * quem OLHOU a imagem, e não de uma heurística minha reagrupando pedaços de
+ * texto por posição vertical. Ver `ios/LeituraModule.swift`.
+ */
+export async function lerTabela(uri: string): Promise<string[][]> {
+  if (!modulo) return []
+  try {
+    const r = (await modulo.lerTabela(uri)) as string[][]
+    return Array.isArray(r) ? r : []
+  } catch {
+    return []
+  }
+}

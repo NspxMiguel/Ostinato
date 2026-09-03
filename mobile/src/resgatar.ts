@@ -20,6 +20,7 @@ import {
   diaValido,
   horaValida,
   instrucoesDeFrase,
+  tabelaComoTexto,
   instrucoesDeGrade,
   instrucoesDeTarefa,
   limparResposta,
@@ -83,7 +84,11 @@ export type Analise = {
  * `confianca` é 1 quando o texto não veio de foto — sem OCR não há o que medir,
  * e a regra de "nenhuma aula lida" cobre esse caso sozinha.
  */
-export async function analisarGrade(texto: string, _confianca = 1): Promise<Analise> {
+export async function analisarGrade(
+  texto: string,
+  _confianca = 1,
+  tabela: readonly (readonly string[])[] = [],
+): Promise<Analise> {
   const doAlgoritmo = importarGrade(texto)
   if (texto.trim().length < 12) {
     return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
@@ -101,7 +106,13 @@ export async function analisarGrade(texto: string, _confianca = 1): Promise<Anal
   // formato que eu previ e erra todo o resto — e quem usa não tem como saber em
   // qual dos dois caiu. Condicionar a IA a "o algoritmo falhou de um jeito
   // específico" era eu decidindo por ele, e ele já disse duas vezes que não.
-  const doModelo = await lerGradeComModelo(texto)
+  // A TABELA vai na frente do texto solto.
+  //
+  // É o conserto do que ele reclamou: o modelo recebia o texto já achatado, com
+  // a grade perdida, e nenhum modelo recupera uma tabela que virou linha corrida.
+  // Quando o Vision devolve a tabela, é ela que vai — com as colunas marcadas.
+  const entrada = tabela.length > 1 ? tabelaComoTexto(tabela) : texto
+  const doModelo = await lerGradeComModelo(entrada)
   if (!doModelo || doModelo.length === 0) {
     return { resultado: doAlgoritmo, texto, usou: false, aviso: null }
   }

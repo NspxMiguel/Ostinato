@@ -16,6 +16,64 @@ import UIKit
  */
 public class LeituraModule: Module {
   public func definition() -> ModuleDefinition {
+    /**
+     Le a imagem como DOCUMENTO, devolvendo a tabela em linhas e celulas.
+
+     Isto existe por causa de uma reclamacao dele em 31/08/2026: *"escanear com
+     ia ta legal nao pae, ainda pego tudo errado. tem q ser uma ia q realmente
+     ve, a da apple n ve, tem q ver nao so tentar traduzir oq o coiso do iphone
+     ja viu"*.
+
+     Ele esta certo no diagnostico e o defeito era meu. O `VNRecognizeTextRequest`
+     devolve pedacos soltos com posicao, e eu os achatava em linhas separadas por
+     TAB usando uma tolerancia vertical fixa. Horario escolar e uma GRADE: com
+     celula mesclada, altura de linha irregular e coluna estreita, essa tolerancia
+     erra — e o que chegava ao modelo ja era sopa. Nao adiantava o modelo ser bom.
+
+     O `RecognizeDocumentsRequest` do iOS 26 detecta a tabela e devolve
+     `rows: [[Cell]]`. Quem enxerga a grade e o Vision, que e o que ele quis
+     dizer com "uma ia q realmente ve" — a estrutura vem de quem olhou o pixel,
+     e nao de uma heuristica minha em cima do texto ja perdido.
+     */
+    AsyncFunction("lerTabela") { (uri: String, promise: Promise) in
+      guard #available(iOS 26.0, *) else {
+        promise.resolve([[String]]())
+        return
+      }
+      Task {
+        do {
+          guard let url = URL(string: uri), let dados = try? Data(contentsOf: url),
+            let imagem = UIImage(data: dados), let cg = imagem.cgImage
+          else {
+            promise.resolve([[String]]())
+            return
+          }
+          var pedido = RecognizeDocumentsRequest()
+          pedido.textRecognitionOptions.recognitionLanguages = [
+            Locale.Language(identifier: "pt-BR"), Locale.Language(identifier: "en-US"),
+          ]
+          let documentos = try await pedido.perform(on: cg)
+
+          // A MAIOR tabela da pagina. Uma foto de horario costuma trazer o
+          // quadro e, as vezes, um bloco de legenda que tambem vira tabela.
+          var melhor: [[String]] = []
+          for doc in documentos {
+            for tabela in doc.document.tables {
+              let linhas = tabela.rows.map { linha in
+                linha.map { $0.content.text.transcript.trimmingCharacters(in: .whitespacesAndNewlines) }
+              }
+              if linhas.flatMap({ $0 }).count > melhor.flatMap({ $0 }).count { melhor = linhas }
+            }
+          }
+          promise.resolve(melhor)
+        } catch {
+          // Falhar aqui nao pode derrubar a importacao: quem chama volta para o
+          // caminho antigo, que le o texto solto.
+          promise.resolve([[String]]())
+        }
+      }
+    }
+
     Name("Leitura")
 
     AsyncFunction("lerTexto") { (uri: String, promise: Promise) in

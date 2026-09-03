@@ -95,3 +95,16 @@ test('hora tem que ser HH:MM de 24h', () => {
   assert.equal(horaValida('08:00'), true)
   assert.equal(horaValida('23:59'), true)
 })
+
+import { tabelaComoTexto } from '../resgate.ts'
+
+test('celula vazia vira "-" para as colunas nao desalinharem', () => {
+  // O erro mais caro possivel num horario e a aula certa no dia errado. Uma
+  // linha com buraco no meio — o intervalo, o dia sem aula — encurtaria e
+  // deslocaria tudo a partir dali.
+  const t = [
+    ['', 'Seg', 'Ter', 'Qua'],
+    ['07:00', 'MAT', '', 'FIS'],
+  ]
+  assert.equal(tabelaComoTexto(t), '- | Seg | Ter | Qua\n07:00 | MAT | - | FIS')
+})

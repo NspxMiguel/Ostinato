@@ -123,6 +123,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         // A confiança do OCR fica guardada para a análise: é um dos sinais que
         // decidem chamar a IA, e ela só existe quando o texto veio de foto.
         setConfiancaDaFoto(r.confianca)
+        setTabelaDaFoto(r.tabela)
         setUsouIa(false)
         setAvisoIa(null)
       }
@@ -135,6 +136,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const [analisando, setAnalisando] = useState(false)
   /** 1 quando o texto não veio de foto: sem OCR não há confiança para medir. */
   const [confiancaDaFoto, setConfiancaDaFoto] = useState(1)
+  /** A grade que o Vision viu na foto, quando viu. */
+  const [tabelaDaFoto, setTabelaDaFoto] = useState<string[][]>([])
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
 
   // O período letivo é OPCIONAL. Ele serve para uma coisa só — saber quais dias
@@ -291,7 +294,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
       // A IA entra AQUI, e não na hora da foto: assim o texto colado à mão
       // ganha o mesmo resgate, e a espera cai num momento em que a pessoa já
       // está esperando resposta.
-      const a = await analisarGrade(textoColado, confiancaDaFoto)
+      const a = await analisarGrade(textoColado, confiancaDaFoto, tabelaDaFoto)
       if (a.usou) setTextoColado(a.texto)
       setUsouIa(a.usou)
       setAvisoIa(a.aviso)

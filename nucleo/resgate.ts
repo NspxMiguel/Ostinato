@@ -72,10 +72,28 @@ export function precisaDeResgateDeTarefa(sinais: { confianca: number; texto: str
  * Modelo pequeno obedece proibição melhor do que obedece descrição, e a
  * proibição que importa é uma só: não inventar o que não estava na imagem.
  */
+/**
+ * A grade como o Vision a viu, em texto que preserva a forma.
+ *
+ * Uma célula por coluna, separada por ` | `, uma linha por linha do quadro. É
+ * feio de ler e é exatamente o ponto: o modelo recebe a POSIÇÃO de cada coisa,
+ * que é o que se perdia quando eu entregava o texto achatado.
+ *
+ * Célula vazia vira `-` em vez de sumir. Sem isso, uma linha com buraco no meio
+ * — o intervalo, o dia sem aula — encurta e as colunas desalinham a partir dali,
+ * que é o erro mais caro possível num horário: a aula certa no dia errado.
+ */
+export function tabelaComoTexto(tabela: readonly (readonly string[])[]): string {
+  return tabela
+    .map((linha) => linha.map((c) => (c.trim() === '' ? '-' : c.trim())).join(' | '))
+    .join('\n')
+}
+
 export function instrucoesDeGrade(): string {
   return [
-    'Você conserta texto de OCR de um horário escolar fotografado.',
-    'A foto tinha letra de mão ou rasura, então o texto chegou quebrado.',
+    'Você lê um horário escolar que já foi reconhecido como TABELA.',
+    'Cada linha abaixo é uma linha do quadro; as colunas vêm separadas por " | " e "-" é célula vazia.',
+    'Normalmente a primeira linha é o cabeçalho com os dias, e a primeira coluna é o horário.',
     'Devolva SOMENTE a tabela corrigida, uma aula por linha, colunas separadas por TAB:',
     'DIA<TAB>HH:MM<TAB>HH:MM<TAB>MATÉRIA',
     'Regras absolutas:',

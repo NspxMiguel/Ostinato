@@ -5,10 +5,17 @@
 // permissão e duas maneiras de falhar.
 
 import * as ImagePicker from 'expo-image-picker'
-import { lerTexto, temLeitura } from '../modules/leitura/src/index.ts'
+import { lerTabela, lerTexto, temLeitura } from '../modules/leitura/src/index.ts'
 
 export type Papel =
-  | { tipo: 'lido'; texto: string; linhas: number; confianca: number }
+  | {
+      tipo: 'lido'
+      texto: string
+      linhas: number
+      confianca: number
+      /** A grade, quando o Vision achou uma tabela na foto. Vazia quando não. */
+      tabela: string[][]
+    }
   | { tipo: 'cancelado' }
   | { tipo: 'indisponivel' }
   | { tipo: 'sem-permissao' }
@@ -41,7 +48,16 @@ export async function lerPapel(de: 'camera' | 'galeria' = 'camera'): Promise<Pap
   if (escolha.canceled || !uri) return { tipo: 'cancelado' }
 
   const r = await lerTexto(uri)
-  return { tipo: 'lido', texto: r.texto, linhas: r.linhas, confianca: r.confianca ?? 1 }
+  // As duas leituras, sempre. A tabela é a boa quando existe; o texto solto é a
+  // rede embaixo dela, e custa pouco porque a imagem já está decodificada.
+  const tabela = await lerTabela(uri)
+  return {
+    tipo: 'lido',
+    texto: r.texto,
+    linhas: r.linhas,
+    confianca: r.confianca ?? 1,
+    tabela,
+  }
 }
 
 export { temLeitura }
