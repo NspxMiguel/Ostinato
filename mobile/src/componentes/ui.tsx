@@ -192,6 +192,7 @@ export function Cartao({
   aoTocar,
   faixa,
   alerta,
+  semCantos,
   padding = 16,
 }: {
   children: ReactNode
@@ -207,10 +208,26 @@ export function Cartao({
    * é chamar atenção, é esperar que a pessoa repare.
    */
   alerta?: string
+  /**
+   * Sem cantos próprios: quem arredonda é quem contém.
+   *
+   * Existe para o cartão dentro do `Deslizar`. Lá o recipiente já recorta a
+   * linha inteira, e o cartão com raio próprio desenhava uma SEGUNDA forma
+   * arredondada por dentro da primeira — o degrau que ele viu e chamou de
+   * "borda sem continuidade".
+   */
+  semCantos?: boolean
   padding?: number
 }) {
   return (
-    <Toque aoTocar={aoTocar} estilo={[e.cartao, alerta ? { borderWidth: 1, borderColor: alerta } : null]}>
+    <Toque
+      aoTocar={aoTocar}
+      estilo={[
+        e.cartao,
+        semCantos ? { borderRadius: 0, borderWidth: 0 } : null,
+        alerta ? { borderWidth: semCantos ? 0 : 1, borderColor: alerta } : null,
+      ]}
+    >
       <LinearGradient
         colors={alerta ? [`${alerta}22`, `${alerta}0A`] : [cores.cartaoDe, cores.cartaoAte]}
         start={{ x: 0, y: 0 }}

@@ -144,6 +144,7 @@ export function Hoje({
                   })
                 }
                 aoRemover={() => guardar('compromissos', { id: item.compromisso.id, removido: true })}
+                destaque={item.atrasado ? cores.atrasado : undefined}
                 rotuloConcluir={t('notificacao.acao.feito')}
                 rotuloRemover={t('acao.apagar')}
               >
@@ -153,6 +154,7 @@ export function Hoje({
                 // da matéria continua: ela diz DE QUE é a tarefa, e essa
                 // informação não some por a tarefa estar atrasada.
                 alerta={item.atrasado ? cores.atrasado : undefined}
+                semCantos
                 aoTocar={() => aoAbrirCompromisso(item.compromisso.id)}
               >
                 <Linha quebra>

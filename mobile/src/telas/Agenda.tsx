@@ -228,6 +228,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                   aoConcluir={() => alternarConcluido(c)}
                   aoRemover={() => remover(c)}
                   concluido={c.concluido}
+                  destaque={item.atrasado ? cores.atrasado : undefined}
                   rotuloConcluir={c.concluido ? t('agenda.reabrir') : t('notificacao.acao.feito')}
                   rotuloRemover={t('ajustes.remover')}
                 >
@@ -242,6 +243,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                     <Cartao
                       faixa={materia?.cor}
                       alerta={item.atrasado ? cores.atrasado : undefined}
+                semCantos
                       aoTocar={() => aoAbrirCompromisso(c.id)}
                     >
                       <View style={c.concluido ? e.concluido : undefined}>
@@ -353,7 +355,16 @@ const e = StyleSheet.create({
   pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
   // O check fica FORA do texto, à esquerda, alinhado ao topo: assim ele não
   // desce junto quando o título quebra em duas linhas.
-  item: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: espaco.m,
+    // Recuo à esquerda: o recipiente do `Deslizar` recorta a linha com canto
+    // arredondado, e o círculo encostado na borda entrava no arco e saía
+    // cortado — foi o que ele apontou na print.
+    paddingLeft: espaco.s,
+    paddingVertical: espaco.xs,
+  },
   cartaoFlex: { flex: 1 },
   circulo: {
     width: 24,

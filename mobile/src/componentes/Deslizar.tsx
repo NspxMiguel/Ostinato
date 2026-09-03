@@ -22,7 +22,7 @@
 
 import type { ReactNode } from 'react'
 import { useRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
@@ -46,19 +46,30 @@ function Acao({
   texto,
   cor,
   lado,
+  aoTocar,
 }: {
   progresso: SharedValue<number>
   texto: string
   cor: string
   lado: 'esquerda' | 'direita'
+  aoTocar: () => void
 }) {
   const estilo = useAnimatedStyle(() => ({
-    opacity: Math.min(1, progresso.value),
-    transform: [{ scale: 0.85 + Math.min(1, progresso.value) * 0.15 }],
+    // Só a ESCALA acompanha o dedo. A opacidade não entra: com ela, o rótulo
+    // ficava cinza-escuro sobre verde no meio do gesto e não dava para ler —
+    // que foi exatamente o que ele viu.
+    transform: [{ scale: 0.9 + Math.min(1, progresso.value) * 0.1 }],
   }))
 
   return (
-    <View
+    // É um BOTÃO, e essa é a correção que importa.
+    //
+    // Ele deslizou, soltou, viu "Feito" e tocou: nada aconteceu, porque eu tinha
+    // desenhado um `View`. No Mail e nos Lembretes o arrasto curto REVELA o
+    // botão e o arrasto longo executa — as duas coisas valem. Só a segunda
+    // existia aqui, e quem para no meio do caminho fica com um painel decorativo.
+    <Pressable
+      onPress={aoTocar}
       style={[
         e.acao,
         { backgroundColor: cor, alignItems: lado === 'esquerda' ? 'flex-start' : 'flex-end' },
@@ -67,7 +78,7 @@ function Acao({
       <Animated.View style={estilo}>
         <Text style={e.rotulo}>{texto}</Text>
       </Animated.View>
-    </View>
+    </Pressable>
   )
 }
 
@@ -76,6 +87,7 @@ export function Deslizar({
   aoConcluir,
   aoRemover,
   concluido,
+  destaque,
   rotuloConcluir,
   rotuloRemover,
 }: {
@@ -83,6 +95,8 @@ export function Deslizar({
   aoConcluir: () => void
   aoRemover: () => void
   concluido?: boolean
+  /** Cor da borda da linha inteira — o vermelho de atrasado vem por aqui. */
+  destaque?: string
   rotuloConcluir: string
   rotuloRemover: string
 }) {
@@ -109,10 +123,23 @@ export function Deslizar({
           texto={rotuloConcluir}
           cor={concluido ? cores.textoFraco : cores.ok}
           lado="esquerda"
+          aoTocar={() => {
+            linha.current?.close()
+            aoConcluir()
+          }}
         />
       )}
       renderRightActions={(progresso) => (
-        <Acao progresso={progresso} texto={rotuloRemover} cor={cores.atrasado} lado="direita" />
+        <Acao
+          progresso={progresso}
+          texto={rotuloRemover}
+          cor={cores.atrasado}
+          lado="direita"
+          aoTocar={() => {
+            linha.current?.close()
+            aoRemover()
+          }}
+        />
       )}
       onSwipeableWillOpen={() => {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -129,7 +156,7 @@ export function Deslizar({
           aoRemover()
         }
       }}
-      containerStyle={e.recipiente}
+      containerStyle={[e.recipiente, destaque ? { borderWidth: 1, borderColor: destaque } : null]}
       // O conteúdo que desliza precisa ser OPACO.
       //
       // É o defeito do print verde: o cartão é um degradê com alfa, desenhado
@@ -152,5 +179,8 @@ const e = StyleSheet.create({
   recipiente: { borderRadius: raio.cartao, overflow: 'hidden' },
   conteudo: { backgroundColor: cores.fundo },
   acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g },
-  rotulo: { color: cores.fundo, fontWeight: '600', fontSize: 15 },
+  // Branco, e não a cor de fundo. Preto sobre o vermelho de atraso é ilegível,
+  // e sobre o verde só funciona em opacidade total — que o gesto não garante.
+  // Branco lê nos dois, em qualquer ponto do arrasto.
+  rotulo: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
 })
