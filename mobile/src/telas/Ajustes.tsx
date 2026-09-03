@@ -258,7 +258,6 @@ export function Ajustes({ aoEscanearHorario }: {
   const [sons, setSons] = useState<string[]>(() => sonsImportados())
   const [importandoSom, setImportandoSom] = useState(false)
   const [confirmandoTudo, setConfirmandoTudo] = useState(false)
-  const quantosRegistros = TABELAS.reduce((n, tabela) => n + vivosDe(base, tabela).length, 0)
   const estadoIa = estadoDoModelo()
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
@@ -286,6 +285,11 @@ export function Ajustes({ aoEscanearHorario }: {
         ? t('ajustes.sync_nao_incluido')
         : t('ajustes.sync_indisponivel')
   const base = usarLoja((s) => s.base)
+  // Depois de `base`, e não antes: esta linha estava acima da declaração dele e
+  // derrubava o app na abertura. Com a barra de abas nativa os Ajustes montam
+  // junto com o Hoje, então o erro não esperava ninguém abrir a tela — ele
+  // acontecia no primeiro render do app inteiro.
+  const quantosRegistros = TABELAS.reduce((n, tabela) => n + vivosDe(base, tabela).length, 0)
   const remover = usarLoja((s) => s.remover)
   const ajustes = usarLoja((s) => s.ajustes)
   const mudarAjustes = usarLoja((s) => s.mudarAjustes)
@@ -917,7 +921,9 @@ function vivosDe(
   base: ReturnType<typeof usarLoja.getState>['base'],
   tabela: (typeof TABELAS)[number],
 ): Registro[] {
-  return vivos(base[tabela] as Record<string, Registro>)
+  // `?? {}` porque dado guardado por uma versão antiga do app pode não ter
+  // todas as coleções, e uma tela de ajustes não é lugar para derrubar o app.
+  return vivos((base[tabela] ?? {}) as Record<string, Registro>)
 }
 
 const SERIES = [
