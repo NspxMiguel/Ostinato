@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, StyleSheet, Switch, TextInput, View } from 'react-native'
+import { Modal, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import {
   IDIOMAS,
@@ -12,6 +12,7 @@ import {
 import { dataDe } from '../../../nucleo/tempo.ts'
 import { criarId } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
+import { vivos, type Registro } from '../../../nucleo/sync/registro.ts'
 import { planejar } from '../../../nucleo/planejador.ts'
 import { NIVEIS, avisosPorIntensidade, intensidadeDe } from '../../../nucleo/intensidade.ts'
 import {
@@ -256,6 +257,8 @@ export function Ajustes({ aoEscanearHorario }: {
   }, [])
   const [sons, setSons] = useState<string[]>(() => sonsImportados())
   const [importandoSom, setImportandoSom] = useState(false)
+  const [confirmandoTudo, setConfirmandoTudo] = useState(false)
+  const quantosRegistros = TABELAS.reduce((n, tabela) => n + vivosDe(base, tabela).length, 0)
   const estadoIa = estadoDoModelo()
   /** Qual tipo de compromisso está com as regras abertas na folha. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
@@ -283,6 +286,7 @@ export function Ajustes({ aoEscanearHorario }: {
         ? t('ajustes.sync_nao_incluido')
         : t('ajustes.sync_indisponivel')
   const base = usarLoja((s) => s.base)
+  const remover = usarLoja((s) => s.remover)
   const ajustes = usarLoja((s) => s.ajustes)
   const mudarAjustes = usarLoja((s) => s.mudarAjustes)
   const guardar = usarLoja((s) => s.guardar)
@@ -595,6 +599,57 @@ export function Ajustes({ aoEscanearHorario }: {
 
       {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com o
           número no título, o que dava a um contador o mesmo peso de "Escola". */}
+      {/* A zona de risco fica no FIM e sozinha.
+          
+          Não é decoração: um botão que apaga tudo no meio da tela é apertado
+          sem querer enquanto se procura outra coisa. Ele fica depois de tudo,
+          onde só chega quem foi atrás dele. */}
+      <Secao titulo={t('ajustes.zona_de_risco')}>
+        <Grupo>
+          <View style={estilo.bloco}>
+            <Apoio cor={cores.texto3}>{t('ajustes.apagar_tudo_desc')}</Apoio>
+            <Botao
+              texto={t('ajustes.apagar_tudo')}
+              variante="discreto"
+              aoTocar={() => setConfirmandoTudo(true)}
+            />
+          </View>
+        </Grupo>
+      </Secao>
+
+      <Modal
+        visible={confirmandoTudo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmandoTudo(false)}
+      >
+        <Pressable style={estilo.fundoDaConfirmacao} onPress={() => setConfirmandoTudo(false)}>
+          <View style={estilo.caixaDaConfirmacao}>
+            <Titulo>{t('ajustes.apagar_tudo_titulo')}</Titulo>
+            <Apoio>{t('ajustes.apagar_tudo_texto', { n: quantosRegistros })}</Apoio>
+            <Apoio cor={cores.aviso}>{t('ajustes.apagar_tudo_aviso')}</Apoio>
+            <Botao
+              texto={t('ajustes.apagar_tudo')}
+              aoTocar={() => {
+                // Remoção lógica em TODAS as coleções, para o apagar viajar no
+                // sync. Limpar o armazenamento aqui faria tudo voltar do outro
+                // aparelho na próxima sincronização — o oposto do que a pessoa
+                // acabou de pedir.
+                for (const tabela of TABELAS) {
+                  for (const r of vivosDe(base, tabela)) remover(tabela, r.id)
+                }
+                setConfirmandoTudo(false)
+              }}
+            />
+            <Botao
+              texto={t('acao.cancelar')}
+              variante="vazado"
+              aoTocar={() => setConfirmandoTudo(false)}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+
       <Secao titulo={t('ajustes.sobre')}>
         <Grupo>
           <View style={estilo.bloco}>
@@ -816,6 +871,18 @@ function LinhaAdicionarFeriado({ valor, aoMudar, aoAdicionar }: { valor: string;
 }
 
 const estilo = StyleSheet.create({
+  fundoDaConfirmacao: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    padding: espaco.g,
+  },
+  caixaDaConfirmacao: {
+    backgroundColor: cores.fundoElevado,
+    borderRadius: raio.g,
+    padding: espaco.g,
+    gap: espaco.m,
+  },
   // Linha de menu já traz o próprio respiro; quem não é linha de menu precisa do
   // mesmo, senão o conteúdo encosta na borda do grupo.
   bloco: { paddingHorizontal: espaco.g, paddingVertical: espaco.m, gap: espaco.s },
@@ -836,6 +903,23 @@ const estilo = StyleSheet.create({
  * tela: a comparação com o calendário acontece nesta forma, e traduzir aqui
  * faria a mesma escola casar em português e falhar em inglês.
  */
+/**
+ * Tudo o que o app guarda. Apagar tudo passa por aqui, e nada fica de fora.
+ *
+ * A ordem importa: o que DEPENDE vem antes do que é dependido. Apagar a matéria
+ * primeiro deixaria a aula órfã por um instante, e qualquer tela que
+ * renderizasse nesse meio-tempo procuraria uma matéria que já não existe.
+ */
+const TABELAS = ['compromissos', 'aulas', 'notas', 'faltas', 'materias', 'periodos'] as const
+
+/** Os registros vivos de uma coleção, sem o tipo de cada uma atrapalhar. */
+function vivosDe(
+  base: ReturnType<typeof usarLoja.getState>['base'],
+  tabela: (typeof TABELAS)[number],
+): Registro[] {
+  return vivos(base[tabela] as Record<string, Registro>)
+}
+
 const SERIES = [
   '1a serie',
   '2a serie',

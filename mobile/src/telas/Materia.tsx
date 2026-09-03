@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import type { Falta, Materia as TipoMateria, Nota } from '../../../nucleo/modelo.ts'
 import { normalizar } from '../../../nucleo/materias.ts'
@@ -64,6 +64,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
   const t = usarT()
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
+  const remover = usarLoja((e) => e.remover)
 
   const materia = base.materias[id]
   if (!materia || materia.removido) {
@@ -88,6 +89,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
   const [mostrarNota, setMostrarNota] = useState(false)
   const [mostrarFalta, setMostrarFalta] = useState(false)
   const [mostrarCarga, setMostrarCarga] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
 
   function salvarNota(v: { titulo: string; valor: string; maximo: string; peso: string }) {
     const valor = Number(v.valor)
@@ -114,7 +116,54 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
 
   return (
     <Tela>
-      <Botao texto={t('materia.fechar')} variante="discreto" aoTocar={aoFechar} />
+      <Linha entre>
+        <Botao texto={t('materia.fechar')} variante="discreto" aoTocar={aoFechar} />
+        <Botao
+          texto={t('materia.apagar')}
+          variante="discreto"
+          aoTocar={() => setConfirmando(true)}
+        />
+      </Linha>
+
+      <Modal
+        visible={confirmando}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmando(false)}
+      >
+        <Pressable style={estilo.fundoDaConfirmacao} onPress={() => setConfirmando(false)}>
+          <View style={estilo.caixaDaConfirmacao}>
+            <Titulo>{t('materia.apagar_titulo', { nome: materia.nome })}</Titulo>
+            <Apoio>
+              {t('materia.apagar_texto', {
+                aulas: aulas.length,
+                notas: notas.length,
+                faltas: faltas.length,
+              })}
+            </Apoio>
+            <Botao
+              texto={t('materia.apagar')}
+              aoTocar={() => {
+                // A matéria leva o que só existe por causa dela: aula, nota e
+                // falta. O COMPROMISSO fica, sem matéria — "prova de química"
+                // continua sendo uma prova que existe na sua semana, e apagá-la
+                // porque a matéria saiu seria destruir o que a pessoa anotou.
+                for (const a of aulas) remover('aulas', a.id)
+                for (const n of notas) remover('notas', n.id)
+                for (const f of faltas) remover('faltas', f.id)
+                remover('materias', materia.id)
+                setConfirmando(false)
+                aoFechar()
+              }}
+            />
+            <Botao
+              texto={t('acao.cancelar')}
+              variante="vazado"
+              aoTocar={() => setConfirmando(false)}
+            />
+          </View>
+        </Pressable>
+      </Modal>
       {/* Uma bolinha só. O `Cartao` já desenha a da matéria pela `faixa`, e
           havia outra escrita à mão logo ao lado do nome — duas bolinhas
           idênticas coladas, que é o tipo de coisa que ninguém reporta e todo
@@ -311,6 +360,18 @@ function FormFalta({
 }
 
 const estilo = StyleSheet.create({
+  fundoDaConfirmacao: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    padding: espaco.g,
+  },
+  caixaDaConfirmacao: {
+    backgroundColor: cores.fundoElevado,
+    borderRadius: raio.g,
+    padding: espaco.g,
+    gap: espaco.m,
+  },
   campo: {
     backgroundColor: cores.cartaoAlto,
     borderRadius: raio.s,
