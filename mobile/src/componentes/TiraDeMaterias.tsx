@@ -3,53 +3,89 @@
 // A tela de matéria (notas, média, faltas) precisava de um caminho, e enfiar uma
 // quinta aba por causa dela deixaria a barra cheia para uma tela que se visita
 // de vez em quando. Como matéria e grade são o mesmo assunto, ela mora aqui.
+//
+// Era uma tira que ROLAVA na horizontal; virou lista vertical em 03/09/2026 para
+// caber o deslizar-para-apagar. Deslizar dentro de um ScrollView horizontal
+// disputa o mesmo eixo do gesto de rolagem, e o resultado é uma lista que às
+// vezes rola e às vezes abre o botão vermelho — a ambiguidade que faz a pessoa
+// achar que o app travou.
 
-import { ScrollView, Text, View } from 'react-native'
+import { Alert, StyleSheet, Text, View } from 'react-native'
+import type { Materia } from '../../../nucleo/modelo.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
-import { Toque } from './ui.tsx'
+import { apagarMateria, oQueVaiJunto } from '../apagarMateria.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
+import { Deslizar } from './Deslizar.tsx'
+import { Toque } from './ui.tsx'
 
 export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   const t = usarT()
-  const materias = vivos(usarLoja((e) => e.base.materias))
+  const base = usarLoja((e) => e.base)
+  const remover = usarLoja((e) => e.remover)
+  const materias = vivos(base.materias)
   if (materias.length === 0) return null
 
+  // Apagar matéria leva aula, nota e falta junto. Deslizar é um gesto de um dedo
+  // e sem desfazer — então ele PERGUNTA, e a pergunta diz o que vai junto em
+  // número, não em "tem certeza?".
+  function confirmarRemocao(m: Materia) {
+    const { aulas, notas, faltas } = oQueVaiJunto(base, m.id)
+    Alert.alert(
+      t('materia.apagar_titulo', { nome: m.nome }),
+      t('materia.apagar_texto', {
+        aulas: aulas.length,
+        notas: notas.length,
+        faltas: faltas.length,
+      }),
+      [
+        { text: t('acao.cancelar'), style: 'cancel' },
+        {
+          text: t('materias.remover'),
+          style: 'destructive',
+          onPress: () => apagarMateria(base, m.id, remover),
+        },
+      ],
+    )
+  }
+
   return (
-    <View style={{ gap: espaco.s, marginHorizontal: -espaco.g }}>
-      <Text style={[fonte.secao, { paddingHorizontal: espaco.g }]}>
-        {t('materias.titulo')}
-      </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: espaco.g, gap: espaco.s }}
-      >
+    <View style={{ gap: espaco.s }}>
+      <Text style={fonte.secao}>{t('materias.titulo')}</Text>
+      <View style={{ gap: espaco.s }}>
         {materias
           .slice()
-          .sort((a, b) => a.nome.localeCompare(b.nome))
-          .map((m) => (
-            <Toque
+          .sort((a: Materia, b: Materia) => a.nome.localeCompare(b.nome))
+          .map((m: Materia) => (
+            <Deslizar
               key={m.id}
-              aoTocar={() => aoAbrir(m.id)}
-              estilo={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: espaco.s,
-                paddingHorizontal: espaco.m,
-                paddingVertical: espaco.s,
-                borderRadius: raio.pilula,
-                backgroundColor: cores.cartao,
-                borderWidth: 1,
-                borderColor: cores.borda,
-              }}
+              aoRemover={() => confirmarRemocao(m)}
+              rotuloRemover={t('materias.remover')}
             >
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: m.cor }} />
-              <Text style={fonte.corpo}>{m.nome}</Text>
-            </Toque>
+              <Toque aoTocar={() => aoAbrir(m.id)} estilo={e.linha}>
+                <View style={[e.ponto, { backgroundColor: m.cor }]} />
+                <Text style={fonte.corpo}>{m.nome}</Text>
+              </Toque>
+            </Deslizar>
           ))}
-      </ScrollView>
+      </View>
     </View>
   )
 }
+
+const e = StyleSheet.create({
+  // Opaco de propósito: é o conteúdo que desliza por cima do painel vermelho.
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espaco.s,
+    paddingHorizontal: espaco.m,
+    paddingVertical: espaco.m,
+    borderRadius: raio.cartao,
+    backgroundColor: cores.cartao,
+    borderWidth: 1,
+    borderColor: cores.borda,
+  },
+  ponto: { width: 8, height: 8, borderRadius: 4 },
+})

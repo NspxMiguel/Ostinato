@@ -8,6 +8,7 @@ import { vivos } from '../../../nucleo/sync/registro.ts'
 import { mediaDaMateria, precisaTirar } from '../../../nucleo/notas.ts'
 import { situacaoDeFaltas } from '../../../nucleo/faltas.ts'
 import { Apoio, Botao, Cartao, Linha, Pilula, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
+import { apagarMateria } from '../apagarMateria.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { horaDeTexto } from '../formato.ts'
@@ -144,14 +145,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
             <Botao
               texto={t('materia.apagar')}
               aoTocar={() => {
-                // A matéria leva o que só existe por causa dela: aula, nota e
-                // falta. O COMPROMISSO fica, sem matéria — "prova de química"
-                // continua sendo uma prova que existe na sua semana, e apagá-la
-                // porque a matéria saiu seria destruir o que a pessoa anotou.
-                for (const a of aulas) remover('aulas', a.id)
-                for (const n of notas) remover('notas', n.id)
-                for (const f of faltas) remover('faltas', f.id)
-                remover('materias', materia.id)
+                apagarMateria(base, materia.id, remover)
                 setConfirmando(false)
                 aoFechar()
               }}

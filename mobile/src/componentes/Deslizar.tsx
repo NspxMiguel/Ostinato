@@ -92,12 +92,13 @@ export function Deslizar({
   rotuloRemover,
 }: {
   children: ReactNode
-  aoConcluir: () => void
+  /** Ausente = a linha só apaga. Matéria não se "conclui". */
+  aoConcluir?: () => void
   aoRemover: () => void
   concluido?: boolean
   /** Cor da borda da linha inteira — o vermelho de atrasado vem por aqui. */
   destaque?: string
-  rotuloConcluir: string
+  rotuloConcluir?: string
   rotuloRemover: string
 }) {
   const linha = useRef<SwipeableMethods>(null)
@@ -117,18 +118,22 @@ export function Deslizar({
       // que soltar ali faz alguma coisa, e não faz.
       overshootLeft={false}
       overshootRight={false}
-      renderLeftActions={(progresso) => (
-        <Acao
-          progresso={progresso}
-          texto={rotuloConcluir}
-          cor={concluido ? cores.textoFraco : cores.ok}
-          lado="esquerda"
-          aoTocar={() => {
-            linha.current?.close()
-            aoConcluir()
-          }}
-        />
-      )}
+      renderLeftActions={
+        aoConcluir === undefined
+          ? undefined
+          : (progresso) => (
+              <Acao
+                progresso={progresso}
+                texto={rotuloConcluir ?? ''}
+                cor={concluido ? cores.textoFraco : cores.ok}
+                lado="esquerda"
+                aoTocar={() => {
+                  linha.current?.close()
+                  aoConcluir()
+                }}
+              />
+            )
+      }
       renderRightActions={(progresso) => (
         <Acao
           progresso={progresso}
@@ -150,7 +155,7 @@ export function Deslizar({
         linha.current?.close()
         if (direcao === 'left') {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-          aoConcluir()
+          aoConcluir?.()
         } else {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
           aoRemover()

@@ -176,6 +176,7 @@ const traducoes = {
     'grade.adicionar_aula': 'Adicionar aula',
     'grade.colar_horario': 'Colar horário',
     'papel.da_galeria': 'Escolher da galeria',
+    'papel.aviso_erro': 'Escanear pode conter erros. Se preferir, escreva manualmente.',
     'grade.escanear': 'Escanear',
     'importar.titulo': 'Calendário da escola',
     'importar.dica': 'Cole o calendário que a escola publicou, ou fotografe. O mês precisa aparecer como título, e cada linha começar pelo dia.',
@@ -250,6 +251,7 @@ const traducoes = {
     // 7. Matéria
     'materias.titulo': 'Matérias',
     'materias.vazio': 'Cadastre uma matéria na grade para ver notas e faltas.',
+    'materias.remover': 'Apagar',
     'materia.media': 'Média',
     'materia.precisa_nota': 'Precisa tirar {nota} na próxima',
     'materia.impossivel_media': 'Já não dá para fechar a média',
@@ -563,6 +565,7 @@ const traducoes = {
     'grade.adicionar_aula': 'Add class',
     'grade.colar_horario': 'Paste schedule',
     'papel.da_galeria': 'Choose from photos',
+    'papel.aviso_erro': 'Scanning can get things wrong — you can always type it in yourself.',
     'grade.escanear': 'Scan',
     'importar.titulo': 'School calendar',
     'importar.dica': 'Paste the calendar your school published, or photograph it. The month must appear as a heading and each line start with the day.',
@@ -637,6 +640,7 @@ const traducoes = {
     // 7. Matéria
     'materias.titulo': 'Subjects',
     'materias.vazio': 'Add a subject in the timetable to track grades and absences.',
+    'materias.remover': 'Delete',
     'materia.media': 'Average',
     'materia.precisa_nota': 'Need to score {nota} on the next one',
     'materia.impossivel_media': 'Can no longer reach the passing grade',
@@ -950,6 +954,7 @@ const traducoes = {
     'grade.adicionar_aula': 'Añadir clase',
     'grade.colar_horario': 'Pegar horario',
     'papel.da_galeria': 'Elegir de la galería',
+    'papel.aviso_erro': 'El escaneo puede contener errores. Si lo prefieres, escríbelo a mano.',
     'grade.escanear': 'Escanear',
     'importar.titulo': 'Calendario del colegio',
     'importar.dica': 'Pega el calendario que publicó el colegio, o fotografíalo. El mes debe aparecer como título y cada línea empezar por el día.',
@@ -1024,6 +1029,7 @@ const traducoes = {
     // 7. Matéria
     'materias.titulo': 'Asignaturas',
     'materias.vazio': 'Registra una asignatura en el horario para ver notas y faltas.',
+    'materias.remover': 'Borrar',
     'materia.media': 'Media',
     'materia.precisa_nota': 'Necesitas sacar {nota} en la próxima',
     'materia.impossivel_media': 'Ya no puedes alcanzar la media',
@@ -1337,6 +1343,7 @@ const traducoes = {
     'grade.adicionar_aula': 'Ajouter un cours',
     'grade.colar_horario': 'Coller l\u2019emploi du temps',
     'papel.da_galeria': 'Choisir dans les photos',
+    'papel.aviso_erro': 'La numérisation peut contenir des erreurs — vous pouvez aussi la saisir à la main.',
     'grade.escanear': 'Scanner',
     'importar.titulo': "Calendrier de l'école",
     'importar.dica': "Collez le calendrier publié par l'école, ou photographiez-le. Le mois doit apparaître en titre et chaque ligne commencer par le jour.",
@@ -1411,6 +1418,7 @@ const traducoes = {
     // 7. Matéria
     'materias.titulo': 'Matières',
     'materias.vazio': 'Renseignez une matière dans l\u2019emploi du temps pour voir les notes et les absences.',
+    'materias.remover': 'Supprimer',
     'materia.media': 'Moyenne',
     'materia.precisa_nota': 'Il vous faut {nota} au prochain',
     'materia.impossivel_media': 'Vous ne pouvez plus atteindre la moyenne',
