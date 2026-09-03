@@ -29,6 +29,7 @@ import {
   precisaDeResgateDeTarefa,
   vale,
 } from '../../nucleo/resgate.ts'
+import { aulasDaTabela } from '../../nucleo/gradeDaTabela.ts'
 import { estadoDoModelo, lerGradeComModelo, perguntar } from '../modules/modelo/src/index.ts'
 
 /** Se a IA do aparelho está pronta agora. */
@@ -89,6 +90,29 @@ export async function analisarGrade(
   _confianca = 1,
   tabela: readonly (readonly string[])[] = [],
 ): Promise<Analise> {
+  // A grade em tabela é lida por REGRA, antes de qualquer modelo.
+  //
+  // Com a grade correta, um horário é a coisa mais determinística que existe:
+  // uma linha de dias, uma coluna de horas, e o resto são células. O modelo
+  // estava compensando uma entrada que eu tinha quebrado — e para o caminho
+  // normal ele é pior: mais lento, e capaz de inventar aula que não existe.
+  if (tabela.length > 1) {
+    const daTabela = aulasDaTabela(tabela)
+    if (daTabela.length > 0) {
+      return {
+        resultado: {
+          aulas: daTabela,
+          materias: [...new Set(daTabela.map((a) => a.materia))],
+          ignoradas: [],
+          formato: 'tabela',
+        },
+        texto,
+        usou: false,
+        aviso: null,
+      }
+    }
+  }
+
   const doAlgoritmo = importarGrade(texto)
   if (texto.trim().length < 12) {
     return { resultado: doAlgoritmo, texto, usou: false, aviso: null }

@@ -50,12 +50,17 @@ export async function lerPapel(de: 'camera' | 'galeria' = 'camera'): Promise<Pap
   const r = await lerTexto(uri)
   // As duas leituras, sempre. A tabela é a boa quando existe; o texto solto é a
   // rede embaixo dela, e custa pouco porque a imagem já está decodificada.
-  // Duas fontes de grade, nesta ordem: a tabela que o Vision DETECTOU, e a que
-  // eu reconstruo das coordenadas. A primeira é melhor quando existe — ela veio
-  // de um detector treinado; a segunda é a que salva a foto sem linha de grade
-  // desenhada, que é justamente onde a primeira desiste.
-  const detectada = await lerTabela(uri)
-  const tabela = detectada.length > 1 ? detectada : (r.grade ?? [])
+  // A reconstrução por COORDENADAS vem primeiro, e isso foi medido.
+  //
+  // Rodando o Vision na foto do horário dele (`ferramentas/sonda-vision.swift`),
+  // as colunas saem limpas e a reconstrução devolve a grade correta. O detector
+  // de tabela do `RecognizeDocumentsRequest` é bom quando o papel TEM linhas
+  // desenhadas, e some ou erra quando não tem — e ele estava ganhando da
+  // reconstrução mesmo quando devolvia coisa pior.
+  //
+  // Então: coordenadas primeiro, detector como rede embaixo.
+  const reconstruida = r.grade ?? []
+  const tabela = reconstruida.length > 1 ? reconstruida : await lerTabela(uri)
   return {
     tipo: 'lido',
     texto: r.texto,
