@@ -25,7 +25,15 @@ export const ACAO_ADIAR = 'ostinato.adiar'
 export const MINUTOS_DE_ADIAMENTO = 10
 
 /** O nome do arquivo de som que vai no bundle do app. */
-const SOM_INSISTENTE = 'ostinato-sino.caf'
+/**
+ * O sino que vem no pacote do app.
+ *
+ * Exportado porque os Ajustes o oferecem como escolha de som do alarme: ele já
+ * estava aqui, tocando nos avisos insistentes, e não aparecia em lugar nenhum
+ * para ser escolhido.
+ */
+export const SOM_DO_APP = 'ostinato-sino.caf'
+const SOM_INSISTENTE = SOM_DO_APP
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -121,8 +129,16 @@ async function agendar(
   //
   // E só vai se o arquivo AINDA existir. Nome apagado não dá erro: o iOS cai no
   // som padrão calado, e quem apagou acharia que a escolha foi ignorada.
+  // O sino do app vale sempre: ele mora na BUNDLE, não em `Library/Sounds`, e
+  // por isso não aparece em `sonsImportados`. Sem esta linha, escolher o sino
+  // caía no som padrão em silêncio — o mesmo defeito que a checagem abaixo
+  // existe para evitar.
   const som =
-    ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme) ? ajustes.somAlarme : null
+    ajustes.somAlarme === SOM_DO_APP
+      ? SOM_DO_APP
+      : ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme)
+        ? ajustes.somAlarme
+        : null
 
   // Modo alarme vira ALARME DE SISTEMA, não notificação.
   //

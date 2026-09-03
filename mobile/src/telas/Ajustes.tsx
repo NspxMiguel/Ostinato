@@ -43,11 +43,14 @@ import {
 import {
   importarSom,
   ouvirSom,
+  pararSom,
   removerSom,
   rotuloDoSom,
   sonsImportados,
 } from 'som-do-alarme'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
+import { SOM_DO_APP } from '../avisos/notificacoes.ts'
+import { pararAlarme, tocarAlarme } from '../avisos/alarme.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { VERSAO } from '../versao.ts'
 
@@ -244,6 +247,12 @@ export function Ajustes({ aoEscanearHorario }: {
   const [estadoAlarme, setEstadoAlarme] = useState<EstadoDoAlarme>('sem-suporte')
   useEffect(() => {
     void estadoDoAlarme().then(setEstadoAlarme)
+    // O sino toca em LAÇO. Sair da tela sem parar deixaria ele tocando para
+    // sempre, e a pessoa procurando de onde vem o som.
+    return () => {
+      pararAlarme()
+      pararSom()
+    }
   }, [])
   const [sons, setSons] = useState<string[]>(() => sonsImportados())
   const [importandoSom, setImportandoSom] = useState(false)
@@ -434,60 +443,15 @@ export function Ajustes({ aoEscanearHorario }: {
         </Grupo>
       </Secao>
 
-      <Secao titulo={t('ajustes.escola')}>
+      {/* O alarme é uma SEÇÃO, e não um apêndice de "Sobre".
+          
+          Ele morava lá dentro, junto de versão e diagnóstico, porque foi onde
+          coube quando eu o escrevi. Mas "Sobre" é para o que o app INFORMA;
+          som, faixa de silêncio e adiar são o que a pessoa DECIDE — e ele já
+          reclamou de ajuste que dá preguiça de olhar. Ajuste enterrado em
+          diagnóstico é a mesma doença. */}
+      <Secao titulo={t('ajustes.alarme')}>
         <Grupo>
-          <LinhaDeMenu
-            titulo={t('ajustes.importar_calendario')}
-            aoTocar={() => setImportando(true)}
-          />
-          <LinhaDeMenu
-            titulo={t('ajustes.periodo_letivo')}
-            valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
-            aoTocar={() => setPeriodoAberto(true)}
-          />
-          <View style={estilo.bloco}>
-            {/* Um rótulo só. O campo trazia o próprio ("Porcentagem") empilhado
-                acima do número, ao lado de "Limite de faltas" à esquerda — dois
-                rótulos desalinhados para uma coisa só, e a linha parecia
-                quebrada. O sufixo % diz o que o rótulo repetia. */}
-            <Linha entre>
-              <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
-                <CampoNumero
-                  valor={ajustes.limiteFaltasPadrao}
-                  aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
-                />
-                <Apoio>%</Apoio>
-              </View>
-            </Linha>
-          </View>
-        </Grupo>
-      </Secao>
-
-      {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com o
-          número no título, o que dava a um contador o mesmo peso de "Escola". */}
-      <Secao titulo={t('ajustes.sobre')}>
-        <Grupo>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.versao')}</Apoio>
-              <Apoio cor={cores.texto3}>{VERSAO}</Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.sincronizacao')}</Apoio>
-              <Apoio cor={cores.texto3}>{textoDaNuvem}</Apoio>
-            </Linha>
-          </View>
-          <View style={estilo.bloco}>
-            <Linha entre>
-              <Apoio>{t('ajustes.vidro')}</Apoio>
-              <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.texto3}>
-                {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
-              </Apoio>
-            </Linha>
-          </View>
           <View style={estilo.bloco}>
             <Apoio>{t('ajustes.som_do_alarme')}</Apoio>
             <Fileira>
@@ -495,6 +459,20 @@ export function Ajustes({ aoEscanearHorario }: {
                 texto={t('ajustes.som_padrao')}
                 ativa={!ajustes.somAlarme}
                 aoTocar={() => mudarAjustes({ somAlarme: null })}
+              />
+              {/* O sino do próprio app. Ele existe no pacote desde o começo — é
+                  o que a notificação insistente toca — e nunca apareceu como
+                  ESCOLHA. Era um som pronto, pago em bytes, escondido. */}
+              <Pilula
+                texto={t('ajustes.som_sino')}
+                ativa={ajustes.somAlarme === SOM_DO_APP}
+                aoTocar={() => {
+                  mudarAjustes({ somAlarme: SOM_DO_APP })
+                  // `ouvirSom` lê de `Library/Sounds`; o sino mora na bundle.
+                  // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
+                  // num som parece som quebrado.
+                  void tocarAlarme()
+                }}
               />
               {sons.map((nome) => (
                 <Pilula
@@ -581,6 +559,63 @@ export function Ajustes({ aoEscanearHorario }: {
                 aoTocar={() => void pedirPermissaoDeAlarme().then(() => estadoDoAlarme().then(setEstadoAlarme))}
               />
             ) : null}
+          </View>
+        </Grupo>
+      </Secao>
+
+      <Secao titulo={t('ajustes.escola')}>
+        <Grupo>
+          <LinhaDeMenu
+            titulo={t('ajustes.importar_calendario')}
+            aoTocar={() => setImportando(true)}
+          />
+          <LinhaDeMenu
+            titulo={t('ajustes.periodo_letivo')}
+            valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
+            aoTocar={() => setPeriodoAberto(true)}
+          />
+          <View style={estilo.bloco}>
+            {/* Um rótulo só. O campo trazia o próprio ("Porcentagem") empilhado
+                acima do número, ao lado de "Limite de faltas" à esquerda — dois
+                rótulos desalinhados para uma coisa só, e a linha parecia
+                quebrada. O sufixo % diz o que o rótulo repetia. */}
+            <Linha entre>
+              <Apoio>{t('ajustes.limite_faltas_padrao')}</Apoio>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: espaco.xs }}>
+                <CampoNumero
+                  valor={ajustes.limiteFaltasPadrao}
+                  aoConfirmar={(n) => mudarAjustes({ limiteFaltasPadrao: n })}
+                />
+                <Apoio>%</Apoio>
+              </View>
+            </Linha>
+          </View>
+        </Grupo>
+      </Secao>
+
+      {/* Diagnóstico, num grupo só. Antes "avisos agendados" era uma SEÇÃO com o
+          número no título, o que dava a um contador o mesmo peso de "Escola". */}
+      <Secao titulo={t('ajustes.sobre')}>
+        <Grupo>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.versao')}</Apoio>
+              <Apoio cor={cores.texto3}>{VERSAO}</Apoio>
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.sincronizacao')}</Apoio>
+              <Apoio cor={cores.texto3}>{textoDaNuvem}</Apoio>
+            </Linha>
+          </View>
+          <View style={estilo.bloco}>
+            <Linha entre>
+              <Apoio>{t('ajustes.vidro')}</Apoio>
+              <Apoio cor={isLiquidGlassAvailable() ? cores.ok : cores.texto3}>
+                {isLiquidGlassAvailable() ? t('ajustes.vidro_ativo') : t('ajustes.vidro_indisponivel')}
+              </Apoio>
+            </Linha>
           </View>
           <View style={estilo.bloco}>
             <Linha entre>
