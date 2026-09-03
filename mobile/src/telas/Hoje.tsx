@@ -155,7 +155,7 @@ export function Hoje({
                 alerta={item.atrasado ? cores.atrasado : undefined}
                 aoTocar={() => aoAbrirCompromisso(item.compromisso.id)}
               >
-                <Linha>
+                <Linha quebra>
                   <Titulo>{item.compromisso.titulo}</Titulo>
                   {item.atrasado ? (
                     <Etiqueta texto={t('hoje.atrasado')} cor={cores.atrasado} />

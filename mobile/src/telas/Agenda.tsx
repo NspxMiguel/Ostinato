@@ -245,7 +245,7 @@ export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string
                       aoTocar={() => aoAbrirCompromisso(c.id)}
                     >
                       <View style={c.concluido ? e.concluido : undefined}>
-                        <Linha>
+                        <Linha quebra>
                           <Titulo>{c.titulo}</Titulo>
                           {item.atrasado ? (
                             <Etiqueta texto={t('hoje.atrasado')} cor={cores.atrasado} />

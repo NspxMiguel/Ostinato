@@ -1,28 +1,75 @@
 // Arrastar a linha para o lado: feito de um lado, apagar do outro.
 //
-// É o gesto que o iPhone inteiro usa — Mail, Lembretes, Mensagens — e por isso
-// ninguém precisa aprender. O que ele pede em troca é comportamento igual ao
-// deles, e são três coisas que costumam faltar:
+// Isto era um `PanResponder` escrito à mão, com dois fundos absolutos atrás da
+// linha. Ele reclamou em 31/08/2026, com print: *"feiao o deslizar pae, dava pra
+// dar uma melhorada"* e *"bem bugado o deslizar tbm, deixa suave, sla, pega um
+// na net mais facil"*.
 //
-//   1. o gesto tem que passar o dedo além de um limite, senão volta. Ação que
-//      dispara com um arrasto de dois pixels apaga tarefa sem querer;
-//   2. arrastar bastante EXECUTA sem precisar tocar no botão, que é o atalho de
-//      quem já sabe o que quer;
-//   3. o toque tátil marca o instante em que o gesto "engatou", e sem ele o
-//      dedo não sabe que passou do ponto.
+// Ele tem razão nas duas coisas, e a segunda é a lição. O gesto de deslizar
+// linha tem uma quantidade absurda de detalhe que não aparece na descrição:
+// atrito ao arrastar, a ação crescendo junto do dedo, o limite de abertura, o
+// fechar quando outra linha abre, o encaixe elástico, e a interação com a
+// rolagem vertical da lista. Eu tinha acertado dois desses e errado o resto —
+// e o resultado é o que a print mostra: um retângulo vermelho flutuando por
+// cima do cartão, com o texto no lugar errado.
 //
-// Apagar é remoção lógica no `guardar`, então o item vira tombstone e o sync
-// leva a remoção junto — não é `delete` no armazenamento.
+// O `ReanimatedSwipeable` do `react-native-gesture-handler` já estava instalado
+// no projeto. Ele roda na thread de UI (Reanimated), então o movimento não
+// engasga quando o JavaScript está ocupado — que é metade do "bugado".
+//
+// O que sobra para mim é o que é DESTE app: o que a ação diz, a cor dela, e a
+// decisão de que apagar exige o gesto inteiro.
 
-import { useRef, type ReactNode } from 'react'
-import { Animated, PanResponder, StyleSheet, Text, View } from 'react-native'
+import type { ReactNode } from 'react'
+import { useRef } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import ReanimatedSwipeable, {
+  type SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable'
+import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { cores, espaco, raio } from '../tema.ts'
 
-/** Onde a ação passa a valer. Abaixo disto o gesto volta sozinho. */
+/** Onde a ação passa a valer. Abaixo disto a linha volta sozinha. */
 const LIMITE = 72
-/** A partir daqui, soltar já executa — sem precisar acertar o botão. */
-const EXECUTA = 150
+
+/**
+ * O painel que aparece atrás da linha.
+ *
+ * Ele CRESCE com o dedo em vez de estar pronto embaixo, e é isso que faz o
+ * gesto parecer que a mão está puxando a ação para fora — o Mail e os Lembretes
+ * fazem assim. O painel pronto e estático, que era o meu, parece um cartão
+ * escondido que a linha revela.
+ */
+function Acao({
+  progresso,
+  texto,
+  cor,
+  lado,
+}: {
+  progresso: SharedValue<number>
+  texto: string
+  cor: string
+  lado: 'esquerda' | 'direita'
+}) {
+  const estilo = useAnimatedStyle(() => ({
+    opacity: Math.min(1, progresso.value),
+    transform: [{ scale: 0.85 + Math.min(1, progresso.value) * 0.15 }],
+  }))
+
+  return (
+    <View
+      style={[
+        e.acao,
+        { backgroundColor: cor, alignItems: lado === 'esquerda' ? 'flex-start' : 'flex-end' },
+      ]}
+    >
+      <Animated.View style={estilo}>
+        <Text style={e.rotulo}>{texto}</Text>
+      </Animated.View>
+    </View>
+  )
+}
 
 export function Deslizar({
   children,
@@ -39,83 +86,61 @@ export function Deslizar({
   rotuloConcluir: string
   rotuloRemover: string
 }) {
-  const x = useRef(new Animated.Value(0)).current
-  const engatou = useRef(false)
+  const linha = useRef<SwipeableMethods>(null)
 
-  const voltar = () =>
-    Animated.spring(x, { toValue: 0, useNativeDriver: true, speed: 30, bounciness: 6 }).start()
-
-  const responder = useRef(
-    PanResponder.create({
-      // Só assume o gesto quando ele é claramente HORIZONTAL. Sem esta razão de
-      // 2:1 a lista para de rolar, porque cada linha rouba o arrasto vertical.
-      onMoveShouldSetPanResponder: (_e, g) =>
-        Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
-      onPanResponderMove: (_e, g) => {
-        x.setValue(g.dx)
-        const passou = Math.abs(g.dx) > LIMITE
-        if (passou !== engatou.current) {
-          engatou.current = passou
-          if (passou) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-        }
-      },
-      onPanResponderRelease: (_e, g) => {
-        engatou.current = false
-        if (g.dx > EXECUTA) {
+  return (
+    <ReanimatedSwipeable
+      ref={linha}
+      // Sem atrito o cartão dispara com o dedo e o gesto fica nervoso; 2 é o
+      // valor que o próprio componente usa nos exemplos e é o que se sente no
+      // Mail.
+      friction={2}
+      // A ação começa a valer no mesmo ponto dos dois lados: assimetria aqui é
+      // o tipo de coisa que a mão nota e ninguém sabe nomear.
+      leftThreshold={LIMITE}
+      rightThreshold={LIMITE}
+      // Sem elástico além do painel. Deixar a linha ir embora da tela sugere
+      // que soltar ali faz alguma coisa, e não faz.
+      overshootLeft={false}
+      overshootRight={false}
+      renderLeftActions={(progresso) => (
+        <Acao
+          progresso={progresso}
+          texto={rotuloConcluir}
+          cor={concluido ? cores.textoFraco : cores.ok}
+          lado="esquerda"
+        />
+      )}
+      renderRightActions={(progresso) => (
+        <Acao progresso={progresso} texto={rotuloRemover} cor={cores.atrasado} lado="direita" />
+      )}
+      onSwipeableWillOpen={() => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      }}
+      onSwipeableOpen={(direcao) => {
+        // A linha FECHA antes de agir. Sem isto ela fica aberta enquanto o item
+        // some da lista por baixo, e o painel vermelho sobra sobre o vizinho.
+        linha.current?.close()
+        if (direcao === 'left') {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
           aoConcluir()
-        } else if (g.dx < -EXECUTA) {
+        } else {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
           aoRemover()
         }
-        voltar()
-      },
-      onPanResponderTerminate: voltar,
-    }),
-  ).current
-
-  return (
-    <View>
-      {/* Os dois fundos ficam atrás e aparecem conforme o lado do arrasto. O
-          verde à esquerda porque o dedo vai PARA a direita ao concluir. */}
-      <View style={e.fundo} pointerEvents="none">
-        <Animated.View
-          style={[
-            e.acao,
-            { backgroundColor: concluido ? cores.textoFraco : cores.ok, alignItems: 'flex-start' },
-            { opacity: x.interpolate({ inputRange: [0, LIMITE], outputRange: [0, 1], extrapolate: 'clamp' }) },
-          ]}
-        >
-          <Text style={e.rotulo}>{rotuloConcluir}</Text>
-        </Animated.View>
-        <Animated.View
-          style={[
-            e.acao,
-            { backgroundColor: cores.atrasado, alignItems: 'flex-end' },
-            { opacity: x.interpolate({ inputRange: [-LIMITE, 0], outputRange: [1, 0], extrapolate: 'clamp' }) },
-          ]}
-        >
-          <Text style={e.rotulo}>{rotuloRemover}</Text>
-        </Animated.View>
-      </View>
-
-      <Animated.View style={{ transform: [{ translateX: x }] }} {...responder.panHandlers}>
-        {children}
-      </Animated.View>
-    </View>
+      }}
+      containerStyle={e.recipiente}
+    >
+      {children}
+    </ReanimatedSwipeable>
   )
 }
 
 const e = StyleSheet.create({
-  fundo: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    borderRadius: raio.cartao,
-  },
-  acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g, borderRadius: raio.cartao },
+  // O recorte é do RECIPIENTE, e é ele que resolve o defeito da print: sem
+  // isso o painel da ação é um retângulo vermelho com cantos próprios,
+  // flutuando por cima do cartão em vez de viver dentro da linha.
+  recipiente: { borderRadius: raio.cartao, overflow: 'hidden' },
+  acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g },
   rotulo: { color: cores.fundo, fontWeight: '600', fontSize: 15 },
 })

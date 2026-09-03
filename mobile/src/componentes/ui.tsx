@@ -444,13 +444,29 @@ export function Vazio({
   )
 }
 
-export function Linha({ children, entre }: { children: ReactNode; entre?: boolean }) {
+export function Linha({
+  children,
+  entre,
+  quebra,
+}: {
+  children: ReactNode
+  entre?: boolean
+  /**
+   * Deixa a linha passar para a linha de baixo em vez de espremer.
+   *
+   * Existe porque a etiqueta ATRASADO saía cortada — "ATRASAD" — quando o
+   * título era comprido: numa fileira sem quebra, o último filho é o que
+   * apanha. Rótulo cortado é pior que rótulo em outra linha.
+   */
+  quebra?: boolean
+}) {
   return (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         gap: espaco.s,
+        flexWrap: quebra ? 'wrap' : 'nowrap',
         justifyContent: entre ? 'space-between' : 'flex-start',
       }}
     >
