@@ -11,6 +11,7 @@ import {
   cancelarAlarme,
   temAlarmeDeSistema,
 } from 'alarme-do-sistema'
+import { SONS_DO_APP, somDoApp } from './sons.ts'
 import { sonsImportados } from 'som-do-alarme'
 import { Platform } from 'react-native'
 import type { Ajustes, Base, Periodo } from '../../../nucleo/modelo.ts'
@@ -32,7 +33,7 @@ export const MINUTOS_DE_ADIAMENTO = 10
  * estava aqui, tocando nos avisos insistentes, e não aparecia em lugar nenhum
  * para ser escolhido.
  */
-export const SOM_DO_APP = 'ostinato-sino.caf'
+export const SOM_DO_APP = SONS_DO_APP[0]!.arquivo
 const SOM_INSISTENTE = SOM_DO_APP
 
 Notifications.setNotificationHandler({
@@ -129,16 +130,15 @@ async function agendar(
   //
   // E só vai se o arquivo AINDA existir. Nome apagado não dá erro: o iOS cai no
   // som padrão calado, e quem apagou acharia que a escolha foi ignorada.
-  // O sino do app vale sempre: ele mora na BUNDLE, não em `Library/Sounds`, e
-  // por isso não aparece em `sonsImportados`. Sem esta linha, escolher o sino
-  // caía no som padrão em silêncio — o mesmo defeito que a checagem abaixo
+  // Os sons do app valem sempre: moram na BUNDLE, não em `Library/Sounds`, e
+  // por isso não aparecem em `sonsImportados`. Sem esta checagem, escolher um
+  // deles caía no som padrão em silêncio — o mesmo defeito que a linha abaixo
   // existe para evitar.
-  const som =
-    ajustes.somAlarme === SOM_DO_APP
-      ? SOM_DO_APP
-      : ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme)
-        ? ajustes.somAlarme
-        : null
+  const som = somDoApp(ajustes.somAlarme)
+    ? ajustes.somAlarme
+    : ajustes.somAlarme && sonsImportados().includes(ajustes.somAlarme)
+      ? ajustes.somAlarme
+      : null
 
   // Modo alarme vira ALARME DE SISTEMA, não notificação.
   //

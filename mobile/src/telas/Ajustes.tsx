@@ -50,8 +50,8 @@ import {
   sonsImportados,
 } from 'som-do-alarme'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
-import { SOM_DO_APP } from '../avisos/notificacoes.ts'
-import { ouvirSinoUmaVez, pararAlarme } from '../avisos/alarme.ts'
+import { ouvirSomDoAppUmaVez, pararAlarme } from '../avisos/alarme.ts'
+import { SONS_DO_APP } from '../avisos/sons.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { VERSAO } from '../versao.ts'
 
@@ -468,20 +468,24 @@ export function Ajustes({ aoEscanearHorario }: {
                 ativa={!ajustes.somAlarme}
                 aoTocar={() => mudarAjustes({ somAlarme: null })}
               />
-              {/* O sino do próprio app. Ele existe no pacote desde o começo — é
-                  o que a notificação insistente toca — e nunca apareceu como
-                  ESCOLHA. Era um som pronto, pago em bytes, escondido. */}
-              <Pilula
-                texto={t('ajustes.som_sino')}
-                ativa={ajustes.somAlarme === SOM_DO_APP}
-                aoTocar={() => {
-                  mudarAjustes({ somAlarme: SOM_DO_APP })
-                  // `ouvirSom` lê de `Library/Sounds`; o sino mora na bundle.
-                  // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
-                  // num som parece som quebrado.
-                  void ouvirSinoUmaVez()
-                }}
-              />
+              {/* Os sons do próprio app. Os toques do iPhone não podem entrar
+                  aqui — são arquivos do sistema, da Apple, e copiá-los para
+                  dentro do pacote reprova na revisão da loja. Quem quer
+                  exatamente aquele toque usa a importação, logo abaixo. */}
+              {SONS_DO_APP.map((som) => (
+                <Pilula
+                  key={som.arquivo}
+                  texto={t(som.chave)}
+                  ativa={ajustes.somAlarme === som.arquivo}
+                  aoTocar={() => {
+                    mudarAjustes({ somAlarme: som.arquivo })
+                    // `ouvirSom` lê de `Library/Sounds`; estes moram na bundle.
+                    // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
+                    // num som parece som quebrado.
+                    void ouvirSomDoAppUmaVez(som.arquivo)
+                  }}
+                />
+              ))}
               {sons.map((nome) => (
                 <Pilula
                   key={nome}

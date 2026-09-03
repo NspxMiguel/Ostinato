@@ -54,7 +54,14 @@
         {
           "color": "#1F1B16",
           "sounds": [
-            "./assets/ostinato-sino.caf"
+            "./assets/ostinato-sino.caf",
+            "./assets/ostinato-marimba.caf",
+            "./assets/ostinato-pulso.caf",
+            "./assets/ostinato-radar.caf",
+            "./assets/ostinato-harpa.caf",
+            "./assets/ostinato-sonar.caf",
+            "./assets/ostinato-carrilhao.caf",
+            "./assets/ostinato-farol.caf"
           ]
         }
       ],

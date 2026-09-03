@@ -16,9 +16,13 @@
 
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio'
 
-const SINO = require('../../assets/ostinato-sino.caf')
+import { SONS_DO_APP, somDoApp } from './sons.ts'
+
+const SINO = SONS_DO_APP[0]!.fonte
 
 let tocador: AudioPlayer | null = null
+/** Qual arquivo o tocador atual carregou — trocar de som exige recriá-lo. */
+let carregado: string | null = null
 
 export async function prepararAudio(): Promise<void> {
   await setAudioModeAsync({
@@ -30,11 +34,18 @@ export async function prepararAudio(): Promise<void> {
   })
 }
 
-export async function tocarAlarme(): Promise<void> {
+export async function tocarAlarme(escolhido?: string | null): Promise<void> {
   await prepararAudio()
-  if (!tocador) {
-    tocador = createAudioPlayer(SINO)
+  const som = somDoApp(escolhido)
+  const fonte = som?.fonte ?? SINO
+  const arquivo = som?.arquivo ?? SONS_DO_APP[0]!.arquivo
+  // Um `AudioPlayer` carrega o arquivo na criação. Reusar o de ontem depois de
+  // a pessoa trocar de som toca o som antigo — e ela só descobre de madrugada.
+  if (!tocador || carregado !== arquivo) {
+    soltarAlarme()
+    tocador = createAudioPlayer(fonte)
     tocador.loop = true
+    carregado = arquivo
   }
   tocador.volume = 1
   tocador.seekTo(0)
@@ -54,10 +65,11 @@ export function alarmeTocando(): boolean {
 export function soltarAlarme(): void {
   tocador?.remove()
   tocador = null
+  carregado = null
 }
 
 /**
- * Toca o sino UMA vez, para ouvir antes de escolher.
+ * Toca um som da bundle UMA vez, para ouvir antes de escolher.
  *
  * `tocarAlarme` toca em LAÇO, porque ele é o alarme: parar é decisão de quem
  * acorda. Aqui é prévia, e prévia que não acaba é defeito — ele reclamou em
@@ -69,10 +81,12 @@ export function soltarAlarme(): void {
  * desmonta nada e o `return` do efeito nunca roda. O conserto certo não é
  * caçar o momento de parar — é não começar um som infinito.
  */
-export async function ouvirSinoUmaVez(): Promise<void> {
+export async function ouvirSomDoAppUmaVez(arquivo: string): Promise<void> {
   await prepararAudio()
   pararAlarme()
-  tocador = createAudioPlayer(SINO)
+  soltarAlarme()
+  tocador = createAudioPlayer(somDoApp(arquivo)?.fonte ?? SINO)
+  carregado = arquivo
   tocador.loop = false
   tocador.volume = 1
   tocador.play()

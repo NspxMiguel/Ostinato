@@ -184,13 +184,13 @@ export function Raiz() {
 
       if (dados.alarme) {
         setAlarmeDe(id)
-        void tocarAlarme()
+        void tocarAlarme(ajustes.somAlarme)
       } else {
         setCompromissoAberto(id)
       }
     })
     return () => inscricao.remove()
-  }, [guardar, ajustes.adiarMinutos])
+  }, [guardar, ajustes.adiarMinutos, ajustes.somAlarme])
 
   // Alarme com o app ABERTO na hora do disparo. Quem acorda a pessoa com o app
   // fechado é o AlarmKit; isto é o som da tela do alarme dentro do app.
@@ -199,7 +199,7 @@ export function Raiz() {
       const dados = n.request.content.data as { compromissoId?: string; alarme?: boolean }
       if (dados.alarme && dados.compromissoId) {
         setAlarmeDe(dados.compromissoId)
-        void tocarAlarme()
+        void tocarAlarme(ajustes.somAlarme)
       }
     })
     return () => inscricao.remove()
