@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -16,21 +17,17 @@ import { usarIdioma, usarT } from '../i18n.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
-import type { ResultadoImportacao } from '../../../nucleo/importarGrade.ts'
+import type { AulaCrua, ResultadoImportacao } from '../../../nucleo/importarGrade.ts'
 import {
   Apoio,
-  Bolinha,
   Botao,
   Fileira,
   Cartao,
   Pilula,
-  Toque,
-  Etiqueta,
   Linha,
   Secao,
   Tela,
   Titulo,
-  Vazio,
 } from '../componentes/ui.tsx'
 import { TiraDeMaterias } from '../componentes/TiraDeMaterias.tsx'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
@@ -40,7 +37,15 @@ import { tabelaComoTexto } from '../../../nucleo/resgate.ts'
 import { NOTA_MINIMA, qualidadeDaGrade } from '../../../nucleo/qualidadeDaGrade.ts'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
-import { horaDeTexto } from '../formato.ts'
+import {
+  faixasDeAulas,
+  GradeSemanal,
+  MESMA_FAIXA,
+  mesclarFaixas,
+  type CelulaOcupada,
+  type FaixaHoraria,
+  type OpcaoMateria,
+} from '../componentes/GradeSemanal.tsx'
 
 /** Semestre que contem hoje: fevereiro a julho, ou agosto a dezembro. */
 function periodoPadrao(agora: Date): { nome: string; inicio: string; fim: string } {
@@ -98,8 +103,6 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const [novaMateriaNome, setNovaMateriaNome] = useState('')
   const [novaMateriaCor, setNovaMateriaCor] = useState<string>(CORES_DE_MATERIA[0])
   const [diaSemana, setDiaSemana] = useState<DiaSemana>(1)
-  /** Qual dia a lista mostra. Separado de `diaSemana`, que é o dia do formulário. */
-  const [diaVisivel, setDiaVisivel] = useState<DiaSemana>(1)
   const [inicio, setInicio] = useState('08:00')
   const [fim, setFim] = useState('09:40')
   const [sala, setSala] = useState('')
@@ -148,6 +151,20 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   /** A grade que o Vision viu na foto, quando viu. */
   const [tabelaDaFoto, setTabelaDaFoto] = useState<string[][]>([])
   const [previaImportacao, setPreviaImportacao] = useState<ResultadoImportacao | null>(null)
+  /**
+   * As linhas de horário da planilha que ainda não têm nenhuma aula.
+   *
+   * A grade em si não guarda "faixa de horário" — ela existe só implícita nas
+   * aulas (`inicio`/`fim` de cada uma). Uma linha recém-criada na planilha,
+   * sem aula nenhuma nela ainda, não sobreviveria a um novo render se não
+   * ficasse guardada em algum lugar: é isto que este estado guarda.
+   */
+  const [faixasExtras, setFaixasExtras] = useState<FaixaHoraria[]>([])
+  // A planilha de prévia (foto/colar) tem o MESMO mecanismo, mas em cima de um
+  // estado local em vez da loja: nada aqui é real até "Confirmar e salvar".
+  const [previaAulas, setPreviaAulas] = useState<AulaCrua[]>([])
+  const [previaMateriasNomes, setPreviaMateriasNomes] = useState<string[]>([])
+  const [previaFaixasExtras, setPreviaFaixasExtras] = useState<FaixaHoraria[]>([])
 
   // O período letivo é OPCIONAL. Ele serve para uma coisa só — saber quais dias
   // são feriado e quando o semestre acaba — e o app funciona sem: aula na terça
@@ -222,15 +239,118 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   // Dias com aula ou segunda a sexta por padrão
   const temSabado = aulasVivas.some((a: Aula) => a.diaSemana === 6)
   const temDomingo = aulasVivas.some((a: Aula) => a.diaSemana === 0)
-  const aulasDoDiaVisivel = aulasVivas
-    .filter((a: Aula) => a.diaSemana === diaVisivel)
-    .sort((a: Aula, b: Aula) => a.inicio.localeCompare(b.inicio))
 
   const diasParaExibir: DiaSemana[] = [
     ...(temDomingo ? ([0] as DiaSemana[]) : []),
     1, 2, 3, 4, 5,
     ...(temSabado ? ([6] as DiaSemana[]) : []),
   ]
+
+  // ─── A planilha da grade salva ──────────────────────────────────────────
+  //
+  // As linhas vêm dos horários que já existem nas aulas, mais as que a pessoa
+  // acabou de criar e ainda não tocaram em nenhuma célula (`faixasExtras`).
+  const faixasPrincipais = mesclarFaixas(faixasDeAulas(aulasVivas), faixasExtras)
+  const opcoesMateriaPrincipal: OpcaoMateria[] = materiasVivas.map((m: Materia) => ({
+    chave: m.id,
+    nome: m.nome,
+    cor: m.cor,
+  }))
+
+  function obterCelulaPrincipal(dia: DiaSemana, faixa: FaixaHoraria): CelulaOcupada | undefined {
+    const aula = aulasVivas.find(
+      (a: Aula) => a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim,
+    )
+    if (!aula) return undefined
+    const materia = mapaMaterias[aula.materiaId]
+    return {
+      chave: aula.id,
+      nome: materia?.nome ?? '',
+      cor: materia?.cor ?? cores.texto3,
+      sub: aula.sala,
+    }
+  }
+
+  function escolherMateriaPrincipal(dia: DiaSemana, faixa: FaixaHoraria, opcao: OpcaoMateria) {
+    const existente = aulasVivas.find(
+      (a: Aula) => a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim,
+    )
+    if (existente) {
+      guardar('aulas', { id: existente.id, materiaId: opcao.chave })
+    } else {
+      guardar('aulas', {
+        materiaId: opcao.chave,
+        diaSemana: dia,
+        inicio: faixa.inicio,
+        fim: faixa.fim,
+        semana: 'toda',
+      })
+    }
+    setFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+  }
+
+  function limparCelulaPrincipal(dia: DiaSemana, faixa: FaixaHoraria) {
+    const existente = aulasVivas.find(
+      (a: Aula) => a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim,
+    )
+    if (existente) remover('aulas', existente.id)
+  }
+
+  function criarMateriaPrincipal(nome: string, cor: string): OpcaoMateria {
+    const id = guardar('materias', { periodoId: garantirPeriodo(), nome, cor, limiteFaltasPct: 25 })
+    return { chave: id, nome, cor }
+  }
+
+  function abrirDetalhesPrincipal(chaveAula: string) {
+    const aula = aulasVivas.find((a: Aula) => a.id === chaveAula)
+    if (aula) abrirEdicaoAula(aula)
+  }
+
+  function salvarFaixaPrincipal(faixaAntiga: FaixaHoraria, novoInicio: string, novoFim: string) {
+    for (const a of aulasVivas) {
+      if (a.inicio === faixaAntiga.inicio && a.fim === faixaAntiga.fim) {
+        guardar('aulas', { id: a.id, inicio: novoInicio, fim: novoFim })
+      }
+    }
+    setFaixasExtras((prev) =>
+      prev.map((f) => (MESMA_FAIXA(f, faixaAntiga) ? { inicio: novoInicio, fim: novoFim } : f)),
+    )
+  }
+
+  function removerFaixaPrincipal(faixa: FaixaHoraria) {
+    const afetadas = aulasVivas.filter(
+      (a: Aula) => a.inicio === faixa.inicio && a.fim === faixa.fim,
+    )
+    if (afetadas.length === 0) {
+      setFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+      return
+    }
+    // Linha com aula dentro é destrutivo, e em mais de um dia — o mesmo
+    // cuidado de "apagar tudo", só que restrito a uma faixa de horário.
+    Alert.alert(
+      t('grade.remover_faixa_titulo'),
+      t('grade.remover_faixa_texto', { n: afetadas.length }),
+      [
+        { text: t('acao.cancelar'), style: 'cancel' },
+        {
+          text: t('grade.remover_faixa'),
+          style: 'destructive',
+          onPress: () => {
+            for (const a of afetadas) remover('aulas', a.id)
+            setFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+          },
+        },
+      ],
+    )
+  }
+
+  function adicionarFaixaPrincipal(inicioFaixa: string, fimFaixa: string) {
+    setFaixasExtras((prev) =>
+      prev.some((f) => f.inicio === inicioFaixa && f.fim === fimFaixa)
+        ? prev
+        : [...prev, { inicio: inicioFaixa, fim: fimFaixa }],
+    )
+  }
 
   const abrirCriacaoAula = (dia: DiaSemana) => {
     setAulaEdicao(null)
@@ -297,9 +417,28 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     setModalAulaVisivel(false)
   }
 
+  // A nota de qualidade lê o estado EDITADO (`previaAulas`), não o resultado
+  // cru da leitura: é o que faz o aviso de dúvida sumir na hora em que a
+  // pessoa corrige a célula suspeita na planilha, em vez de continuar
+  // reclamando de algo que ela já consertou.
   const qualidade = previaImportacao
-    ? qualidadeDaGrade(previaImportacao.aulas)
+    ? qualidadeDaGrade(previaAulas)
     : { nota: 1, suspeitas: [], aulas: 0 }
+
+  /** Começa (ou recomeça) a prévia editável a partir de um resultado de leitura. */
+  function iniciarPreviaEditavel(resultado: ResultadoImportacao) {
+    setPreviaImportacao(resultado)
+    setPreviaAulas(resultado.aulas)
+    setPreviaMateriasNomes(resultado.materias)
+    setPreviaFaixasExtras([])
+  }
+
+  function fecharPreviaEditavel() {
+    setPreviaImportacao(null)
+    setPreviaAulas([])
+    setPreviaMateriasNomes([])
+    setPreviaFaixasExtras([])
+  }
 
   /** Refaz a leitura com o modelo, quando a regra deixou dúvida. */
   const analisarComModelo = async () => {
@@ -310,7 +449,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
       const a = await analisarGrade(textoColado, confiancaDaFoto, [])
       setUsouIa(a.usou)
       setAvisoIa(a.aviso)
-      setPreviaImportacao(a.resultado)
+      iniciarPreviaEditavel(a.resultado)
     } finally {
       setAnalisando(false)
     }
@@ -326,10 +465,139 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
       if (a.usou) setTextoColado(a.texto)
       setUsouIa(a.usou)
       setAvisoIa(a.aviso)
-      setPreviaImportacao(a.resultado)
+      iniciarPreviaEditavel(a.resultado)
     } finally {
       setAnalisando(false)
     }
+  }
+
+  // ─── A planilha da prévia (foto/colar) ──────────────────────────────────
+  //
+  // Mesmo mecanismo da planilha principal, só que em cima de `previaAulas` —
+  // um estado local que só vira aula de verdade em "Confirmar e salvar". É
+  // aqui que a pessoa CORRIGE o que o scanner leu, célula por célula, em vez
+  // de aceitar ou rejeitar a leitura inteira no escuro.
+  const faixasPrevia = mesclarFaixas(faixasDeAulas(previaAulas), previaFaixasExtras)
+  // Sábado/domingo entram na prévia se a LEITURA trouxe aula nesses dias,
+  // mesmo que a grade salva ainda não tenha nenhuma — senão a coluna some e a
+  // aula lida ali fica sem onde aparecer.
+  const diasParaExibirPrevia: DiaSemana[] = [
+    ...(temDomingo || previaAulas.some((a) => a.diaSemana === 0) ? ([0] as DiaSemana[]) : []),
+    1, 2, 3, 4, 5,
+    ...(temSabado || previaAulas.some((a) => a.diaSemana === 6) ? ([6] as DiaSemana[]) : []),
+  ]
+  const nomesReaisEmMinusculo = new Set(
+    materiasVivas.map((m: Materia) => m.nome.trim().toLowerCase()),
+  )
+  const opcoesMateriaPrevia: OpcaoMateria[] = [
+    ...materiasVivas.map((m: Materia) => ({ chave: m.id, nome: m.nome, cor: m.cor })),
+    ...previaMateriasNomes
+      .filter((nome) => !nomesReaisEmMinusculo.has(nome.trim().toLowerCase()))
+      .map((nome, i) => ({
+        chave: `previa:${nome}`,
+        nome,
+        cor: CORES_DE_MATERIA[i % CORES_DE_MATERIA.length] ?? CORES_DE_MATERIA[0],
+      })),
+  ]
+
+  function obterCelulaPrevia(dia: DiaSemana, faixa: FaixaHoraria): CelulaOcupada | undefined {
+    const aula = previaAulas.find(
+      (a) => a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim,
+    )
+    if (!aula) return undefined
+    const cor =
+      opcoesMateriaPrevia.find(
+        (op) => op.nome.trim().toLowerCase() === aula.materia.trim().toLowerCase(),
+      )?.cor ?? cores.texto3
+    return { chave: `${dia}|${faixa.inicio}|${faixa.fim}`, nome: aula.materia, cor, sub: aula.sala }
+  }
+
+  function escolherMateriaPrevia(dia: DiaSemana, faixa: FaixaHoraria, opcao: OpcaoMateria) {
+    setPreviaAulas((prev) => {
+      const existe = prev.some(
+        (a) => a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim,
+      )
+      if (existe) {
+        return prev.map((a) =>
+          a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim
+            ? { ...a, materia: opcao.nome, confianca: 1 }
+            : a,
+        )
+      }
+      return [
+        ...prev,
+        { materia: opcao.nome, diaSemana: dia, inicio: faixa.inicio, fim: faixa.fim, confianca: 1 },
+      ]
+    })
+    setPreviaFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+    setPreviaMateriasNomes((prev) =>
+      prev.some((n) => n.trim().toLowerCase() === opcao.nome.trim().toLowerCase())
+        ? prev
+        : [...prev, opcao.nome],
+    )
+  }
+
+  function limparCelulaPrevia(dia: DiaSemana, faixa: FaixaHoraria) {
+    setPreviaAulas((prev) =>
+      prev.filter(
+        (a) => !(a.diaSemana === dia && a.inicio === faixa.inicio && a.fim === faixa.fim),
+      ),
+    )
+  }
+
+  function criarMateriaPrevia(nome: string, cor: string): OpcaoMateria {
+    setPreviaMateriasNomes((prev) =>
+      prev.some((n) => n.trim().toLowerCase() === nome.trim().toLowerCase())
+        ? prev
+        : [...prev, nome],
+    )
+    return { chave: `previa:${nome}`, nome, cor }
+  }
+
+  function salvarFaixaPrevia(faixaAntiga: FaixaHoraria, novoInicio: string, novoFim: string) {
+    setPreviaAulas((prev) =>
+      prev.map((a) =>
+        a.inicio === faixaAntiga.inicio && a.fim === faixaAntiga.fim
+          ? { ...a, inicio: novoInicio, fim: novoFim }
+          : a,
+      ),
+    )
+    setPreviaFaixasExtras((prev) =>
+      prev.map((f) => (MESMA_FAIXA(f, faixaAntiga) ? { inicio: novoInicio, fim: novoFim } : f)),
+    )
+  }
+
+  function removerFaixaPrevia(faixa: FaixaHoraria) {
+    const afetadas = previaAulas.filter((a) => a.inicio === faixa.inicio && a.fim === faixa.fim)
+    if (afetadas.length === 0) {
+      setPreviaFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+      return
+    }
+    Alert.alert(
+      t('grade.remover_faixa_titulo'),
+      t('grade.remover_faixa_texto', { n: afetadas.length }),
+      [
+        { text: t('acao.cancelar'), style: 'cancel' },
+        {
+          text: t('grade.remover_faixa'),
+          style: 'destructive',
+          onPress: () => {
+            setPreviaAulas((prev) =>
+              prev.filter((a) => !(a.inicio === faixa.inicio && a.fim === faixa.fim)),
+            )
+            setPreviaFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
+          },
+        },
+      ],
+    )
+  }
+
+  function adicionarFaixaPrevia(inicioFaixa: string, fimFaixa: string) {
+    setPreviaFaixasExtras((prev) =>
+      prev.some((f) => f.inicio === inicioFaixa && f.fim === fimFaixa)
+        ? prev
+        : [...prev, { inicio: inicioFaixa, fim: fimFaixa }],
+    )
   }
 
   const confirmarImportacao = () => {
@@ -341,10 +609,12 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     // é o pior tipo, porque a pessoa conclui que o app está quebrado.
     if (!previaImportacao) return
 
+    // Lê de `previaAulas`/`previaMateriasNomes` — o que a pessoa CORRIGIU na
+    // planilha — e não do resultado cru de `previaImportacao`.
     const mapaNomesParaId: Record<string, string> = {}
     let corIndice = 0
 
-    for (const nomeMat of previaImportacao.materias) {
+    for (const nomeMat of previaMateriasNomes) {
       const normalizado = nomeMat.trim().toLowerCase()
       const existente = materiasVivas.find((m: Materia) => m.nome.trim().toLowerCase() === normalizado)
       if (existente) {
@@ -362,7 +632,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
       }
     }
 
-    for (const aulaCrua of previaImportacao.aulas) {
+    for (const aulaCrua of previaAulas) {
       const matId = mapaNomesParaId[aulaCrua.materia]
       if (matId) {
         guardar('aulas', {
@@ -378,7 +648,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
     setModalColarVisivel(false)
     setTextoColado('')
-    setPreviaImportacao(null)
+    fecharPreviaEditavel()
   }
 
   return (
@@ -400,14 +670,18 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
           variante="vazado"
           aoTocar={() => {
             setTextoColado('')
-            setPreviaImportacao(null)
+            fecharPreviaEditavel()
             setModalColarVisivel(true)
           }}
         />
         <Botao
           texto={t('grade.adicionar_aula')}
           variante="vazado"
-          aoTocar={() => abrirCriacaoAula(diaVisivel)}
+          // O botão avançado: o formulário completo (dia, horário, sala,
+          // semana alternada), para quem quer preencher tudo de uma vez em
+          // vez de tocar célula por célula na planilha. Segunda-feira é só o
+          // ponto de partida do formulário — o campo de dia continua ali.
+          aoTocar={() => abrirCriacaoAula(diasParaExibir[0] ?? 1)}
         />
         {/* Apagar a grade inteira só aparece quando existe grade, e pede
             confirmação: é o único botão desta tela que destrói trabalho, e
@@ -453,60 +727,23 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         </Pressable>
       </Modal>
 
-      {aulasVivas.length === 0 ? (
-        <Vazio texto={t('grade.sem_aulas')} />
-      ) : (
-        <View style={{ gap: espaco.g }}>
-          {/* Abas de dia. Antes a grade rolava na horizontal, uma coluna por
-              dia: num telefone isso esconde metade da semana fora da tela e
-              obriga a arrastar para descobrir que existe sexta. */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: espaco.s, paddingRight: espaco.g }}
-          >
-            {diasParaExibir.map((dia: DiaSemana) => (
-              <Pilula
-                key={dia}
-                texto={t(`dia.abrev.${dia}` as ChaveI18n)}
-                ativa={dia === diaVisivel}
-                aoTocar={() => setDiaVisivel(dia)}
-              />
-            ))}
-          </ScrollView>
-
-          <View style={{ gap: espaco.m }}>
-            {aulasDoDiaVisivel.length === 0 ? (
-              <Vazio texto={t('hoje.sem_aulas')} />
-            ) : (
-              aulasDoDiaVisivel.map((aula: Aula) => {
-                const materia = mapaMaterias[aula.materiaId]
-                return (
-                  <Toque key={aula.id} aoTocar={() => abrirEdicaoAula(aula)} estilo={e.linhaAula}>
-                    <View style={e.horaAula}>
-                      <Text style={e.horaInicio}>{horaDeTexto(aula.inicio)}</Text>
-                      <Text style={e.horaFim}>{horaDeTexto(aula.fim)}</Text>
-                    </View>
-                    <Bolinha cor={materia?.cor ?? cores.texto3} />
-                    <View style={{ flex: 1, gap: 3 }}>
-                      <Titulo>{materia?.nome ?? ''}</Titulo>
-                      {aula.sala ? <Apoio>{aula.sala}</Apoio> : null}
-                      {aula.semana !== 'toda' ? (
-                        <Etiqueta texto={t(`grade.semana_${aula.semana}` as ChaveI18n)} />
-                      ) : null}
-                    </View>
-                  </Toque>
-                )
-              })
-            )}
-            <Toque aoTocar={() => abrirCriacaoAula(diaVisivel)} estilo={e.botaoVazioDia}>
-              <Text style={[fonte.apoio, { color: cores.texto3 }]}>
-                + {t('grade.adicionar_aula')}
-              </Text>
-            </Toque>
-          </View>
-        </View>
-      )}
+      {/* A grade em forma de planilha: colunas são os dias, linhas são os
+          horários, e cada célula toca para escolher a matéria. É o pedido
+          dele — "meio que um Excel" — no lugar do texto colado e do
+          formulário de uma aula por vez, que ninguém enxergava como semana. */}
+      <GradeSemanal
+        dias={diasParaExibir}
+        faixas={faixasPrincipais}
+        obterCelula={obterCelulaPrincipal}
+        materiasDisponiveis={opcoesMateriaPrincipal}
+        aoEscolherMateria={escolherMateriaPrincipal}
+        aoLimparCelula={limparCelulaPrincipal}
+        aoCriarMateria={criarMateriaPrincipal}
+        aoAbrirDetalhes={abrirDetalhesPrincipal}
+        aoSalvarFaixa={salvarFaixaPrincipal}
+        aoRemoverFaixa={removerFaixaPrincipal}
+        aoAdicionarFaixa={adicionarFaixaPrincipal}
+      />
 
       {/* Modal de Edição / Criação de Aula */}
       <Modal
@@ -697,10 +934,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
             ) : (
               <Secao titulo={t('grade.previa_titulo')}>
                 <Cartao>
-                  <Titulo>{t('grade.aulas_encontradas', { n: previaImportacao.aulas.length })}</Titulo>
-                  <Apoio>
-                    {previaImportacao.materias.join(', ')}
-                  </Apoio>
+                  <Titulo>{t('grade.aulas_encontradas', { n: previaAulas.length })}</Titulo>
+                  <Apoio>{previaMateriasNomes.join(', ')}</Apoio>
                   {/* Quem leu isto: a IA ou o algoritmo. Sem dizer, uma leitura
                       ruim parece defeito do app em vez de limite do método. */}
                   <Apoio cor={usouIa ? cores.ok : cores.texto3}>
@@ -712,6 +947,23 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   </Apoio>
                   {avisoIa ? <Apoio cor={cores.aviso}>{t(avisoIa as ChaveI18n)}</Apoio> : null}
                 </Cartao>
+
+                {/* A MESMA planilha da tela principal, só que sobre o estado
+                    local da prévia: aqui é onde a leitura da foto/colagem se
+                    confere e se corrige, célula por célula, em vez de aceitar
+                    ou rejeitar a leitura inteira no escuro. */}
+                <GradeSemanal
+                  dias={diasParaExibirPrevia}
+                  faixas={faixasPrevia}
+                  obterCelula={obterCelulaPrevia}
+                  materiasDisponiveis={opcoesMateriaPrevia}
+                  aoEscolherMateria={escolherMateriaPrevia}
+                  aoLimparCelula={limparCelulaPrevia}
+                  aoCriarMateria={criarMateriaPrevia}
+                  aoSalvarFaixa={salvarFaixaPrevia}
+                  aoRemoverFaixa={removerFaixaPrevia}
+                  aoAdicionarFaixa={adicionarFaixaPrevia}
+                />
 
                 {/* O app dizendo que NÃO está confiante.
                     
@@ -746,7 +998,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                     <Botao
                       texto={t('grade.duvida_corrigir')}
                       variante="vazado"
-                      aoTocar={() => setPreviaImportacao(null)}
+                      aoTocar={fecharPreviaEditavel}
                     />
                   </Cartao>
                 ) : null}
@@ -763,11 +1015,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                 ) : null}
 
                 <Botao texto={t('grade.confirmar_importacao')} aoTocar={confirmarImportacao} />
-                <Botao
-                  texto={t('grade.limpar')}
-                  variante="vazado"
-                  aoTocar={() => setPreviaImportacao(null)}
-                />
+                <Botao texto={t('grade.limpar')} variante="vazado" aoTocar={fecharPreviaEditavel} />
                 <Botao
                   texto={t('acao.cancelar')}
                   variante="discreto"
@@ -800,18 +1048,6 @@ const e = StyleSheet.create({
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
   ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.s, lineHeight: 18 },
-  linhaAula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
-  horaAula: { minWidth: 46, paddingTop: 1 },
-  horaInicio: { fontSize: 15, fontWeight: '600', color: cores.texto, fontVariant: ['tabular-nums'] },
-  horaFim: { fontSize: 13, color: cores.texto3, fontVariant: ['tabular-nums'] },
-  botaoVazioDia: {
-    padding: espaco.m,
-    borderRadius: raio.m,
-    borderWidth: 1,
-    borderColor: cores.borda,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
   modalConteudo: { flex: 1, backgroundColor: cores.fundo, padding: espaco.g },
   campo: { gap: espaco.xs },
   input: {

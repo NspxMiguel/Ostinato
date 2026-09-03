@@ -511,21 +511,32 @@ export function Linha({
 export function LinhaDeMenu({
   titulo,
   valor,
+  icone,
+  perigo,
   aoTocar,
 }: {
   titulo: string
   valor?: string
+  /** Selo à esquerda do título — usado na lista de categorias dos Ajustes. */
+  icone?: ReactNode
+  /** Tinge o título e a seta com a cor de aviso, para a linha que é destrutiva. */
+  perigo?: boolean
   aoTocar: () => void
 }) {
   return (
     <Toque aoTocar={aoTocar} estilo={e.linhaDeMenu}>
-      <Text style={[fonte.corpo, { flex: 1 }]}>{titulo}</Text>
+      {icone}
+      <Text style={[fonte.corpo, { flex: 1 }, perigo ? { color: cores.aviso } : null]}>
+        {titulo}
+      </Text>
       {valor ? (
         <Text style={[fonte.apoio, { color: cores.texto3 }]} numberOfLines={1}>
           {valor}
         </Text>
       ) : null}
-      <Text style={{ color: cores.texto4, fontSize: 20, marginTop: -2 }}>›</Text>
+      <Text style={{ color: perigo ? cores.aviso : cores.texto4, fontSize: 20, marginTop: -2 }}>
+        ›
+      </Text>
     </Toque>
   )
 }
