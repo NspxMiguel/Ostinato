@@ -23,6 +23,7 @@ import {
 import { comInicialMinuscula, dataPorExtenso, horaDeTexto, quandoPorExtenso } from '../formato.ts'
 import { ehAssuntoDeHoje, estaAtrasado } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
+import { Deslizar } from '../componentes/Deslizar.tsx'
 import { usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco } from '../tema.ts'
 
@@ -41,6 +42,7 @@ export function Hoje({
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
+  const guardar = usarLoja((e) => e.guardar)
   const recursos = ajustes.recursos
   const [agora, setAgora] = useState(() => new Date())
 
@@ -126,6 +128,25 @@ export function Hoje({
             const aviso = item.proximoAviso
             return (
               <Entrada key={item.compromisso.id} indice={i}>
+              {/* Arrastar para o lado vale AQUI também.
+                  
+                  Ele reclamou em 31/08/2026: *"arrastar tarefa pro lado n ta
+                  funcionando no hoje"*. Não estava quebrado — eu tinha posto o
+                  gesto só na Agenda. E o Hoje é justamente a tela onde marcar
+                  "fiz" tem mais valor, porque é o que ele abre para saber o que
+                  falta hoje. */}
+              <Deslizar
+                aoConcluir={() =>
+                  guardar('compromissos', {
+                    id: item.compromisso.id,
+                    concluido: true,
+                    concluidoEm: Date.now(),
+                  })
+                }
+                aoRemover={() => guardar('compromissos', { id: item.compromisso.id, removido: true })}
+                rotuloConcluir={t('notificacao.acao.feito')}
+                rotuloRemover={t('acao.apagar')}
+              >
               <Cartao
                 faixa={materia?.cor}
                 // O cartão inteiro fica vermelho quando está atrasado. A bolinha
@@ -192,6 +213,7 @@ export function Hoje({
                   </>
                 ) : null}
               </Cartao>
+              </Deslizar>
               </Entrada>
             )
           })
