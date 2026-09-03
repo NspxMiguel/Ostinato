@@ -26,6 +26,15 @@ const DIAS: [RegExp, number][] = [
   [/^(qui|thu|quinta|thursday|jue|jeu)/i, 4],
   [/^(sex|fri|sexta|friday|vie|ven)/i, 5],
   [/^(sab|sáb|sat|sabado|sábado|saturday|sam)/i, 6],
+  // Ordinal weekday notation from the Brazilian school calendar ("2ª",
+  // "2ª-feira" = Monday, … "6ª-feira" = Friday). It is not an abbreviation
+  // of a name, so it needs its own pattern instead of joining the prefixes
+  // above. Saturday and Sunday are not written this way, so they're absent.
+  [/^2\s*[ªaº°]/i, 1],
+  [/^3\s*[ªaº°]/i, 2],
+  [/^4\s*[ªaº°]/i, 3],
+  [/^5\s*[ªaº°]/i, 4],
+  [/^6\s*[ªaº°]/i, 5],
 ]
 
 function diaDe(texto: string): number | null {
@@ -36,23 +45,49 @@ function diaDe(texto: string): number | null {
 }
 
 /**
- * Duas horas numa célula: "07:25-08:00", "07:25 - 08:00", "7h25 às 8h".
+ * Duas horas numa célula: "07:25-08:00", "07:25 - 08:00", "7h25 às 8h",
+ * "7.30 - 8.15".
  *
- * O separador é qualquer coisa que não seja dígito nem `:` — no OCR ele vem
- * como hífen, travessão, "às", ou some junto com um espaço perdido.
+ * The mark between hour and minute is ":", "h"/"H" or "." — the dot is what
+ * shows up when a spreadsheet exports the time as a decimal number, or when
+ * someone writes it by hand the European way.
+ *
+ * The separator BETWEEN the two times is anything that isn't a digit or a
+ * time mark — in OCR it comes as a hyphen, an em dash, "às", "até", or it
+ * disappears along with a lost space.
+ *
+ * The minute accepts a single digit too ("8:0" → "08:00"), for the same
+ * reason the hour was already zero-padded: a swallowed digit is the OCR's
+ * most common bite, and a one-digit minute only makes sense read as
+ * zero-padded.
  */
+const TIME_PATTERN = /(\d{1,2})\s*[:hH.]\s*(\d{1,2})\b/g
+
 export function horasDaCelula(texto: string): { inicio: string; fim: string } | null {
-  const achadas = [...texto.matchAll(/(\d{1,2})\s*[:hH]\s*(\d{2})/g)].map(
-    (m) => `${String(Number(m[1])).padStart(2, '0')}:${m[2]}`,
+  const achadas = [...texto.matchAll(TIME_PATTERN)].map(
+    (m) => `${String(Number(m[1])).padStart(2, '0')}:${String(Number(m[2])).padStart(2, '0')}`,
   )
   if (achadas.length < 2) return null
   return { inicio: achadas[0]!, fim: achadas[1]! }
 }
 
-/** Uma hora só na célula, para o reparo de linha mutilada. */
+/** A single time in the cell — for rows that only carry a start or an end. */
 function umaHoraDaCelula(texto: string): string | null {
-  const m = texto.match(/(\d{1,2})\s*[:hH]\s*(\d{2})/)
-  return m ? `${String(Number(m[1])).padStart(2, '0')}:${m[2]}` : null
+  const m = new RegExp(TIME_PATTERN.source).exec(texto)
+  return m ? `${String(Number(m[1])).padStart(2, '0')}:${String(Number(m[2])).padStart(2, '0')}` : null
+}
+
+/**
+ * A cell with no class in it: empty, punctuation standing in for a blank
+ * line on paper, or one of the words a school uses to say "nothing happens
+ * here" — break, recess, lunch, free, vacant. None of those is a subject,
+ * and counting them as one invents a discipline that doesn't exist.
+ */
+const NO_CLASS_CELL = /^(?:[-–—.·]+|livre|vago|vaga|intervalo|recreio|almoco|almoço)$/i
+
+function cellHasNoClass(texto: string): boolean {
+  const t = texto.trim()
+  return t === '' || NO_CLASS_CELL.test(t)
 }
 
 /** Onde estão os dias: a linha com mais nomes de dia da semana. */
@@ -71,6 +106,9 @@ function linhaDoCabecalho(tabela: readonly (readonly string[])[]): number {
   return quantos >= 2 ? melhor : -1
 }
 
+/** A row's time signal: an explicit pair, or a lone time to complete later. */
+type RowTime = { index: number; pair: { inicio: string; fim: string } | null; loose: string | null }
+
 /**
  * Lê a grade. Devolve vazio quando ela não tem a forma de horário — e aí quem
  * chama passa a bola para o modelo.
@@ -87,34 +125,54 @@ export function aulasDaTabela(tabela: readonly (readonly string[])[]): AulaCrua[
     if (d !== null) diaDaColuna.set(i, d)
   })
 
-  const saida: AulaCrua[] = []
-  /** O fim da última linha lida, para reparar a próxima se ela vier quebrada. */
-  let ultimoFim: string | null = null
+  // First pass: what each data row HAS in the way of a time — an explicit
+  // pair, or just a lone time. Resolving a lone time needs looking at a
+  // neighboring row, which is why it waits for the second pass.
+  const rowTimes: RowTime[] = []
   for (let i = cabecalho + 1; i < tabela.length; i++) {
     const linha = tabela[i]!
-    // O horário da linha: a primeira célula que tenha duas horas. Quase sempre
-    // é a primeira coluna, mas há escola que põe o horário no fim.
-    let horas = linha.map(horasDaCelula).find((h) => h !== null) ?? null
+    const pair = linha.map(horasDaCelula).find((h) => h !== null) ?? null
+    const loose = pair ? null : (linha.map(umaHoraDaCelula).find((h) => h !== null) ?? null)
+    if (pair || loose) rowTimes.push({ index: i, pair, loose })
+  }
 
-    // Uma hora só, e a anterior terminou: a linha herda o fim da de cima.
-    //
-    // Isto não é chute, é uma propriedade que horário escolar TEM: as faixas
-    // são contíguas, uma começa onde a outra acabou. E é o que salva a linha
-    // que o OCR mutilou — na foto dele, "08:00 - 08:45" chegou como
-    // ":00 - 08:45", e sem isto as cinco aulas daquela linha sumiam CALADAS,
-    // que é o pior desfecho: a grade fica com um buraco e ninguém percebe.
-    if (!horas && ultimoFim) {
-      const uma = linha.map(umaHoraDaCelula).find((h) => h !== null)
-      if (uma && uma > ultimoFim) horas = { inicio: ultimoFim, fim: uma }
+  const saida: AulaCrua[] = []
+  let ultimoFim: string | null = null
+  for (let k = 0; k < rowTimes.length; k++) {
+    const row = rowTimes[k]!
+    let horas = row.pair
+
+    if (!horas && row.loose) {
+      // Two possible readings for a lone time, tried in this order:
+      //
+      // 1. It's the END of a row whose START the OCR ate — in the photo he
+      //    sent, "08:00 - 08:45" arrived as ":00 - 08:45". Tried first
+      //    because it's the measured real-world case, and because a lone
+      //    time greater than the previous end is a strong signal: school
+      //    periods are contiguous.
+      if (ultimoFim && row.loose > ultimoFim) {
+        horas = { inicio: ultimoFim, fim: row.loose }
+      } else {
+        // 2. It's the START, and the end is the START of the NEXT row —
+        //    this is the schedule column that only ever prints "07:25",
+        //    "08:10", "08:55", once per row, and the final row (with no
+        //    subject cells) exists only to mark where the day ends.
+        //    Without looking ahead, this whole column disappears silently:
+        //    its first row never has an `ultimoFim` to inherit from.
+        const nextRow = rowTimes[k + 1]
+        const nextStart = nextRow ? (nextRow.pair?.inicio ?? nextRow.loose) : null
+        if (nextStart && nextStart > row.loose) {
+          horas = { inicio: row.loose, fim: nextStart }
+        }
+      }
     }
     if (!horas) continue
     ultimoFim = horas.fim
 
+    const rowCells = tabela[row.index]!
     for (const [coluna, dia] of diaDaColuna) {
-      const materia = (linha[coluna] ?? '').trim()
-      // Célula vazia é intervalo ou dia sem aula. Célula que é só pontuação
-      // também: o OCR devolve "-" e "—" onde o papel tinha uma linha.
-      if (materia === '' || /^[-–—.·]+$/.test(materia)) continue
+      const materia = (rowCells[coluna] ?? '').trim()
+      if (cellHasNoClass(materia)) continue
       saida.push({
         diaSemana: dia as AulaCrua['diaSemana'],
         inicio: horas.inicio as AulaCrua['inicio'],
