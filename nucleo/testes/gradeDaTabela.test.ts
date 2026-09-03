@@ -75,3 +75,24 @@ test('texto colado com | volta a ser tabela', () => {
 test('frase solta com uma barra NAO vira tabela', () => {
   assert.deepEqual(tabelaDoTexto('prova de mat | sexta'), [])
 })
+
+test('linha mutilada pelo OCR herda o fim da linha de cima', () => {
+  // Da foto real dele: "08:00 - 08:45" chegou como ":00 - 08:45". Sem o reparo,
+  // as cinco aulas daquela linha sumiam sem ninguem perceber.
+  const t = [
+    ['', 'SEG', 'TER'],
+    ['07:25 - 08:00', 'ERE', 'ALE'],
+    [':00 - 08:45', 'Culto', 'ALE'],
+  ]
+  const aulas = aulasDaTabela(t)
+  assert.equal(aulas.length, 4, 'as duas linhas entram')
+  const reparada = aulas.filter((a) => a.materia === 'Culto')[0]!
+  assert.equal(reparada.inicio, '08:00', 'herdou o fim da linha de cima')
+  assert.equal(reparada.fim, '08:45')
+})
+
+test('sem linha anterior, a mutilada continua fora', () => {
+  // Reparar sem referencia seria inventar horario.
+  const t = [['', 'SEG'], [':00 - 08:45', 'Culto']]
+  assert.deepEqual(aulasDaTabela(t), [])
+})

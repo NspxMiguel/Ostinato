@@ -49,6 +49,12 @@ export function horasDaCelula(texto: string): { inicio: string; fim: string } | 
   return { inicio: achadas[0]!, fim: achadas[1]! }
 }
 
+/** Uma hora só na célula, para o reparo de linha mutilada. */
+function umaHoraDaCelula(texto: string): string | null {
+  const m = texto.match(/(\d{1,2})\s*[:hH]\s*(\d{2})/)
+  return m ? `${String(Number(m[1])).padStart(2, '0')}:${m[2]}` : null
+}
+
 /** Onde estão os dias: a linha com mais nomes de dia da semana. */
 function linhaDoCabecalho(tabela: readonly (readonly string[])[]): number {
   let melhor = -1
@@ -82,12 +88,27 @@ export function aulasDaTabela(tabela: readonly (readonly string[])[]): AulaCrua[
   })
 
   const saida: AulaCrua[] = []
+  /** O fim da última linha lida, para reparar a próxima se ela vier quebrada. */
+  let ultimoFim: string | null = null
   for (let i = cabecalho + 1; i < tabela.length; i++) {
     const linha = tabela[i]!
     // O horário da linha: a primeira célula que tenha duas horas. Quase sempre
     // é a primeira coluna, mas há escola que põe o horário no fim.
-    const horas = linha.map(horasDaCelula).find((h) => h !== null)
+    let horas = linha.map(horasDaCelula).find((h) => h !== null) ?? null
+
+    // Uma hora só, e a anterior terminou: a linha herda o fim da de cima.
+    //
+    // Isto não é chute, é uma propriedade que horário escolar TEM: as faixas
+    // são contíguas, uma começa onde a outra acabou. E é o que salva a linha
+    // que o OCR mutilou — na foto dele, "08:00 - 08:45" chegou como
+    // ":00 - 08:45", e sem isto as cinco aulas daquela linha sumiam CALADAS,
+    // que é o pior desfecho: a grade fica com um buraco e ninguém percebe.
+    if (!horas && ultimoFim) {
+      const uma = linha.map(umaHoraDaCelula).find((h) => h !== null)
+      if (uma && uma > ultimoFim) horas = { inicio: ultimoFim, fim: uma }
+    }
     if (!horas) continue
+    ultimoFim = horas.fim
 
     for (const [coluna, dia] of diaDaColuna) {
       const materia = (linha[coluna] ?? '').trim()
