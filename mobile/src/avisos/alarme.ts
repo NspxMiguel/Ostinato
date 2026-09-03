@@ -55,3 +55,25 @@ export function soltarAlarme(): void {
   tocador?.remove()
   tocador = null
 }
+
+/**
+ * Toca o sino UMA vez, para ouvir antes de escolher.
+ *
+ * `tocarAlarme` toca em LAÇO, porque ele é o alarme: parar é decisão de quem
+ * acorda. Aqui é prévia, e prévia que não acaba é defeito — ele reclamou em
+ * 31/08/2026: *"ao clicar em som padrao do app, ele n para de tocar ate fechar
+ * o app"*.
+ *
+ * O motivo de a limpeza de tela não ter resolvido: com a barra de abas nativa
+ * as quatro abas ficam MONTADAS o tempo todo, então sair dos Ajustes não
+ * desmonta nada e o `return` do efeito nunca roda. O conserto certo não é
+ * caçar o momento de parar — é não começar um som infinito.
+ */
+export async function ouvirSinoUmaVez(): Promise<void> {
+  await prepararAudio()
+  pararAlarme()
+  tocador = createAudioPlayer(SINO)
+  tocador.loop = false
+  tocador.volume = 1
+  tocador.play()
+}

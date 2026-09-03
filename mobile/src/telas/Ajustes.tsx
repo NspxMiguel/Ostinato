@@ -50,7 +50,7 @@ import {
 } from 'som-do-alarme'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { SOM_DO_APP } from '../avisos/notificacoes.ts'
-import { pararAlarme, tocarAlarme } from '../avisos/alarme.ts'
+import { ouvirSinoUmaVez, pararAlarme } from '../avisos/alarme.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { VERSAO } from '../versao.ts'
 
@@ -471,7 +471,7 @@ export function Ajustes({ aoEscanearHorario }: {
                   // `ouvirSom` lê de `Library/Sounds`; o sino mora na bundle.
                   // Chamar ele aqui devolveria silêncio, e silêncio ao tocar
                   // num som parece som quebrado.
-                  void tocarAlarme()
+                  void ouvirSinoUmaVez()
                 }}
               />
               {sons.map((nome) => (

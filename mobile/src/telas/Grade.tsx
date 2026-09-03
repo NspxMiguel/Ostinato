@@ -132,6 +132,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     }
   }
   const [usouIa, setUsouIa] = useState(false)
+  const [confirmandoLimpeza, setConfirmandoLimpeza] = useState(false)
   const [avisoIa, setAvisoIa] = useState<string | null>(null)
   const [analisando, setAnalisando] = useState(false)
   /** 1 quando o texto não veio de foto: sem OCR não há confiança para medir. */
@@ -381,7 +382,49 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
           variante="vazado"
           aoTocar={() => abrirCriacaoAula(diaVisivel)}
         />
+        {/* Apagar a grade inteira só aparece quando existe grade, e pede
+            confirmação: é o único botão desta tela que destrói trabalho, e
+            reescanear um horário custa fotografar de novo. */}
+        {aulasVivas.length > 0 ? (
+          <Botao
+            texto={t('grade.apagar_tudo')}
+            variante="discreto"
+            aoTocar={() => setConfirmandoLimpeza(true)}
+          />
+        ) : null}
       </Fileira>
+
+      <Modal
+        visible={confirmandoLimpeza}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmandoLimpeza(false)}
+      >
+        <Pressable
+          style={e.fundoDaConfirmacao}
+          onPress={() => setConfirmandoLimpeza(false)}
+        >
+          <View style={e.caixaDaConfirmacao}>
+            <Titulo>{t('grade.apagar_tudo_titulo')}</Titulo>
+            <Apoio>{t('grade.apagar_tudo_texto', { n: aulasVivas.length })}</Apoio>
+            <Botao
+              texto={t('grade.apagar_tudo')}
+              aoTocar={() => {
+                // Remoção LÓGICA, uma por uma: o registro vira lápide e o sync
+                // leva a remoção junto. Apagar do armazenamento faria a aula
+                // voltar do outro aparelho na próxima sincronização.
+                for (const a of aulasVivas) remover('aulas', a.id)
+                setConfirmandoLimpeza(false)
+              }}
+            />
+            <Botao
+              texto={t('acao.cancelar')}
+              variante="vazado"
+              aoTocar={() => setConfirmandoLimpeza(false)}
+            />
+          </View>
+        </Pressable>
+      </Modal>
 
       {aulasVivas.length === 0 ? (
         <Vazio texto={t('grade.sem_aulas')} />
@@ -671,6 +714,20 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 }
 
 const e = StyleSheet.create({
+  fundoDaConfirmacao: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    padding: espaco.g,
+  },
+  caixaDaConfirmacao: {
+    // Opaco: a caixa flutua sobre a tela e não tem preto por baixo para se
+    // apoiar. Mesma lição da folha da roda e do cartão do arrastar.
+    backgroundColor: cores.fundoElevado,
+    borderRadius: raio.g,
+    padding: espaco.g,
+    gap: espaco.m,
+  },
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
   ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.s, lineHeight: 18 },

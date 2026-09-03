@@ -159,6 +159,9 @@ const traducoes = {
     'dia.abrev.5': 'Sex',
     'dia.abrev.6': 'Sáb',
 
+    'grade.apagar_tudo': 'Apagar todas as aulas',
+    'grade.apagar_tudo_titulo': 'Apagar a grade inteira?',
+    'grade.apagar_tudo_texto': '{n} aula(s) saem do horário. As matérias, as notas e as faltas ficam.',
     'grade.adicionar_aula': 'Adicionar aula',
     'grade.colar_horario': 'Colar horário',
     'papel.da_galeria': 'Escolher da galeria',
@@ -523,6 +526,9 @@ const traducoes = {
     'dia.abrev.5': 'Fri',
     'dia.abrev.6': 'Sat',
 
+    'grade.apagar_tudo': 'Delete every class',
+    'grade.apagar_tudo_titulo': 'Delete the whole timetable?',
+    'grade.apagar_tudo_texto': '{n} class(es) leave the timetable. Subjects, grades and absences stay.',
     'grade.adicionar_aula': 'Add class',
     'grade.colar_horario': 'Paste schedule',
     'papel.da_galeria': 'Choose from photos',
@@ -887,6 +893,9 @@ const traducoes = {
     'dia.abrev.5': 'Vie',
     'dia.abrev.6': 'Sáb',
 
+    'grade.apagar_tudo': 'Borrar todas las clases',
+    'grade.apagar_tudo_titulo': '\u00bfBorrar todo el horario?',
+    'grade.apagar_tudo_texto': '{n} clase(s) salen del horario. Las asignaturas, las notas y las faltas se quedan.',
     'grade.adicionar_aula': 'Añadir clase',
     'grade.colar_horario': 'Pegar horario',
     'papel.da_galeria': 'Elegir de la galería',
@@ -1251,6 +1260,9 @@ const traducoes = {
     'dia.abrev.5': 'Ven',
     'dia.abrev.6': 'Sam',
 
+    'grade.apagar_tudo': 'Supprimer tous les cours',
+    'grade.apagar_tudo_titulo': 'Supprimer tout l\u2019emploi du temps\u00a0?',
+    'grade.apagar_tudo_texto': '{n} cours quittent l\u2019emploi du temps. Les mati\u00e8res, les notes et les absences restent.',
     'grade.adicionar_aula': 'Ajouter un cours',
     'grade.colar_horario': 'Coller l\u2019emploi du temps',
     'papel.da_galeria': 'Choisir dans les photos',
