@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import type { Base, Compromisso, DataISO, DiaSemana, Hora, Materia, TipoCompromisso } from '../../../nucleo/modelo.ts'
 import { aulasDoDia, periodoAtivo } from '../../../nucleo/grade.ts'
+import { turnosComAulas } from '../../../nucleo/turnosDoDia.ts'
 import { planejar, type AvisoAgendado } from '../../../nucleo/planejador.ts'
 import { resolverVencimento, type VencimentoResolvido } from '../../../nucleo/vencimento.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
@@ -67,6 +68,9 @@ export function Hoje({
     [base, periodo, ajustes.inverterSemanaAlternada, agora, plano],
   )
 
+  // Aulas seguidas da mesma matéria viram um bloco, e os blocos se agrupam em
+  // manhã/tarde/noite — sem inventar turno que o dia não tem.
+  const turnos = turnosComAulas(aulas)
   const semGrade = vivos(base.aulas).length === 0
   const semCompromisso = vivos(base.compromissos).length === 0
 
@@ -84,34 +88,56 @@ export function Hoje({
             aoAgir={semGrade ? aoIrParaGrade : undefined}
           />
         ) : (
-          aulas.map((item, i) => {
-            const inicio = instante(item.data, item.aula.inicio)
-            const fim = instante(item.data, item.aula.fim)
-            const ms = agora.getTime()
-            const acontecendo = ms >= inicio.getTime() && ms < fim.getTime()
-            const passou = ms >= fim.getTime()
-            const sala = item.aula.sala ?? item.materia?.sala
-            return (
-              <Entrada key={item.aula.id} indice={i}>
-                <View style={[e.aula, passou ? e.passou : null]}>
-                  {/* O horário vira coluna à esquerda: a pessoa lê a régua do dia
-                      de cima a baixo, sem caçar a hora dentro de cada linha. */}
-                  <View style={e.hora}>
-                    <Text style={e.horaInicio}>{horaDeTexto(item.aula.inicio)}</Text>
-                    <Text style={e.horaFim}>{horaDeTexto(item.aula.fim)}</Text>
-                  </View>
-                  <Bolinha cor={item.materia?.cor ?? cores.texto3} />
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <Linha entre>
-                      <Titulo>{item.materia?.nome ?? ''}</Titulo>
-                      {acontecendo ? <Etiqueta texto={t('hoje.agora')} cor={cores.destaque} /> : null}
-                    </Linha>
-                    {sala ? <Apoio>{sala}</Apoio> : null}
-                  </View>
-                </View>
-              </Entrada>
-            )
-          })
+          turnos.map((grupo) => (
+            <View key={grupo.turno} style={{ gap: espaco.s }}>
+              {/* O título do turno só aparece quando há MAIS de um. Num dia que
+                  cabe todo na manhã, "Manhã" sozinho não informa nada — só
+                  empurra a lista para baixo. */}
+              {turnos.length > 1 ? (
+                <Text style={e.turno}>{t(`turno.${grupo.turno}` as const)}</Text>
+              ) : null}
+              {grupo.blocos.map((bloco, i) => {
+                const inicio = instante(bloco.aulas[0]!.data, bloco.inicio)
+                const fim = instante(bloco.aulas[0]!.data, bloco.fim)
+                const ms = agora.getTime()
+                const acontecendo = ms >= inicio.getTime() && ms < fim.getTime()
+                const passou = ms >= fim.getTime()
+                const primeira = bloco.aulas[0]!
+                const sala = primeira.aula.sala ?? bloco.materia?.sala
+                return (
+                  <Entrada key={primeira.aula.id} indice={i}>
+                    <View style={[e.aula, passou ? e.passou : null]}>
+                      {/* O horário vira coluna à esquerda: a pessoa lê a régua do
+                          dia de cima a baixo, sem caçar a hora dentro de cada
+                          linha. */}
+                      <View style={e.hora}>
+                        <Text style={e.horaInicio}>{horaDeTexto(bloco.inicio)}</Text>
+                        <Text style={e.horaFim}>{horaDeTexto(bloco.fim)}</Text>
+                      </View>
+                      <Bolinha cor={bloco.materia?.cor ?? cores.texto3} />
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Linha entre>
+                          <Titulo>{bloco.materia?.nome ?? ''}</Titulo>
+                          {acontecendo ? (
+                            <Etiqueta texto={t('hoje.agora')} cor={cores.destaque} />
+                          ) : null}
+                        </Linha>
+                        {/* Quantos tempos, porque unificar esconde essa conta e
+                            ela importa: duas aulas seguidas de história não são
+                            a mesma coisa que uma. */}
+                        <Linha>
+                          {bloco.aulas.length > 1 ? (
+                            <Apoio>{t('turno.tempos', { n: bloco.aulas.length })}</Apoio>
+                          ) : null}
+                          {sala ? <Apoio>{sala}</Apoio> : null}
+                        </Linha>
+                      </View>
+                    </View>
+                  </Entrada>
+                )
+              })}
+            </View>
+          ))
         )}
       </Secao>
       ) : null}
@@ -332,6 +358,16 @@ function duracaoPorExtenso(ms: number, t: TFn): string {
 
 const e = StyleSheet.create({
   passou: { opacity: 0.4 },
+  // Menor e mais apagado que o título da seção: é uma divisória dentro da
+  // lista, não um segundo cabeçalho competindo com "Aulas de hoje".
+  turno: {
+    color: cores.texto3,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: espaco.s,
+  },
   aula: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.m },
   // Largura mínima, não fixa: horário é numérico e não cresce com o idioma, mas
   // 24h ("13:30") e 12h ("1:30 PM") têm larguras diferentes.
