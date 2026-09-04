@@ -27,6 +27,7 @@ import {
 import { pararAlarme, tocarAlarme } from './avisos/alarme.ts'
 import { pararAlarmeDoSistema, temAlarmeDeSistema } from 'alarme-do-sistema'
 import { registrarTarefaDeFundo } from './avisos/tarefaDeFundo.ts'
+import { ligarTelemetria } from './telemetria.ts'
 import { atualizarAtividadeViva } from './avisos/atividadeViva.ts'
 import { atualizarWidget } from './avisos/widget.ts'
 import { Hoje } from './telas/Hoje.tsx'
@@ -65,6 +66,13 @@ export function Raiz() {
   const [aba, setAba] = useState<Aba>('hoje')
   /** A procedência do último estado que o controlador nativo confirmou. */
   const procedencia = useRef(0)
+
+  // Uma vez só, cedo: todo erro JS não tratado passa a ser reportado. Ver
+  // telemetria.ts — não trava o app, e falha em silêncio se o servidor não
+  // responder.
+  useEffect(() => {
+    ligarTelemetria()
+  }, [])
   const recursos = usarLoja((s) => s.ajustes.recursos)
   // A barra mostra só o que a pessoa usa. Aba que abre um muro é pior que aba
   // que não existe.
