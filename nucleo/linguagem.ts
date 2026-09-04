@@ -515,10 +515,12 @@ const RECIPIENTES_PT =
  *
  * "num"/"numa" (contração de "em um/uma") faltavam aqui e causavam o mesmo
  * estrago do "no caderno": "português num post it" virava o nome de matéria
- * inteiro em vez de parar em "português".
+ * inteiro em vez de parar em "português". Levantamento das outras contrações
+ * de lugar do português que tinham o mesmo risco: "dum/duma" (de+um/uma) e
+ * "pelo/pela/pelos/pelas" (por+o/a) — mesmo padrão, mesma correção.
  */
 const COMPLEMENTO: Partial<Record<Idioma, RegExp>> = {
-  pt: /\b(?:no|na|nos|nas|num|numa|em|pra|pro|para|sobre|com|ate|usando|paginas?|pagina)\b/g,
+  pt: /\b(?:no|na|nos|nas|num|numa|dum|duma|pelo|pela|pelos|pelas|em|pra|pro|para|sobre|com|ate|usando|paginas?|pagina)\b/g,
   es: /\b(?:en|para|sobre|con|hasta|paginas?)\b/g,
   fr: /\b(?:dans|sur|pour|avec|jusqu)\b/g,
 }

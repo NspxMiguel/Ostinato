@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Modal, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native'
+import { Alert, Linking, Modal, Pressable, StyleSheet, Switch, TextInput, View, Text } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import {
   IDIOMAS,
@@ -35,7 +35,7 @@ import { rotuloDeRegra } from '../formato.ts'
 import { criarPeriodoPadrao } from '../periodoPadrao.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
-import { idiomaDoSistema, usarT } from '../i18n.ts'
+import { idiomaDoSistema, usarIdioma, usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 import {
   estadoDoAlarme,
@@ -55,6 +55,7 @@ import { ouvirSomDoAppUmaVez, pararAlarme } from '../avisos/alarme.ts'
 import { SONS_DO_APP } from '../avisos/sons.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import { VERSAO } from '../versao.ts'
+import { documentoLegal, EMAIL_SUPORTE, type TipoLegal } from '../../../nucleo/legal.ts'
 
 function Campo({
   rotulo,
@@ -449,6 +450,7 @@ export function Ajustes({ aoEscanearHorario }: {
   aoEscanearHorario?: () => void
 }) {
   const t = usarT()
+  const idioma = usarIdioma()
   // O motivo vem do módulo nativo, e não de um texto fixo: quando a conta paga
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
   // seria mandar o usuário resolver o problema errado.
@@ -507,6 +509,10 @@ export function Ajustes({ aoEscanearHorario }: {
   /** Qual categoria está aberta na raiz — é o que troca a coluna única pelas
       telas do padrão "Ajustes do iPhone". */
   const [categoria, setCategoria] = useState<Categoria | null>(null)
+  /** Privacidade ou termos abertos — folha ANINHADA dentro do modal "Sobre",
+      nunca irmã dele (dois `Modal` irmãos visíveis ao mesmo tempo não empilham
+      certo no iOS — já corrigido nesta tela uma vez, ver PEDIDOS.md). */
+  const [legalAberto, setLegalAberto] = useState<TipoLegal | null>(null)
   /** Qual tipo de compromisso está com as regras abertas na folha, dentro da
       categoria Avisos. */
   const [tipoAberto, setTipoAberto] = useState<TipoCompromisso | null>(null)
@@ -1129,8 +1135,60 @@ export function Ajustes({ aoEscanearHorario }: {
               ) : null}
             </View>
           </Grupo>
+
+          <Grupo>
+            <LinhaDeMenu
+              titulo={t('ajustes.suporte')}
+              valor={EMAIL_SUPORTE}
+              aoTocar={() => Linking.openURL(`mailto:${EMAIL_SUPORTE}`)}
+            />
+            <LinhaDeMenu titulo={t('ajustes.privacidade')} aoTocar={() => setLegalAberto('privacidade')} />
+            <LinhaDeMenu titulo={t('ajustes.termos')} aoTocar={() => setLegalAberto('termos')} />
+          </Grupo>
+
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
         </Tela>
+
+        {/* Privacidade/termos — ANINHADO aqui dentro, não irmão do "Sobre":
+            dois <Modal> irmãos visíveis ao mesmo tempo não empilham certo no
+            iOS (bug já corrigido nesta mesma tela, ver PEDIDOS.md). */}
+        <Modal
+          visible={legalAberto !== null}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setLegalAberto(null)}
+        >
+          {legalAberto ? (
+            <Tela titulo={t(legalAberto === 'privacidade' ? 'ajustes.privacidade' : 'ajustes.termos')}>
+              {(() => {
+                const doc = documentoLegal(legalAberto, idioma)
+                return (
+                  <Grupo>
+                    <View style={estilo.bloco}>
+                      <Apoio cor={cores.texto3}>
+                        {t('legal.atualizado_em')} {doc.atualizadoEm}
+                      </Apoio>
+                      <Text style={{ color: cores.texto, marginTop: espaco.s }}>{doc.introducao}</Text>
+                    </View>
+                    {doc.secoes.map((secao) => (
+                      <View key={secao.titulo} style={estilo.bloco}>
+                        <Text style={{ color: cores.texto, fontWeight: '600', marginBottom: espaco.xs }}>
+                          {secao.titulo}
+                        </Text>
+                        {secao.paragrafos.map((p) => (
+                          <Text key={p} style={{ color: cores.textoFraco, marginTop: espaco.xs }}>
+                            {p}
+                          </Text>
+                        ))}
+                      </View>
+                    ))}
+                  </Grupo>
+                )
+              })()}
+              <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setLegalAberto(null)} />
+            </Tela>
+          ) : null}
+        </Modal>
       </Modal>
 
       {/* ————— Dados (zona de risco) ————— */}
