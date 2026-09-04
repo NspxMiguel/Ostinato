@@ -32,6 +32,7 @@ import {
 import { isLiquidGlassAvailable } from 'expo-glass-effect'
 import { ImportarCalendario } from './ImportarCalendario.tsx'
 import { rotuloDeRegra } from '../formato.ts'
+import { criarPeriodoPadrao } from '../periodoPadrao.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
 import { idiomaDoSistema, usarT } from '../i18n.ts'
@@ -1042,7 +1043,18 @@ export function Ajustes({ aoEscanearHorario }: {
                 }
               />
             ) : (
-              <Vazio texto={t('ajustes.sem_periodo')} />
+              // Com ação, e não só um aviso.
+              //
+              // Isto era um `Vazio` mudo: a folha dizia que não havia período,
+              // não oferecia criar um, e a única saída era "Fechar" — um beco
+              // sem saída para a coisa de que a grade inteira depende. O botão
+              // cria o ano corrente; a pessoa ajusta as datas na hora, porque a
+              // folha já vira o editor.
+              <Vazio
+                texto={t('ajustes.sem_periodo')}
+                acao={t('ajustes.criar_periodo')}
+                aoAgir={() => criarPeriodoPadrao(guardar)}
+              />
             )}
             <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
           </Tela>
