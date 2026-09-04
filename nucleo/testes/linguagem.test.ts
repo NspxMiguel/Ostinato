@@ -203,6 +203,18 @@ test('o nome da matéria termina onde começa o complemento', () => {
   assert.equal(n.materiaNome, 'português')
 })
 
+test('"questões" é tarefa, mesmo com "páginas" (que sozinho seria leitura)', () => {
+  // Achado no iPhone dele em 04/09/2026: "Biologia — todas as questões
+  // páginas 14 a 19" saiu como tipo Leitura, porque "questoes" não estava
+  // na lista de palavras de tarefa e só sobrou "paginas" pra decidir.
+  const r = interpretar(
+    'Biologia — todas as questões páginas 14 a 19',
+    new Date('2026-09-04T08:00:00'),
+    'pt',
+  )
+  assert.equal(r.tipo, 'tarefa')
+})
+
 test('"de/da/do" continuam dentro do nome da matéria', () => {
   // O corte não pode comer nome legítimo: "história da arte" é uma matéria.
   const r = interpretar('prova de história da arte', new Date('2026-08-31T08:00:00'), 'pt')
