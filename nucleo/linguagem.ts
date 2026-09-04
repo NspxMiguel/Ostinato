@@ -512,9 +512,13 @@ const RECIPIENTES_PT =
  * segunda", "sobre a Revolução". Nenhuma delas aparece dentro do nome de uma
  * matéria, ao contrário de "de/da/do" — que ficam de fora desta lista porque
  * "história da arte" é o nome inteiro.
+ *
+ * "num"/"numa" (contração de "em um/uma") faltavam aqui e causavam o mesmo
+ * estrago do "no caderno": "português num post it" virava o nome de matéria
+ * inteiro em vez de parar em "português".
  */
 const COMPLEMENTO: Partial<Record<Idioma, RegExp>> = {
-  pt: /\b(?:no|na|nos|nas|em|pra|pro|para|sobre|com|ate|usando|paginas?|pagina)\b/g,
+  pt: /\b(?:no|na|nos|nas|num|numa|em|pra|pro|para|sobre|com|ate|usando|paginas?|pagina)\b/g,
   es: /\b(?:en|para|sobre|con|hasta|paginas?)\b/g,
   fr: /\b(?:dans|sur|pour|avec|jusqu)\b/g,
 }

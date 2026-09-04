@@ -195,6 +195,12 @@ test('o nome da matéria termina onde começa o complemento', () => {
 
   const p = interpretar('leitura de biologia páginas 40 a 60', new Date('2026-08-31T08:00:00'), 'pt')
   assert.equal(p.materiaNome, 'biologia')
+
+  // "num"/"numa" (em+um/uma) faltava na lista: "português num post it" virava
+  // matéria "português num post it" em vez de parar em "português". Achado no
+  // iPhone dele em 04/09/2026.
+  const n = interpretar('tarefa de português num post it', new Date('2026-09-04T08:00:00'), 'pt')
+  assert.equal(n.materiaNome, 'português')
 })
 
 test('"de/da/do" continuam dentro do nome da matéria', () => {
