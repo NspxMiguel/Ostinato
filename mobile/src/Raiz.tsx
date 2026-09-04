@@ -13,7 +13,7 @@ import { dataDe } from '../../nucleo/tempo.ts'
 import { periodoAtivo } from '../../nucleo/grade.ts'
 import { usarLoja } from './estado/loja.ts'
 import { usarT } from './i18n.ts'
-import { cores, espaco, fonte, raio } from './tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from './tema.ts'
 import {
   ACAO_ADIAR,
   adiarAviso,
@@ -59,6 +59,9 @@ const ABAS: {
 export function Raiz() {
   const t = usarT()
   const margem = useSafeAreaInsets()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   const [aba, setAba] = useState<Aba>('hoje')
   /** A procedência do último estado que o controlador nativo confirmou. */
   const procedencia = useRef(0)
@@ -448,6 +451,7 @@ export function Raiz() {
  * navegação não é ação.
  */
 function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
+  const cores = usarCores()
   const cor = ativo ? cores.texto : cores.texto3
   if (id === 'hoje') {
     return <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2.5, borderColor: cor }} />
@@ -491,7 +495,8 @@ function IconeDaAba({ id, ativo }: { id: Aba; ativo: boolean }) {
   )
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   // O + flutua sobre o conteúdo, acima da barra nativa. `bottom` é calculado no
   // uso, a partir da margem segura: a barra do iOS 26 muda de altura sozinha
   // quando encolhe ao rolar, e cravar um número aqui erraria nos dois estados.
@@ -505,5 +510,5 @@ const e = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
-
+  })
+}

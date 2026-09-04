@@ -16,7 +16,12 @@ import { useEffect, useRef } from 'react'
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
-import { paletaEscura as cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, paletaEscura as cores, espaco, raio } from '../tema.ts'
+
+// Sempre paletaEscura, de propósito — não `usarCores()`. A tela do alarme
+// tocando é tela cheia por cima de tudo, e o modo claro não entra aqui: é o
+// mesmo motivo do relógio de alarme do próprio iOS, que também não clareia.
+const fonte = criarFonte(cores)
 
 /** Um anel que cresce e some, em laço. `atraso` é o que escalona os três. */
 function Anel({ atraso, cor }: { atraso: number; cor: string }) {

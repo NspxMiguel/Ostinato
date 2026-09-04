@@ -35,7 +35,7 @@ import {
 import { momentoPorExtenso } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
-import { cores, espaco, fonte, raio, CORES_DE_MATERIA } from '../tema.ts'
+import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { resgatarFrase, resgatarTarefa } from '../resgatar.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
@@ -49,6 +49,9 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
 }) {
   const t = usarT()
   const idioma = usarIdioma()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
 
@@ -385,7 +388,8 @@ function EscolherMateria({
   )
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   // O aviso de que a IA do aparelho encostou no texto. Discreto, mas presente:
   // texto que muda sozinho sem explicacao faz a pessoa desconfiar do app todo.
   ajuda: { color: cores.textoFraco, fontSize: 13, marginTop: espaco.s, lineHeight: 18 },
@@ -400,4 +404,5 @@ const e = StyleSheet.create({
     minHeight: 120,
     textAlignVertical: 'top',
   },
-})
+  })
+}

@@ -12,7 +12,7 @@ import { apagarMateria } from '../apagarMateria.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { horaDeTexto } from '../formato.ts'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 
 /** Formata um número sem decimais desnecessários, sempre com ponto decimal. */
 function numero(n: number): string {
@@ -34,6 +34,8 @@ function Campo({
   placeholder?: string
   largura?: number
 }) {
+  const cores = usarCores()
+  const estilo = criarEstilo(cores, criarFonte(cores))
   return (
     <View style={{ gap: espaco.xs, flex: largura ? undefined : 1 }}>
       <Apoio>{rotulo}</Apoio>
@@ -54,15 +56,20 @@ function Campo({
   )
 }
 
-const COR_RISCO = {
-  tranquilo: cores.ok,
-  atencao: cores.aviso,
-  critico: cores.atrasado,
-  reprovado: cores.atrasado,
-} as const
+function corDeRisco(cores: Paleta) {
+  return {
+    tranquilo: cores.ok,
+    atencao: cores.aviso,
+    critico: cores.atrasado,
+    reprovado: cores.atrasado,
+  } as const
+}
 
 export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) {
   const t = usarT()
+  const cores = usarCores()
+  const estilo = criarEstilo(cores, criarFonte(cores))
+  const COR_RISCO = corDeRisco(cores)
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
   const removerVarios = usarLoja((e) => e.removerVarios)
@@ -353,28 +360,30 @@ function FormFalta({
   )
 }
 
-const estilo = StyleSheet.create({
-  fundoDaConfirmacao: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    padding: espaco.g,
-  },
-  caixaDaConfirmacao: {
-    backgroundColor: cores.fundoElevado,
-    borderRadius: raio.g,
-    padding: espaco.g,
-    gap: espaco.m,
-  },
-  campo: {
-    backgroundColor: cores.cartaoAlto,
-    borderRadius: raio.s,
-    paddingHorizontal: espaco.m,
-    paddingVertical: espaco.s,
-    color: cores.texto,
-    fontSize: fonte.corpo.fontSize,
-  },
-})
+function criarEstilo(cores: Paleta, fonte: ReturnType<typeof criarFonte>) {
+  return StyleSheet.create({
+    fundoDaConfirmacao: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      padding: espaco.g,
+    },
+    caixaDaConfirmacao: {
+      backgroundColor: cores.fundoElevado,
+      borderRadius: raio.g,
+      padding: espaco.g,
+      gap: espaco.m,
+    },
+    campo: {
+      backgroundColor: cores.cartaoAlto,
+      borderRadius: raio.s,
+      paddingHorizontal: espaco.m,
+      paddingVertical: espaco.s,
+      color: cores.texto,
+      fontSize: fonte.corpo.fontSize,
+    },
+  })
+}
 
 /**
  * Os outros nomes da mesma matéria.

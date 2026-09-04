@@ -24,7 +24,7 @@ import { dataPorExtenso, quandoPorExtenso } from '../formato.ts'
 import { estaAtrasado } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
-import { cores, espaco } from '../tema.ts'
+import { espaco, usarCores, type Paleta } from '../tema.ts'
 
 type TFn = ReturnType<typeof criarT>
 
@@ -40,6 +40,8 @@ type Grupo = { id: string; titulo: string; itens: ItemAgenda[] }
 export function Agenda({ aoAbrirCompromisso }: { aoAbrirCompromisso: (id: string) => void }) {
   const t = usarT()
   const idioma = usarIdioma()
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
   const guardar = usarLoja((e) => e.guardar)
@@ -300,6 +302,8 @@ function Circulo({
   cor: string
   aoTocar: () => void
 }) {
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   return (
     <Pressable
       onPress={aoTocar}
@@ -350,7 +354,8 @@ function duracaoPorExtenso(ms: number, t: TFn): string {
   return t('tempo.dias', { n: Math.round(horas / 24) })
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   filtros: { gap: espaco.m },
   pilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
   // O check fica FORA do texto, à esquerda, alinhado ao topo: assim ele não
@@ -377,4 +382,5 @@ const e = StyleSheet.create({
   },
   visto: { color: cores.fundo, fontSize: 13, fontWeight: '700', marginTop: -1 },
   concluido: { opacity: 0.45 },
-})
+  })
+}

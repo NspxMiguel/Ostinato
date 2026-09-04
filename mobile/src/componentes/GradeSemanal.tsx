@@ -28,7 +28,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { DiaSemana } from '../../../nucleo/modelo.ts'
 import { horaDeMinutos, minutosDaHora } from '../../../nucleo/tempo.ts'
-import { CORES_DE_MATERIA, cores, espaco, fonte, raio } from '../tema.ts'
+import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { usarT } from '../i18n.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { horaDeTexto } from '../formato.ts'
@@ -83,6 +83,9 @@ export function GradeSemanal({
 }) {
   const t = usarT()
   const margem = useSafeAreaInsets()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
 
   // Folha da célula: escolher (ou trocar, ou tirar) a matéria daquele dia+hora.
   const [celulaAtiva, setCelulaAtiva] = useState<{ dia: DiaSemana; faixa: FaixaHoraria } | null>(
@@ -371,7 +374,8 @@ export function mesclarFaixas(dasAulas: FaixaHoraria[], extras: FaixaHoraria[]):
 
 export { CHAVE_FAIXA, MESMA_FAIXA }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   colunaHora: {
     width: LARGURA_HORA,
     borderRightWidth: StyleSheet.hairlineWidth,
@@ -439,3 +443,4 @@ const e = StyleSheet.create({
   circuloCor: { width: 32, height: 32, borderRadius: 16 },
   circuloCorSelecionado: { borderWidth: 3, borderColor: cores.texto },
 })
+}

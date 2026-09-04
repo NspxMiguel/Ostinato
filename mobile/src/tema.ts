@@ -1,3 +1,5 @@
+import { useColorScheme } from 'react-native'
+
 // A paleta. Uma só, e todas as telas bebem daqui.
 //
 // Vem do redesenho de 30/08/2026. O que ela substitui, e por quê:
@@ -97,7 +99,27 @@ export const paletaClara = {
   marfim: '#000000',
 } as const
 
-export const cores = paletaEscura
+/** `string`, não o literal de `as const`: as duas paletas têm as mesmas
+ * CHAVES com valores DIFERENTES, e o tipo precisa aceitar ambas. */
+export type Paleta = Record<keyof typeof paletaEscura, string>
+
+/**
+ * A paleta do momento, seguindo o esquema do sistema.
+ *
+ * Pedido em 04/09/2026, depois de a barra de abas nativa aparecer BRANCA num
+ * aparelho em modo claro enquanto o resto do app continuava preto: `cores`
+ * era uma constante fixa em `paletaEscura`, e a barra de abas — que é do
+ * próprio iOS (`UITabBarController`, não desenhada por nós) — segue o
+ * esquema real do sistema. Um app metade forçado escuro, metade automático
+ * é a pior combinação: pareceu bug porque era.
+ *
+ * `useColorScheme` devolve `null` às vezes (primeiro render, iOS antigo);
+ * cai pro escuro nesse caso — é o padrão da marca.
+ */
+export function usarCores(): Paleta {
+  const esquema = useColorScheme()
+  return esquema === 'light' ? paletaClara : paletaEscura
+}
 
 export const espaco = { xs: 4, s: 8, m: 12, g: 16, gg: 24, ggg: 32 } as const
 
@@ -113,22 +135,26 @@ export const raio = { s: 8, m: 12, g: 16, gg: 22, cartao: 26, pilula: 999 } as c
  * Nenhum destes estilos fixa largura: português e francês correm ~30% mais
  * longos que inglês, e rótulo com largura fixa corta a palavra no meio.
  */
-export const fonte = {
-  /** "Hoje", "Agenda" — o título da tela. */
-  titulo: { fontSize: 32, fontWeight: '700' as const, color: cores.texto, letterSpacing: -0.5 },
-  /** Nome de compromisso, de matéria. */
-  tituloItem: { fontSize: 18, fontWeight: '600' as const, color: cores.texto },
-  corpo: { fontSize: 16, color: cores.texto },
-  /** Metadado, data, o texto de apoio de uma linha. */
-  apoio: { fontSize: 14, color: cores.textoFraco },
-  /**
-   * "Chegando", "Notas". Sentence case, NÃO caixa alta: caixa alta em rótulo de
-   * seção é maneirismo de painel administrativo, e o iOS parou de fazer isso.
-   */
-  secao: { fontSize: 13, fontWeight: '600' as const, color: cores.texto3, letterSpacing: 0.2 },
-  /** Legenda de widget, contador. */
-  micro: { fontSize: 11, fontWeight: '500' as const, color: cores.textoFraco },
-} as const
+/** Fábrica, não constante — o texto tem cor, e a cor muda com a paleta. Cada
+ * componente chama `criarFonte(cores)` depois de `usarCores()`. */
+export function criarFonte(cores: Paleta) {
+  return {
+    /** "Hoje", "Agenda" — o título da tela. */
+    titulo: { fontSize: 32, fontWeight: '700' as const, color: cores.texto, letterSpacing: -0.5 },
+    /** Nome de compromisso, de matéria. */
+    tituloItem: { fontSize: 18, fontWeight: '600' as const, color: cores.texto },
+    corpo: { fontSize: 16, color: cores.texto },
+    /** Metadado, data, o texto de apoio de uma linha. */
+    apoio: { fontSize: 14, color: cores.textoFraco },
+    /**
+     * "Chegando", "Notas". Sentence case, NÃO caixa alta: caixa alta em rótulo de
+     * seção é maneirismo de painel administrativo, e o iOS parou de fazer isso.
+     */
+    secao: { fontSize: 13, fontWeight: '600' as const, color: cores.texto3, letterSpacing: 0.2 },
+    /** Legenda de widget, contador. */
+    micro: { fontSize: 11, fontWeight: '500' as const, color: cores.textoFraco },
+  } as const
+}
 
 /**
  * As cores que o usuário escolhe para cada matéria.

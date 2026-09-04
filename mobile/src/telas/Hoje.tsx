@@ -26,7 +26,7 @@ import { ehAssuntoDeHoje, estaAtrasado } from '../../../nucleo/hoje.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { Deslizar } from '../componentes/Deslizar.tsx'
 import { usarIdioma, usarT } from '../i18n.ts'
-import { cores, espaco } from '../tema.ts'
+import { espaco, usarCores, type Paleta } from '../tema.ts'
 
 type TFn = ReturnType<typeof criarT>
 
@@ -41,6 +41,8 @@ export function Hoje({
 }) {
   const t = usarT()
   const idioma = usarIdioma()
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
   const guardar = usarLoja((e) => e.guardar)
@@ -356,7 +358,8 @@ function duracaoPorExtenso(ms: number, t: TFn): string {
   return t('tempo.dias', { n: Math.round(horas / 24) })
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   passou: { opacity: 0.4 },
   // Menor e mais apagado que o título da seção: é uma divisória dentro da
   // lista, não um segundo cabeçalho competindo com "Aulas de hoje".
@@ -378,4 +381,5 @@ const e = StyleSheet.create({
   // Um traço curto na cor de destaque: é o único lugar da lista onde o amarelo
   // aparece, e ele marca justamente a frase que nenhum concorrente tem.
   marcaDeAviso: { width: 10, height: 2, borderRadius: 1, backgroundColor: cores.destaque },
-})
+  })
+}

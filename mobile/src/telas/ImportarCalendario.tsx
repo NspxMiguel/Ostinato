@@ -20,7 +20,7 @@ import { Apoio, Botao, Cartao, Fileira, Linha, Pilula, Secao, Tela, Titulo, Toqu
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
-import { cores, espaco, fonte } from '../tema.ts'
+import { criarFonte, espaco, usarCores } from '../tema.ts'
 
 /** Os três grupos da tela, na ordem em que importam. */
 type Grupo = 'semAula' | 'agenda' | 'fora'
@@ -32,6 +32,8 @@ function grupoDe(e: EventoLido, papel: 'aluno' | 'responsavel', series: string[]
 
 export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
   const t = usarT()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
   const base = usarLoja((s) => s.base)
   const ajustes = usarLoja((s) => s.ajustes)
   const guardar = usarLoja((s) => s.guardar)

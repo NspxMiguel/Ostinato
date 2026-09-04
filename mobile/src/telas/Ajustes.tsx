@@ -36,7 +36,7 @@ import { criarPeriodoPadrao } from '../periodoPadrao.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { estadoDaNuvem, motivoDaNuvem } from '../sync.ts'
 import { idiomaDoSistema, usarIdioma, usarT } from '../i18n.ts'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import {
   estadoDoAlarme,
   pedirPermissaoDeAlarme,
@@ -73,6 +73,8 @@ function Campo({
   aoBlur?: () => void
   placeholder?: string
 }) {
+  const cores = usarCores()
+  const estilo = criarEstilo(cores, criarFonte(cores))
   return (
     <View style={{ gap: espaco.xs, flex: rotulo ? 1 : undefined }}>
       {rotulo ? <Apoio>{rotulo}</Apoio> : null}
@@ -248,6 +250,8 @@ type Categoria = 'perfil' | 'recursos' | 'avisos' | 'alarme' | 'escola' | 'sobre
  * confiáveis de tela gerada, e sete formas não justificam uma dependência.
  */
 function Selo({ tipo, perigo }: { tipo: Categoria; perigo?: boolean }) {
+  const cores = usarCores()
+  const estilo = criarEstilo(cores, criarFonte(cores))
   const cor = perigo ? cores.aviso : cores.texto
   return (
     <View style={[estilo.selo, perigo ? { backgroundColor: `${cores.aviso}1F` } : null]}>
@@ -451,6 +455,9 @@ export function Ajustes({ aoEscanearHorario }: {
 }) {
   const t = usarT()
   const idioma = usarIdioma()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const estilo = criarEstilo(cores, fonte)
   // O motivo vem do módulo nativo, e não de um texto fixo: quando a conta paga
   // existir mas ninguém tiver entrado no iCloud, dizer "precisa de conta paga"
   // seria mandar o usuário resolver o problema errado.
@@ -1284,7 +1291,8 @@ function LinhaAdicionarFeriado({ valor, aoMudar, aoAdicionar }: { valor: string;
   )
 }
 
-const estilo = StyleSheet.create({
+function criarEstilo(cores: Paleta, fonte: ReturnType<typeof criarFonte>) {
+  const estilo = StyleSheet.create({
   fundoDaConfirmacao: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -1318,7 +1326,9 @@ const estilo = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
+  })
+  return estilo
+}
 
 /**
  * As séries que a pessoa pode marcar.

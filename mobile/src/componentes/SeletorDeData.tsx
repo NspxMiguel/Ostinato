@@ -12,7 +12,7 @@
 import { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores } from '../tema.ts'
 import { horaDoAparelho } from '../formato.ts'
 
 type Props = {
@@ -65,6 +65,8 @@ function paraTexto(d: Date): { data: string; hora: string } {
 }
 
 export function SeletorDeData({ data, hora, aoMudar, locale, rotuloData, rotuloHora }: Props) {
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
   const [aberto, setAberto] = useState(false)
   const [horaAberta, setHoraAberta] = useState(false)
   const valor = paraDate(data, hora)

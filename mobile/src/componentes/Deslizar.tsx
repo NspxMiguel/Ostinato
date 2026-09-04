@@ -28,7 +28,7 @@ import ReanimatedSwipeable, {
 } from 'react-native-gesture-handler/ReanimatedSwipeable'
 import Animated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
-import { cores, espaco, raio } from '../tema.ts'
+import { espaco, raio, usarCores, type Paleta } from '../tema.ts'
 
 /** Onde a ação passa a valer. Abaixo disto a linha volta sozinha. */
 const LIMITE = 72
@@ -54,6 +54,7 @@ function Acao({
   lado: 'esquerda' | 'direita'
   aoTocar: () => void
 }) {
+  const e = criarEstilo(usarCores())
   const estilo = useAnimatedStyle(() => ({
     // Só a ESCALA acompanha o dedo. A opacidade não entra: com ela, o rótulo
     // ficava cinza-escuro sobre verde no meio do gesto e não dava para ler —
@@ -102,6 +103,8 @@ export function Deslizar({
   rotuloRemover: string
 }) {
   const linha = useRef<SwipeableMethods>(null)
+  const cores = usarCores()
+  const e = criarEstilo(cores)
 
   return (
     <ReanimatedSwipeable
@@ -180,15 +183,17 @@ export function Deslizar({
   )
 }
 
-const e = StyleSheet.create({
-  // O recorte é do RECIPIENTE, e é ele que resolve o defeito da print: sem
-  // isso o painel da ação é um retângulo vermelho com cantos próprios,
-  // flutuando por cima do cartão em vez de viver dentro da linha.
-  recipiente: { borderRadius: raio.cartao, overflow: 'hidden' },
-  conteudo: { backgroundColor: cores.fundo },
-  acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g },
-  // Branco, e não a cor de fundo. Preto sobre o vermelho de atraso é ilegível,
-  // e sobre o verde só funciona em opacidade total — que o gesto não garante.
-  // Branco lê nos dois, em qualquer ponto do arrasto.
-  rotulo: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-})
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
+    // O recorte é do RECIPIENTE, e é ele que resolve o defeito da print: sem
+    // isso o painel da ação é um retângulo vermelho com cantos próprios,
+    // flutuando por cima do cartão em vez de viver dentro da linha.
+    recipiente: { borderRadius: raio.cartao, overflow: 'hidden' },
+    conteudo: { backgroundColor: cores.fundo },
+    acao: { flex: 1, justifyContent: 'center', paddingHorizontal: espaco.g },
+    // Branco, e não a cor de fundo. Preto sobre o vermelho de atraso é ilegível,
+    // e sobre o verde só funciona em opacidade total — que o gesto não garante.
+    // Branco lê nos dois, em qualquer ponto do arrasto.
+    rotulo: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  })
+}
