@@ -31,7 +31,7 @@ import { Deslizar } from './Deslizar.tsx'
 export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   const t = usarT()
   const base = usarLoja((e) => e.base)
-  const remover = usarLoja((e) => e.remover)
+  const removerVarios = usarLoja((e) => e.removerVarios)
   const materias = vivos(base.materias)
   if (materias.length === 0) return null
 
@@ -52,7 +52,7 @@ export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
         {
           text: t('materias.remover'),
           style: 'destructive',
-          onPress: () => apagarMateria(base, m.id, remover),
+          onPress: () => apagarMateria(base, m.id, removerVarios),
         },
       ],
     )

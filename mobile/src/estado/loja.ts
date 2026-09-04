@@ -31,6 +31,20 @@ type Loja = {
   /** Cria ou atualiza. Sem `id`, cria; com `id`, atualiza o que existe. */
   guardar: <T extends Tabela>(tabela: T, valor: Partial<PorTabela[T]> & { id?: string }) => string
   remover: (tabela: Tabela, id: string) => void
+  /**
+   * Apaga vários registros, em qualquer combinação de tabelas, numa MESMA
+   * escrita e num MESMO `set`.
+   *
+   * Existe porque "apagar tudo" chamava `remover` num laço — uma escrita no
+   * MMKV e uma troca de `base` POR REGISTRO. Cada troca de `base` é o que
+   * dispara `rearmar()` na Raiz (ele depende de `base` inteiro), e `rearmar()`
+   * não é barato: lê o AlarmKit, decide o que sobra e o que falta, atualiza a
+   * Live Activity, o widget e o índice do Spotlight. Cinquenta registros
+   * viravam cinquenta sincronizações inteiras enfileiradas, e a tela ficava
+   * sem responder a toque nenhum até a fila esvaziar — o "buga todo" de
+   * 04/09/2026.
+   */
+  removerVarios: (alvos: readonly { tabela: Tabela; id: string }[]) => void
   mudarAjustes: (mudanca: Partial<Ajustes>) => void
   substituirBase: (base: Base, marca: string | null, fila: ItemFila[]) => void
 }
@@ -86,6 +100,24 @@ export const usarLoja = create<Loja>((set, get) => ({
       [tabela]: { ...estado.base[tabela], [id]: registro },
     }
     const fila = enfileirar(estado.fila, tabela, id, t)
+    escrever(CHAVES.base, base)
+    escrever(CHAVES.fila, fila)
+    set({ base, fila })
+  },
+
+  removerVarios: (alvos) => {
+    if (alvos.length === 0) return
+    const t = agora()
+    const estado = get()
+    let base = estado.base
+    let fila = estado.fila
+    for (const { tabela, id } of alvos) {
+      const anterior = (base[tabela] as Record<string, Registro>)[id]
+      if (!anterior) continue
+      const registro: Registro = { ...anterior, removido: true, atualizadoEm: t, origem: estado.aparelho }
+      base = { ...base, [tabela]: { ...base[tabela], [id]: registro } }
+      fila = enfileirar(fila, tabela, id, t)
+    }
     escrever(CHAVES.base, base)
     escrever(CHAVES.fila, fila)
     set({ base, fila })

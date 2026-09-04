@@ -63,6 +63,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
   const remover = usarLoja((e) => e.remover)
+  const removerVarios = usarLoja((e) => e.removerVarios)
 
   const periodo = periodoAtivo(base)
   const [criandoPeriodo, setCriandoPeriodo] = useState(false)
@@ -336,7 +337,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
           text: t('grade.remover_faixa'),
           style: 'destructive',
           onPress: () => {
-            for (const a of afetadas) remover('aulas', a.id)
+            removerVarios(afetadas.map((a) => ({ tabela: 'aulas' as const, id: a.id })))
             setFaixasExtras((prev) => prev.filter((f) => !MESMA_FAIXA(f, faixa)))
           },
         },
@@ -711,10 +712,16 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
             <Botao
               texto={t('grade.apagar_tudo')}
               aoTocar={() => {
-                // Remoção LÓGICA, uma por uma: o registro vira lápide e o sync
-                // leva a remoção junto. Apagar do armazenamento faria a aula
-                // voltar do outro aparelho na próxima sincronização.
-                for (const a of aulasVivas) remover('aulas', a.id)
+                // Remoção LÓGICA: o registro vira lápide e o sync leva a
+                // remoção junto. Apagar do armazenamento faria a aula voltar do
+                // outro aparelho na próxima sincronização.
+                //
+                // UMA chamada, não uma por aula: cada `remover` isolado troca a
+                // `base` inteira e dispara uma sincronização de avisos
+                // completa — uma grade de trinta aulas travava a tela por
+                // vários segundos, sem responder a toque nenhum. Medido em
+                // 04/09/2026, é o "app buga todo" que ele reportou.
+                removerVarios(aulasVivas.map((a) => ({ tabela: 'aulas' as const, id: a.id })))
                 setConfirmandoLimpeza(false)
               }}
             />

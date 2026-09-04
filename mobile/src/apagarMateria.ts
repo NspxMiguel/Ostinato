@@ -26,15 +26,21 @@ export function oQueVaiJunto(base: Base, materiaId: string) {
  * O COMPROMISSO fica, sem matéria — "prova de química" continua sendo uma prova
  * que existe na sua semana, e apagá-la porque a matéria saiu seria destruir o
  * que a pessoa anotou.
+ *
+ * UMA chamada a `removerVarios`, não um `remover` por registro: cada `remover`
+ * troca a `base` inteira e dispara uma sincronização de avisos completa — uma
+ * matéria com dez aulas travava a tela por um instante bem perceptível.
  */
 export function apagarMateria(
   base: Base,
   materiaId: string,
-  remover: (tabela: TabelaEmCascata, id: string) => void,
+  removerVarios: (alvos: readonly { tabela: TabelaEmCascata; id: string }[]) => void,
 ) {
   const { aulas, notas, faltas } = oQueVaiJunto(base, materiaId)
-  for (const a of aulas) remover('aulas', a.id)
-  for (const n of notas) remover('notas', n.id)
-  for (const f of faltas) remover('faltas', f.id)
-  remover('materias', materiaId)
+  removerVarios([
+    ...aulas.map((a) => ({ tabela: 'aulas' as const, id: a.id })),
+    ...notas.map((n) => ({ tabela: 'notas' as const, id: n.id })),
+    ...faltas.map((f) => ({ tabela: 'faltas' as const, id: f.id })),
+    { tabela: 'materias' as const, id: materiaId },
+  ])
 }

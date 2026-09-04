@@ -65,7 +65,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
   const t = usarT()
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
-  const remover = usarLoja((e) => e.remover)
+  const removerVarios = usarLoja((e) => e.removerVarios)
 
   const materia = base.materias[id]
   if (!materia || materia.removido) {
@@ -145,7 +145,7 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
             <Botao
               texto={t('materia.apagar')}
               aoTocar={() => {
-                apagarMateria(base, materia.id, remover)
+                apagarMateria(base, materia.id, removerVarios)
                 setConfirmando(false)
                 aoFechar()
               }}

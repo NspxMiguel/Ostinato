@@ -490,9 +490,13 @@ export function Ajustes({ aoEscanearHorario }: {
             // sync. Limpar o armazenamento aqui faria tudo voltar do outro
             // aparelho na próxima sincronização — o oposto do que a pessoa
             // acabou de pedir.
-            for (const tabela of TABELAS) {
-              for (const r of vivosDe(base, tabela)) remover(tabela, r.id)
-            }
+            //
+            // UMA chamada, não uma por registro: apagar em laço era uma escrita
+            // e uma sincronização de avisos inteira POR REGISTRO, e travava a
+            // tela por segundos com dezenas deles. Medido em 04/09/2026.
+            removerVarios(
+              TABELAS.flatMap((tabela) => vivosDe(base, tabela).map((r) => ({ tabela, id: r.id }))),
+            )
             setCategoria(null)
           },
         },
@@ -537,6 +541,7 @@ export function Ajustes({ aoEscanearHorario }: {
   // acontecia no primeiro render do app inteiro.
   const quantosRegistros = TABELAS.reduce((n, tabela) => n + vivosDe(base, tabela).length, 0)
   const remover = usarLoja((s) => s.remover)
+  const removerVarios = usarLoja((s) => s.removerVarios)
   const ajustes = usarLoja((s) => s.ajustes)
   const mudarAjustes = usarLoja((s) => s.mudarAjustes)
   const guardar = usarLoja((s) => s.guardar)
