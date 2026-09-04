@@ -760,7 +760,9 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         onRequestClose={() => setModalAulaVisivel(false)}
       >
         <View style={e.modalConteudo}>
-          <ScrollView contentContainerStyle={{ gap: espaco.m }}>
+          {/* Sem isto, tocar num botão logo depois de escrever num campo
+              só fecha o teclado, e o botão só reage no segundo toque. */}
+          <ScrollView contentContainerStyle={{ gap: espaco.m }} keyboardShouldPersistTaps="handled">
             <Titulo>{aulaEdicao ? t('grade.editar_aula') : t('grade.nova_aula')}</Titulo>
 
             {/* Seleção de Matéria */}
@@ -891,7 +893,9 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         onRequestClose={() => setModalColarVisivel(false)}
       >
         <View style={e.modalConteudo}>
-          <ScrollView contentContainerStyle={{ gap: espaco.m }}>
+          {/* Sem isto, tocar num botão logo depois de escrever num campo
+              só fecha o teclado, e o botão só reage no segundo toque. */}
+          <ScrollView contentContainerStyle={{ gap: espaco.m }} keyboardShouldPersistTaps="handled">
             <Titulo>{t('grade.colar_horario')}</Titulo>
 
             {!previaImportacao ? (

@@ -46,6 +46,15 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
           gap: espaco.gg,
         }}
         showsVerticalScrollIndicator={false}
+        // Sem isto, o PRIMEIRO toque num botão abaixo de um campo de texto
+        // focado só fecha o teclado — o toque em si é engolido, e só o SEGUNDO
+        // toque no mesmo lugar realmente aciona o botão. É o comportamento
+        // padrão do ScrollView, e é exatamente o que parecia "Save não
+        // funciona" na Captura: escrever, tocar Save, nada acontece; tocar de
+        // novo, funciona. Medido em 04/09/2026 depois de o toque "sumir"
+        // reproduzidamente numa tela que usa este componente para TUDO — o
+        // conserto é aqui, não em cada tela.
+        keyboardShouldPersistTaps="handled"
       >
         {/* O título rola COM o conteúdo, como o título grande do iOS.
             Fixo — que era como estava — ele ficava por cima do primeiro item e

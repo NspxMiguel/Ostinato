@@ -212,7 +212,9 @@ export function NovoCompromisso({
 
   return (
     <Tela titulo={id ? t('novo_compromisso.titulo_tela_editar') : t('novo_compromisso.titulo_tela_novo')}>
-      <ScrollView contentContainerStyle={{ gap: espaco.m }}>
+      {/* Sem isto, tocar Save logo depois de escrever no Título só fecha o
+          teclado — o toque é engolido e o botão só reage no SEGUNDO toque. */}
+      <ScrollView contentContainerStyle={{ gap: espaco.m }} keyboardShouldPersistTaps="handled">
         {/* Tipo de compromisso */}
         <Secao titulo={t('novo_compromisso.tipo_regra')}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={e.listaPilulas}>
