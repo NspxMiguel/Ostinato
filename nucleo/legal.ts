@@ -62,9 +62,16 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
           ],
         },
         {
+          titulo: 'Relatório de erro (diagnóstico)',
+          paragrafos: [
+            'Quando o app trava ou encontra um erro inesperado, ele pode enviar um relatório técnico curto para o servidor do desenvolvedor: a mensagem de erro, em qual parte do app aconteceu, a versão do app, e um identificador aleatório do aparelho (não é ligado à sua conta Apple nem a você).',
+            'Esse relatório NUNCA inclui o conteúdo que você digitou ou fotografou — nome de matéria, título de tarefa, texto de foto. Ele existe só para o desenvolvedor achar e corrigir bugs.',
+          ],
+        },
+        {
           titulo: 'O que o app NÃO faz',
           paragrafos: [
-            'O Ostinato não coleta identificadores de publicidade, não tem analytics de terceiros, não vende nem compartilha dado nenhum com ninguém, e não rastreia você entre outros apps ou sites.',
+            'O Ostinato não coleta identificadores de publicidade, não tem analytics de terceiros, não vende nem compartilha dado nenhum com ninguém, e não rastreia você entre outros apps ou sites. O relatório de erro acima é a única coisa que sai do aparelho.',
           ],
         },
         {
@@ -143,9 +150,16 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
           ],
         },
         {
+          titulo: 'Error reports (diagnostics)',
+          paragrafos: [
+            "When the app crashes or hits an unexpected error, it may send a short technical report to the developer's server: the error message, which part of the app it happened in, the app version, and a random device identifier (not linked to your Apple account or to you).",
+            'This report NEVER includes what you typed or photographed — subject names, task titles, scanned text. It exists only so the developer can find and fix bugs.',
+          ],
+        },
+        {
           titulo: "What the app does NOT do",
           paragrafos: [
-            "Ostinato does not collect advertising identifiers, has no third-party analytics, does not sell or share any data with anyone, and does not track you across other apps or websites.",
+            "Ostinato does not collect advertising identifiers, has no third-party analytics, does not sell or share any data with anyone, and does not track you across other apps or websites. The error report above is the only thing that leaves the device.",
           ],
         },
         {

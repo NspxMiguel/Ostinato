@@ -33,6 +33,7 @@ import {
 import { aulasDaTabela } from '../../nucleo/gradeDaTabela.ts'
 import { NOTA_MINIMA, qualidadeDaGrade } from '../../nucleo/qualidadeDaGrade.ts'
 import { estadoDoModelo, lerGradeComModelo, perguntar } from '../modules/modelo/src/index.ts'
+import { registrarErro } from './telemetria.ts'
 
 /** Se a IA do aparelho está pronta agora. */
 export function temModelo(): boolean {
@@ -240,7 +241,8 @@ export async function resgatarFrase(
   let antes: Interpretacao
   try {
     antes = interpretarMelhor(texto, agora, idioma)
-  } catch {
+  } catch (erro) {
+    registrarErro('resgatarFrase:interpretar-antes', erro)
     return { texto, usou: false }
   }
   const gatilho = precisaDeResgateDeFrase({
@@ -260,7 +262,8 @@ export async function resgatarFrase(
     const depois = interpretarMelhor(limpo, agora, idioma)
     if (depois.confianca <= antes.confianca) return { texto, usou: false }
     return { texto: limpo, usou: true }
-  } catch {
+  } catch (erro) {
+    registrarErro('resgatarFrase:interpretar-depois', erro)
     return { texto, usou: false }
   }
 }
