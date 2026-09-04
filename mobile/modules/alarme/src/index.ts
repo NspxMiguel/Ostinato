@@ -65,6 +65,23 @@ export async function cancelarAlarme(id: string): Promise<boolean> {
   }
 }
 
+/**
+ * Silencia um alarme que está TOCANDO agora — não confundir com `cancelarAlarme`.
+ *
+ * `cancelar` desarma um alarme futuro; isto é o que a tela de "Close" precisa
+ * chamar quando o alarme já está soando, porque quem toca de verdade é o
+ * sistema (é assim que ele funciona com o app fechado), não o áudio de dentro
+ * do app — pausar o áudio local não silencia o alarme do sistema.
+ */
+export async function pararAlarmeDoSistema(id: string): Promise<boolean> {
+  if (!modulo) return false
+  try {
+    return (await modulo.parar(id)) as boolean
+  } catch {
+    return false
+  }
+}
+
 export type EstadoDoAlarme = 'autorizado' | 'negado' | 'nao-perguntado' | 'sem-suporte'
 
 /**

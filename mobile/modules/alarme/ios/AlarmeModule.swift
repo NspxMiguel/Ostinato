@@ -116,6 +116,32 @@ public class AlarmeModule: Module {
     }
 
     /**
+     Silencia um alarme que está TOCANDO agora, sem apagar o agendamento.
+
+     `cancelar` e `parar` não são a mesma coisa: `cancelar` desarma um alarme
+     futuro; `parar` é o `AlarmManager.shared.stop`, o comando que a Apple
+     documenta para silenciar o que já está soando. Faltava — a tela "Close" do
+     app só pausava o áudio de dentro do JavaScript, e o alarme de VERDADE, que
+     toca pelo próprio sistema (é o que faz ele funcionar com o app fechado e no
+     silencioso), continuava. Reclamado em 03/09/2026: *"cliquei em alarme,
+     farol e fechar, pq n parou de tocar"*.
+     */
+    AsyncFunction("parar") { (id: String, promise: Promise) in
+      guard #available(iOS 26.1, *), let uuid = UUID(uuidString: id) else {
+        promise.resolve(false)
+        return
+      }
+      Task { @MainActor in
+        do {
+          try AlarmManager.shared.stop(id: uuid)
+          promise.resolve(true)
+        } catch {
+          promise.resolve(false)
+        }
+      }
+    }
+
+    /**
      O estado da autorizacao, em uma palavra.
 
      Existe para a tela conseguir mostrar "negado nos Ajustes" em vez de

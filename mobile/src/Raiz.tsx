@@ -22,8 +22,10 @@ import {
   pedirPermissao,
   registrarCategoria,
   sincronizarAvisos,
+  uuidDaChave,
 } from './avisos/notificacoes.ts'
 import { pararAlarme, tocarAlarme } from './avisos/alarme.ts'
+import { pararAlarmeDoSistema, temAlarmeDeSistema } from 'alarme-do-sistema'
 import { registrarTarefaDeFundo } from './avisos/tarefaDeFundo.ts'
 import { atualizarAtividadeViva } from './avisos/atividadeViva.ts'
 import { atualizarWidget } from './avisos/widget.ts'
@@ -98,6 +100,14 @@ export function Raiz() {
   )
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null)
   const [alarmeDe, setAlarmeDe] = useState<string | null>(null)
+  /**
+   * A `chave` do aviso que está tocando agora — não é o `id` do compromisso.
+   *
+   * Quem toca de verdade é o alarme do SISTEMA, e ele é identificado pela
+   * chave (`compromissoId|regraId|repeticao`), não pelo compromisso. Sem isto,
+   * o botão "Close" não tinha como saber QUAL alarme silenciar.
+   */
+  const alarmeChaveTocando = useRef<string | null>(null)
 
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
@@ -210,6 +220,7 @@ export function Raiz() {
       const dados = resposta.notification.request.content.data as {
         compromissoId?: string
         alarme?: boolean
+        chave?: string
       }
       const id = dados.compromissoId
       if (!id) return
@@ -226,6 +237,7 @@ export function Raiz() {
       }
 
       if (dados.alarme) {
+        alarmeChaveTocando.current = dados.chave ?? null
         setAlarmeDe(id)
         void tocarAlarme(ajustes.somAlarme)
       } else {
@@ -239,8 +251,13 @@ export function Raiz() {
   // fechado é o AlarmKit; isto é o som da tela do alarme dentro do app.
   useEffect(() => {
     const inscricao = Notifications.addNotificationReceivedListener((n) => {
-      const dados = n.request.content.data as { compromissoId?: string; alarme?: boolean }
+      const dados = n.request.content.data as {
+        compromissoId?: string
+        alarme?: boolean
+        chave?: string
+      }
       if (dados.alarme && dados.compromissoId) {
+        alarmeChaveTocando.current = dados.chave ?? null
         setAlarmeDe(dados.compromissoId)
         void tocarAlarme(ajustes.somAlarme)
       }
@@ -250,6 +267,14 @@ export function Raiz() {
 
   const fecharAlarme = useCallback(() => {
     pararAlarme()
+    // O áudio de dentro do app é só metade do alarme. Quem toca de verdade —
+    // e é o que faz o alarme funcionar com o app fechado e no silencioso — é o
+    // sistema, e sem chamar `parar` nele o som continuava depois de "Close".
+    // Reclamado em 03/09/2026: "cliquei em alarme, farol e fechar, pq n parou
+    // de tocar".
+    const chave = alarmeChaveTocando.current
+    if (chave && temAlarmeDeSistema()) void pararAlarmeDoSistema(uuidDaChave(chave))
+    alarmeChaveTocando.current = null
     setAlarmeDe(null)
   }, [])
 

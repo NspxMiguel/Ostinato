@@ -9,6 +9,7 @@ import {
   agendarAlarme,
   alarmesAgendados,
   cancelarAlarme,
+  pararAlarmeDoSistema,
   temAlarmeDeSistema,
 } from 'alarme-do-sistema'
 import { SONS_DO_APP, somDoApp } from './sons.ts'
@@ -394,5 +395,12 @@ export async function adiarAviso(
 
 /** Desarma o despertador junto com o aviso. */
 export function cancelarAlarmeDoAviso(chave: string): void {
-  void cancelarAlarme(uuidDaChave(chave))
+  // `cancelar` some com um alarme FUTURO. Se este já está tocando — a pessoa
+  // marcou "Feito" na notificação enquanto o despertador soava — `cancelar`
+  // sozinho não o cala; é `parar` que silencia o que já disparou. Chamar os
+  // dois cobre as duas situações, e o segundo é barato quando não há nada
+  // tocando: o módulo captura o erro e devolve `false` em silêncio.
+  const id = uuidDaChave(chave)
+  void cancelarAlarme(id)
+  void pararAlarmeDoSistema(id)
 }
