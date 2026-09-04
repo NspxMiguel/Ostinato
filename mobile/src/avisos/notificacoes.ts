@@ -199,13 +199,51 @@ export type ResultadoSincronizacao = {
 }
 
 /**
+ * A fila que impede duas sincronizações de rodarem ao mesmo tempo.
+ *
+ * `rearmar` dispara a cada mudança de ajustes — e trocar o som do alarme,
+ * ajustar a janela de silêncio e mudar o minuto de adiar em sequência rápida
+ * chama `sincronizarAvisos` várias vezes antes da primeira terminar. Cada
+ * chamada lê o AlarmKit, decide o que sobra e o que falta, e escreve de volta:
+ * sem fila, a mais nova podia ler o AlarmKit ANTES de a mais velha (ainda em
+ * voo) escrever o alarme que acabou de agendar — e aí a varredura de órfãos da
+ * mais nova cancelava um alarme que, do ponto de vista dela, nunca existiu.
+ *
+ * Medido em 03/09/2026: uma prova com alarme às 22:59, três ajustes trocados em
+ * sequência, terminou em "No events due to fire" — o alarme nunca tocou.
+ *
+ * A fila resolve encadeando: cada chamada espera a anterior acabar antes de
+ * começar a sua própria leitura. Perde-se paralelismo que ninguém precisa;
+ * ganha-se a garantia de que nenhuma sincronização lê um estado que outra,
+ * mais nova, já decidiu mudar.
+ */
+let filaDeSincronizacao: Promise<unknown> = Promise.resolve()
+
+/**
  * Alinha o iOS com o plano. Só mexe no que mudou.
  *
  * Cancelar tudo e reagendar seria menos código, e é o que faz o aviso "piscar":
  * entre o cancelamento e o novo agendamento existe uma janela em que nada está
  * armado. Se o app for morto exatamente ali, o aviso some sem ninguém saber.
  */
-export async function sincronizarAvisos(
+export function sincronizarAvisos(
+  base: Base,
+  ajustes: Ajustes,
+  periodo: Periodo | undefined,
+  t: ReturnType<typeof criarT>,
+  agora = new Date(),
+): Promise<ResultadoSincronizacao> {
+  // Encadeia na fila em vez de rodar direto: a próxima chamada espera esta
+  // terminar (com sucesso ou erro — `.catch` aqui existe só para a fila não
+  // travar para sempre se uma rodada falhar) antes de começar a sua.
+  const minhaVez = filaDeSincronizacao
+    .catch(() => undefined)
+    .then(() => sincronizarAvisosAgora(base, ajustes, periodo, t, agora))
+  filaDeSincronizacao = minhaVez
+  return minhaVez
+}
+
+async function sincronizarAvisosAgora(
   base: Base,
   ajustes: Ajustes,
   periodo: Periodo | undefined,
