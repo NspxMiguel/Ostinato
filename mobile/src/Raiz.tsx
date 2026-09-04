@@ -4,7 +4,7 @@
 // e uma biblioteca de navegação inteira custaria mais do que resolve.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Animated, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, Animated, AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Tabs } from 'react-native-screens'
@@ -77,6 +77,14 @@ export function Raiz() {
   /** Texto que chegou de fora (Siri, Atalhos), já escrito na captura. */
   const [textoDeFora, setTextoDeFora] = useState<string | undefined>(undefined)
   const [criando, setCriando] = useState(false)
+  /**
+   * Se a folha do compromisso tem algo preenchido e não salvo.
+   *
+   * É `ref` e não `state` de propósito: só o `onRequestClose` lê, e transformar
+   * cada tecla digitada num render da árvore inteira de abas seria caro para
+   * uma informação que ninguém desenha.
+   */
+  const formularioPendente = useRef(false)
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null)
   const [alarmeDe, setAlarmeDe] = useState<string | null>(null)
 
@@ -115,6 +123,29 @@ export function Raiz() {
     // tela de início acha a prova, e tocar abre ela pela mesma URL da Siri.
     void indexar(itensParaBusca(base, periodo, t, ajustes.inverterSemanaAlternada))
   }, [base, ajustes, t, guardar])
+
+  /**
+   * Fecha a folha do compromisso — perguntando primeiro, se houver o que perder.
+   *
+   * Não mexer no estado quando a pessoa cancela é o que faz a folha VOLTAR: o
+   * `Modal` só sai porque `visible` vira falso, então recusar aqui devolve a
+   * folha com tudo preenchido, que é o comportamento do iOS.
+   */
+  const fecharFormulario = useCallback(() => {
+    const sair = () => {
+      formularioPendente.current = false
+      setCriando(false)
+      setCompromissoAberto(null)
+    }
+    if (!formularioPendente.current) {
+      sair()
+      return
+    }
+    Alert.alert(t('formulario.descartar_titulo'), t('formulario.descartar_texto'), [
+      { text: t('formulario.continuar_editando'), style: 'cancel' },
+      { text: t('formulario.descartar'), style: 'destructive', onPress: sair },
+    ])
+  }, [t])
 
   const primeiraVez = useRef(true)
   useEffect(() => {
@@ -322,14 +353,18 @@ export function Raiz() {
         visible={criando || compromissoAberto !== null}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => {
-          setCriando(false)
-          setCompromissoAberto(null)
-        }}
+        // Arrastar a folha para baixo cai AQUI, e não passa por botão nenhum.
+        // Fechando direto, quem escorrega o dedo perde o formulário inteiro sem
+        // uma pergunta — que é o que o iOS faz questão de não fazer.
+        onRequestClose={fecharFormulario}
       >
         <NovoCompromisso
           id={compromissoAberto ?? undefined}
+          aoMudarPendencia={(p) => {
+            formularioPendente.current = p
+          }}
           aoFechar={() => {
+            formularioPendente.current = false
             setCriando(false)
             setCompromissoAberto(null)
           }}

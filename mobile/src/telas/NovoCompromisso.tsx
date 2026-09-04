@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Pressable,
   ScrollView,
@@ -41,7 +41,22 @@ import {
 } from '../componentes/ui.tsx'
 
 
-export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () => void }) {
+export function NovoCompromisso({
+  id,
+  aoFechar,
+  aoMudarPendencia,
+}: {
+  id?: string
+  aoFechar: () => void
+  /**
+   * Avisa quem apresenta a folha de que existe coisa preenchida e não salva.
+   *
+   * Existe porque a folha do iOS fecha ARRASTANDO, e o arrastar não passa por
+   * nenhum botão daqui: sem este aviso, quem escorrega o dedo perde o
+   * formulário inteiro sem uma pergunta. Medido em 03/09/2026, perdendo um.
+   */
+  aoMudarPendencia?: (pendente: boolean) => void
+}) {
   const t = usarT()
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
@@ -62,6 +77,26 @@ export function NovoCompromisso({ id, aoFechar }: { id?: string; aoFechar: () =>
     compromissoExistente?.vencimento ?? { tipo: 'data', data: dataDe(new Date()), hora: '23:59' },
   )
   const [avisos, setAvisos] = useState<RegraAviso[] | null>(compromissoExistente?.avisos ?? null)
+
+  // O que conta como "tem coisa aqui dentro".
+  //
+  // Ao EDITAR, é ter mexido em algo. Ao CRIAR, é ter escrito qualquer coisa —
+  // tipo e vencimento nascem preenchidos por padrão e não valem como trabalho
+  // da pessoa, senão toda folha recém-aberta pediria confirmação para fechar.
+  const pendente = compromissoExistente
+    ? tipo !== compromissoExistente.tipo ||
+      titulo !== compromissoExistente.titulo ||
+      detalhe !== (compromissoExistente.detalhe ?? '') ||
+      materiaId !== (compromissoExistente.materiaId ?? '') ||
+      JSON.stringify(vencimento) !== JSON.stringify(compromissoExistente.vencimento) ||
+      JSON.stringify(avisos) !== JSON.stringify(compromissoExistente.avisos ?? null)
+    : titulo.trim() !== '' || detalhe.trim() !== '' || materiaId !== '' || avisos !== null
+
+  useEffect(() => {
+    aoMudarPendencia?.(pendente)
+    // Ao desmontar, a folha já foi embora: nada mais está pendente.
+    return () => aoMudarPendencia?.(false)
+  }, [pendente, aoMudarPendencia])
 
   const materiasVivas = vivos(base.materias)
   const materiaSelecionada = materiaId ? base.materias[materiaId] : undefined
