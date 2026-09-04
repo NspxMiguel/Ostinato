@@ -58,11 +58,21 @@ export function precisaDeResgateDeGrade(sinais: {
 /**
  * Vale chamar o modelo para esta foto de tarefa?
  *
- * Aqui não há "aulas lidas" para medir, então sobra a confiança e o tamanho: um
- * texto de duas palavras mal lido não tem o que resgatar, e um vazio menos ainda.
+ * A confiança do Vision NÃO entra aqui — e essa é a correção. Ele mede se as
+ * LETRAS foram lidas certo, não se a foto é uma anotação de uma tarefa só. Uma
+ * foto de "Sala de Aula" (portal da escola, várias tarefas, nome do aluno,
+ * professor, datas — tudo junto na mesma página) tem confiança ALTA porque
+ * cada caractere foi lido perfeitamente, e mesmo assim vira um bloco só,
+ * ilegível, com o nome do aluno grudado na primeira "tarefa" — foi
+ * exatamente o que aconteceu em 04/09/2026: confiança alta, gate pulou a IA,
+ * o texto cru (uma página inteira) foi parar direto no campo.
+ *
+ * Diferente da grade (`precisaDeResgateDeGrade`), aqui não existe algoritmo
+ * fazendo o papel de juiz — não há "aulas lidas" para comparar. Por isso toda
+ * foto de tarefa passa pela IA quando ela existe: o único filtro que sobra é
+ * ter texto de verdade pra resgatar.
  */
 export function precisaDeResgateDeTarefa(sinais: { confianca: number; texto: string }): boolean {
-  if (sinais.confianca >= CONFIANCA_BAIXA) return false
   return sinais.texto.trim().length >= 8
 }
 
