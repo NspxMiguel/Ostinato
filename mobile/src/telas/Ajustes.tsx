@@ -998,7 +998,7 @@ export function Ajustes({ aoEscanearHorario }: {
               <Apoio cor={cores.texto3}>{t('ajustes.apagar_tudo_desc')}</Apoio>
               <Botao
                 texto={t('ajustes.apagar_tudo')}
-                variante="discreto"
+                variante="destrutivo"
                 aoTocar={() => setConfirmandoTudo(true)}
               />
             </View>

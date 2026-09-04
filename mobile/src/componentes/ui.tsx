@@ -379,18 +379,30 @@ export function Botao({
 }: {
   texto: string
   aoTocar: () => void
-  variante?: 'cheio' | 'vazado' | 'discreto'
+  variante?: 'cheio' | 'vazado' | 'discreto' | 'destrutivo'
 }) {
   const comVidro = isLiquidGlassAvailable()
   const corTexto =
-    variante === 'cheio' ? cores.texto : variante === 'vazado' ? cores.texto : cores.textoFraco
+    variante === 'cheio'
+      ? cores.texto
+      : variante === 'vazado'
+        ? cores.texto
+        : variante === 'destrutivo'
+          ? // Vermelho, e não o cinza do `discreto`.
+            //
+            // "Apagar tudo" saía cinza-apagado, que no iOS é a cor de botão
+            // DESABILITADO — a ação mais séria do app parecia inativa. Vermelho
+            // é o que a Apple usa para destrutivo, e continua sendo texto (não
+            // um botão cheio), porque o destaque da tela é o de fechar.
+            cores.atrasado
+          : cores.textoFraco
   const rotulo = (
     <Text style={{ fontSize: 16, fontWeight: '600', color: corTexto, textAlign: 'center' }}>
       {texto}
     </Text>
   )
 
-  if (variante === 'discreto') {
+  if (variante === 'discreto' || variante === 'destrutivo') {
     return (
       <Toque aoTocar={aoTocar} estilo={[e.botao, e.botaoDiscreto]}>
         {rotulo}
@@ -526,11 +538,20 @@ export function LinhaDeMenu({
   return (
     <Toque aoTocar={aoTocar} estilo={e.linhaDeMenu}>
       {icone}
-      <Text style={[fonte.corpo, { flex: 1 }, perigo ? { color: cores.aviso } : null]}>
+      {/* O título manda no espaço; quem encolhe é o resumo.
+          Sem isto, "What you use" quebrava em três linhas enquanto o resumo
+          "Timetable, Grades and absences" ocupava metade da linha. */}
+      <Text
+        style={[fonte.corpo, { flexGrow: 1, flexShrink: 0 }, perigo ? { color: cores.aviso } : null]}
+        numberOfLines={1}
+      >
         {titulo}
       </Text>
       {valor ? (
-        <Text style={[fonte.apoio, { color: cores.texto3 }]} numberOfLines={1}>
+        <Text
+          style={[fonte.apoio, { color: cores.texto3, flexShrink: 1 }]}
+          numberOfLines={1}
+        >
           {valor}
         </Text>
       ) : null}
