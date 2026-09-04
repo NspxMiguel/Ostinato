@@ -11,7 +11,7 @@ import type { Compromisso, Materia, TipoCompromisso } from '../../../nucleo/mode
 import { TIPOS_COMPROMISSO } from '../../../nucleo/modelo.ts'
 import type { Interpretacao } from '../../../nucleo/linguagem.ts'
 import { interpretarMelhor } from '../../../nucleo/linguagem.ts'
-import { resolverMateria, comApelido } from '../../../nucleo/materias.ts'
+import { resolverMateria, comApelido, pareceNomeDeMateria } from '../../../nucleo/materias.ts'
 import { periodoAtivo } from '../../../nucleo/grade.ts'
 import { instante, dataDe } from '../../../nucleo/tempo.ts'
 import { previaDeVencimento } from '../../../nucleo/vencimento.ts'
@@ -139,7 +139,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   const salvar = useCallback(() => {
     if (!lido || !vencimento) return
     let idFinal = materiaId
-    if (!idFinal && lido.materiaNome && materiaLida?.tipo === 'nova') {
+    if (!idFinal && lido.materiaNome && materiaLida?.tipo === 'nova' && pareceNomeDeMateria(lido.materiaNome)) {
       idFinal = criarMateria(lido.materiaNome)
     }
     guardar('compromissos', {
@@ -316,7 +316,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
             )}
           </Cartao>
 
-          {lido.materiaNome && !materiaId ? (
+          {lido.materiaNome && !materiaId && pareceNomeDeMateria(lido.materiaNome) ? (
             <EscolherMateria
               nome={lido.materiaNome}
               candidatos={materiaLida?.tipo === 'perguntar' ? materiaLida.candidatos : []}

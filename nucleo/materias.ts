@@ -147,3 +147,22 @@ export function comApelido(m: Materia, nome: string): Materia {
   const jaTem = [m.nome, ...(m.apelidos ?? [])].some((n) => normalizar(n) === normalizar(nome))
   return jaTem ? m : { ...m, apelidos: [...(m.apelidos ?? []), nome.trim()] }
 }
+
+/**
+ * Isto tem cara de nome de matéria, ou é lixo de OCR grudado no resto do
+ * texto?
+ *
+ * Achado em 04/09/2026: uma foto de portal escolar ("Sala de Aula") deixou
+ * passar "Aula MIGUEL RAMTHUN MORETTI / ENSINO F... • Tarefa de Ciências
+ * Postado por Fiama Cristina Kern Kava •" como se fosse nome de matéria — e
+ * o app ofereceu "Criar" aquilo. Nome de matéria de verdade é curto e não
+ * carrega "•" (marcador de lista), "Postado por" nem barra de navegação —
+ * quando aparece algo assim, é melhor dizer "não sei" do que oferecer criar
+ * uma matéria com o cabeçalho da tela inteiro.
+ */
+export function pareceNomeDeMateria(nome: string): boolean {
+  const limpo = nome.trim()
+  if (limpo.length === 0 || limpo.length > 40) return false
+  if (limpo.includes('•') || /postado por/i.test(limpo)) return false
+  return limpo.split(/\s+/).length <= 6
+}
