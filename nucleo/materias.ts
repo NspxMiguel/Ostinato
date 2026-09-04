@@ -5,7 +5,7 @@
 // aqui é o que junta os quatro — e, quando não tem certeza, diz que não tem, em
 // vez de chutar. Chutar errado joga uma prova na matéria errada.
 
-import type { Materia } from './modelo.ts'
+import type { Idioma, Materia } from './modelo.ts'
 import { vivos } from './sync/registro.ts'
 import { mesmoGrupoDeMateria } from './abreviacoesMaterias.ts'
 
@@ -63,11 +63,14 @@ function forca(
   alvo: string,
   forma: string,
   ehApelido: boolean,
+  idioma: Idioma,
 ): { v: number; por: Casamento['por'] } {
   if (forma === alvo) return { v: ehApelido ? 0.9 : 1, por: ehApelido ? 'apelido' : 'nome' }
   // "português" e "lpo" não são a mesma palavra abreviada — são duas siglas
-  // diferentes para a mesma matéria. Isso só o dicionário resolve.
-  if (mesmoGrupoDeMateria(alvo, forma)) return { v: 0.85, por: 'apelido' }
+  // diferentes para a mesma matéria. Isso só o dicionário resolve, e o
+  // dicionário é por idioma — sigla de escola americana não deveria casar
+  // matéria digitada em português, e vice-versa.
+  if (mesmoGrupoDeMateria(alvo, forma, idioma)) return { v: 0.85, por: 'apelido' }
   if (casaPorPedacos(alvo, forma)) return { v: 0.8, por: 'abreviacao' }
   const semEspaco = alvo.replace(/ /g, '')
   if (semEspaco.length >= 2 && iniciaisDe(forma) === semEspaco) {
@@ -85,7 +88,7 @@ function forca(
  * Quem é a matéria desse nome. Devolve os candidatos, do mais provável ao menos,
  * porque a tela precisa oferecer escolha quando o topo não convence.
  */
-export function casarMateria(nome: string, materias: Materia[]): Casamento[] {
+export function casarMateria(nome: string, materias: Materia[], idioma: Idioma = 'pt'): Casamento[] {
   const alvo = normalizar(nome)
   if (alvo === '') return []
 
@@ -98,7 +101,7 @@ export function casarMateria(nome: string, materias: Materia[]): Casamento[] {
     ]
     let melhor: { v: number; por: Casamento['por'] } = { v: 0, por: 'prefixo' }
     for (const [forma, ehApelido] of formas) {
-      const f = forca(alvo, forma, ehApelido)
+      const f = forca(alvo, forma, ehApelido, idioma)
       if (f.v > melhor.v) melhor = f
     }
     if (melhor.v > 0) saida.push({ materia: m, confianca: melhor.v, por: melhor.por })
@@ -123,8 +126,12 @@ export type Resolucao =
  * "Bioquímica" pelo mesmo valor, escolher uma seria sorteio disfarçado de
  * inteligência.
  */
-export function resolverMateria(nome: string, base: { materias: Record<string, Materia> }): Resolucao {
-  const candidatos = casarMateria(nome, vivos(base.materias))
+export function resolverMateria(
+  nome: string,
+  base: { materias: Record<string, Materia> },
+  idioma: Idioma = 'pt',
+): Resolucao {
+  const candidatos = casarMateria(nome, vivos(base.materias), idioma)
   const melhor = candidatos[0]
   if (!melhor) return { tipo: 'nova', nome }
 

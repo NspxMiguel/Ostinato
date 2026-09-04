@@ -652,7 +652,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     const traducoes: Record<string, string> = {}
     for (const nomeMat of previaMateriasNomes) {
       if (!pareceAbreviacaoDesconhecida(nomeMat)) continue
-      if (resolverMateria(nomeMat, base).tipo !== 'nova') continue
+      if (resolverMateria(nomeMat, base, idioma).tipo !== 'nova') continue
       const nomeReal = await perguntarSignificado(nomeMat)
       if (nomeReal) traducoes[nomeMat] = nomeReal
     }
@@ -669,7 +669,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
 
     for (const nomeMat of previaMateriasNomes) {
       const nomeFinal = traducoes[nomeMat] ?? nomeMat
-      const resolucao = resolverMateria(nomeFinal, base)
+      const resolucao = resolverMateria(nomeFinal, base, idioma)
       if (resolucao.tipo === 'achou') {
         mapaNomesParaId[nomeMat] = resolucao.materia.id
         // Aprende com o uso, sem sair do aparelho: casou por dicionário ou
@@ -975,7 +975,7 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
                   autoCorrect={false}
                   autoCapitalize="none"
                   spellCheck={false}
-                  placeholder="Ex: Segunda 08:00 - 10:00 Cálculo 1..."
+                  placeholder={t('grade.colar_exemplo')}
                   placeholderTextColor={cores.textoFraco}
                 />
                 {usouIa ? <Text style={e.ajuda}>{t('resgate.usou')}</Text> : null}

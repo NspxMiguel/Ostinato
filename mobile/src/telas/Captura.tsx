@@ -74,7 +74,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
     erroDeLeitura = true
   }
 
-  const materiaLida = lido?.materiaNome ? resolverMateria(lido.materiaNome, base) : null
+  const materiaLida = lido?.materiaNome ? resolverMateria(lido.materiaNome, base, idioma) : null
   const [materiaEscolhida, setMateriaEscolhida] = useState<string | null>(null)
   const materiaId =
     materiaEscolhida ?? (materiaLida?.tipo === 'achou' ? materiaLida.materia.id : undefined)

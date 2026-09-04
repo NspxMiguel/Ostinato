@@ -154,7 +154,10 @@ export function GradeSemanal({
           </Toque>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {/* O indicador FICA ligado, de propósito: com só 4 de 5 dias cabendo na
+            tela, escondê-lo faz a tabela parecer cortada/quebrada em vez de
+            rolável — "meio esquisitinha", como ele descreveu em 04/09/2026. */}
+        <ScrollView horizontal showsHorizontalScrollIndicator>
           <View>
             <View style={{ flexDirection: 'row', height: ALTURA_CABECALHO }}>
               {dias.map((d) => (
