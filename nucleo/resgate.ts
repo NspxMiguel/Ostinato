@@ -117,12 +117,19 @@ export function instrucoesDeGrade(): string {
 export function instrucoesDeTarefa(): string {
   return [
     'Você conserta texto de OCR de uma anotação escolar fotografada.',
-    'A foto tinha letra de mão ou rasura, então o texto chegou quebrado.',
-    'Devolva SOMENTE as tarefas, uma por linha, em português, na forma:',
+    'Pode ser letra de mão, rasura, OU um print de portal/app da escola (tipo',
+    '"Google Classroom" ou "Sala de Aula") com menu, cabeçalho, nome do aluno,',
+    'nome do professor e "Postado por" misturados com a tarefa de verdade.',
+    'Devolva SOMENTE UMA tarefa — a mais próxima no tempo — na forma:',
     'matéria — o que fazer — quando',
     'Regras absolutas:',
+    '- NUNCA inclua nome de aluno, nome de professor, "Postado por" nem',
+    '  cabeçalho de página no resultado — isso não é a tarefa, é moldura da tela;',
+    '- se o texto tiver VÁRIAS tarefas, escolha só a de prazo mais próximo e',
+    '  ignore as outras — uma tarefa por vez, nunca uma lista;',
     '- não invente tarefa, data nem matéria que não esteja no texto;',
-    '- linha que você não entender, apague em vez de chutar;',
+    '- se não der para separar a tarefa do resto com confiança, devolva vazio',
+    '  em vez de chutar;',
     '- não escreva explicação, comentário, título nem marcação de código.',
   ].join('\n')
 }

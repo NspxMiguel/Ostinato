@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { CONFIANCA_MINIMA, casarMateria, comApelido, normalizar, resolverMateria } from '../materias.ts'
+import { CONFIANCA_MINIMA, casarMateria, comApelido, normalizar, pareceNomeDeMateria, resolverMateria } from '../materias.ts'
 import { base, materia, reiniciarIds } from './ajuda.ts'
 
 test('normalizar tira acento, caixa e pontuação', () => {
@@ -140,4 +140,19 @@ test('dicionário de um idioma não vaza para outro', () => {
   const bio = materia('Biologia')
   const r = resolverMateria('svt', base({ materias: [bio] }), 'pt')
   assert.equal(r.tipo, 'nova')
+})
+
+test('pareceNomeDeMateria recusa lixo de OCR de portal escolar', () => {
+  // Caso real de 04/09/2026: foto do "Sala de Aula" (portal da escola) virou
+  // um "nome de matéria" com cabeçalho de página, nome do aluno e "Postado
+  // por" tudo grudado. O app ofereceu "Criar" isso — não devia.
+  assert.equal(
+    pareceNomeDeMateria(
+      'Aula MIGUEL RAMTHUN MORETTI / ENSINO F... • Tarefa de Ciências Postado por Fiama Cristina Kern Kava •',
+    ),
+    false,
+  )
+  assert.equal(pareceNomeDeMateria('Biologia'), true)
+  assert.equal(pareceNomeDeMateria('Educação Física'), true)
+  assert.equal(pareceNomeDeMateria(''), false)
 })
