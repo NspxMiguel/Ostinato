@@ -11,6 +11,15 @@
 // achar que o app travou.
 
 import { Alert, StyleSheet, Text, View } from 'react-native'
+// O `Pressable` é o do gesture-handler, NÃO o do React Native.
+//
+// O do RN disputa o toque com o `Swipeable` que envolve a linha, e vence: ele
+// vira o responder assim que o dedo encosta, e o arrastar nunca começa. Medido
+// em 03/09/2026 — o mesmo deslizar funcionava na Agenda, onde o filho direto do
+// `Swipeable` é uma View e o toque mora em elementos menores lá dentro; aqui o
+// tocável ocupa a linha inteira, então não sobra lugar por onde puxar. O do
+// gesture-handler participa da mesma árvore de gestos e cede o pan.
+import { Pressable } from 'react-native-gesture-handler'
 import type { Materia } from '../../../nucleo/modelo.ts'
 import { vivos } from '../../../nucleo/sync/registro.ts'
 import { apagarMateria, oQueVaiJunto } from '../apagarMateria.ts'
@@ -18,7 +27,6 @@ import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { cores, espaco, fonte, raio } from '../tema.ts'
 import { Deslizar } from './Deslizar.tsx'
-import { Toque } from './ui.tsx'
 
 export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   const t = usarT()
@@ -63,10 +71,13 @@ export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
               aoRemover={() => confirmarRemocao(m)}
               rotuloRemover={t('materias.remover')}
             >
-              <Toque aoTocar={() => aoAbrir(m.id)} estilo={e.linha}>
+              <Pressable
+                onPress={() => aoAbrir(m.id)}
+                style={({ pressed }) => [e.linha, pressed ? e.pressionada : null]}
+              >
                 <View style={[e.ponto, { backgroundColor: m.cor }]} />
                 <Text style={fonte.corpo}>{m.nome}</Text>
-              </Toque>
+              </Pressable>
             </Deslizar>
           ))}
       </View>
@@ -87,5 +98,9 @@ const e = StyleSheet.create({
     borderWidth: 1,
     borderColor: cores.borda,
   },
+  // O `Toque` do app dá o retorno de toque encolhendo a linha; aqui ele não
+  // serve (ver o comentário do import), então o retorno é a própria linha
+  // clareando — que é o que o iOS faz numa lista.
+  pressionada: { backgroundColor: cores.fundoElevado },
   ponto: { width: 8, height: 8, borderRadius: 4 },
 })

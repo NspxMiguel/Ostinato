@@ -26,6 +26,8 @@ const TEXTOS = {
       'Para transformar o que você fala em tarefa. Quando o idioma tem modelo baixado, o reconhecimento acontece no próprio aparelho.',
     NSCameraUsageDescription: 'Para ler o horário ou a tarefa a partir de uma foto do papel.',
     NSPhotoLibraryUsageDescription: 'Para ler o horário a partir de uma imagem que você já tem.',
+    NSAlarmKitUsageDescription:
+      'Para tocar o alarme do iPhone na hora do compromisso, mesmo com o telefone no silencioso.',
   },
   en: {
     NSMicrophoneUsageDescription: 'So you can jot a task down by speaking instead of typing.',
@@ -33,6 +35,8 @@ const TEXTOS = {
       'To turn what you say into a task. When the language has an on-device model, recognition happens on the device itself.',
     NSCameraUsageDescription: 'To read your timetable or task from a photo of the paper.',
     NSPhotoLibraryUsageDescription: 'To read your timetable from an image you already have.',
+    NSAlarmKitUsageDescription:
+      'To ring the iPhone alarm when a commitment is due, even with the phone on silent.',
   },
   es: {
     NSMicrophoneUsageDescription: 'Para que apuntes la tarea hablando, en vez de escribir.',
@@ -40,6 +44,8 @@ const TEXTOS = {
       'Para convertir lo que dices en una tarea. Cuando el idioma tiene modelo descargado, el reconocimiento ocurre en el propio dispositivo.',
     NSCameraUsageDescription: 'Para leer el horario o la tarea desde una foto del papel.',
     NSPhotoLibraryUsageDescription: 'Para leer el horario desde una imagen que ya tienes.',
+    NSAlarmKitUsageDescription:
+      'Para que suene la alarma del iPhone a la hora del compromiso, incluso con el teléfono en silencio.',
   },
   fr: {
     NSMicrophoneUsageDescription: 'Pour noter le devoir en parlant, plutôt qu’en tapant.',
@@ -47,6 +53,8 @@ const TEXTOS = {
       'Pour transformer ce que vous dites en devoir. Quand la langue dispose d’un modèle téléchargé, la reconnaissance se fait sur l’appareil.',
     NSCameraUsageDescription: 'Pour lire l’emploi du temps ou le devoir depuis une photo du papier.',
     NSPhotoLibraryUsageDescription: 'Pour lire l’emploi du temps depuis une image que vous avez déjà.',
+    NSAlarmKitUsageDescription:
+      'Pour déclencher l’alarme de l’iPhone à l’heure de l’échéance, même téléphone en silencieux.',
   },
 }
 
