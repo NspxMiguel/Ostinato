@@ -31,10 +31,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 
 export function Tela({ children, titulo }: { children: ReactNode; titulo?: string }) {
   const margem = useSafeAreaInsets()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   return (
     <View style={[e.tela, { paddingTop: margem.top }]}>
       <ScrollView
@@ -67,6 +70,7 @@ export function Tela({ children, titulo }: { children: ReactNode; titulo?: strin
 }
 
 export function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
+  const fonte = criarFonte(usarCores())
   return (
     <View style={{ gap: espaco.m }}>
       {/* Sentence case. Caixa alta em rótulo de seção é maneirismo de painel
@@ -228,6 +232,8 @@ export function Cartao({
   semCantos?: boolean
   padding?: number
 }) {
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   return (
     <Toque
       aoTocar={aoTocar}
@@ -272,6 +278,8 @@ export function Cartao({
  */
 export function Grupo({ children }: { children: ReactNode }) {
   const filhos = Children.toArray(children)
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   return (
     <View style={e.cartao}>
       <LinearGradient
@@ -290,14 +298,18 @@ export function Grupo({ children }: { children: ReactNode }) {
 }
 
 export function Titulo({ children }: { children: ReactNode }) {
+  const fonte = criarFonte(usarCores())
   return <Text style={fonte.tituloItem}>{children}</Text>
 }
 
 export function Apoio({ children, cor }: { children: ReactNode; cor?: string }) {
+  const fonte = criarFonte(usarCores())
   return <Text style={[fonte.apoio, cor ? { color: cor } : undefined]}>{children}</Text>
 }
 
 export function Etiqueta({ texto, cor }: { texto: string; cor?: string }) {
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   // Sem `cor`, a etiqueta é neutra. Com `cor`, ela é ESTADO — e aí o texto herda
   // a cor e o fundo fica translúcido, para não virar um bloco chapado.
   return (
@@ -333,6 +345,8 @@ export function Pilula({
   cor?: string
 }) {
   const comVidro = isLiquidGlassAvailable()
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   const conteudo = (
     <>
       {cor ? <Bolinha cor={cor} tamanho={7} /> : null}
@@ -391,6 +405,8 @@ export function Botao({
   variante?: 'cheio' | 'vazado' | 'discreto' | 'destrutivo'
 }) {
   const comVidro = isLiquidGlassAvailable()
+  const cores = usarCores()
+  const e = criarEstilo(cores)
   const corTexto =
     variante === 'cheio'
       ? cores.texto
@@ -477,6 +493,9 @@ export function Vazio({
   acao?: string
   aoAgir?: () => void
 }) {
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   return (
     <View style={e.vazio}>
       {/* Um anel, não um ícone de biblioteca: é a mesma forma da aba Hoje e do
@@ -544,6 +563,9 @@ export function LinhaDeMenu({
   perigo?: boolean
   aoTocar: () => void
 }) {
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   return (
     <Toque aoTocar={aoTocar} estilo={e.linhaDeMenu}>
       {icone}
@@ -578,7 +600,11 @@ export function Fileira({ children }: { children: ReactNode }) {
   )
 }
 
-const e = StyleSheet.create({
+/** Fábrica, não constante — StyleSheet.create resolve a cor UMA vez, quando
+ * é chamado; por isso cada componente chama isto de novo a cada render, com
+ * a paleta do momento (`usarCores()`). Ver a nota em tema.ts. */
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
   tituloTela: { paddingTop: espaco.xs, marginBottom: -espaco.s },
   cartao: {
@@ -660,4 +686,5 @@ const e = StyleSheet.create({
     borderColor: cores.texto4,
     marginBottom: espaco.xs,
   },
-})
+  })
+}

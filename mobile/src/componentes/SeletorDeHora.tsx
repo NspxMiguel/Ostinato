@@ -17,7 +17,7 @@
 import { useState } from 'react'
 import { Modal, Pressable, Text, View } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores } from '../tema.ts'
 import { horaDeTexto } from '../formato.ts'
 import { usarT } from '../i18n.ts'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -45,6 +45,8 @@ export function SeletorDeHora({
   const [aberto, setAberto] = useState(false)
   const t = usarT()
   const margem = useSafeAreaInsets()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
 
   return (
     <View style={{ gap: espaco.s, flex: 1 }}>

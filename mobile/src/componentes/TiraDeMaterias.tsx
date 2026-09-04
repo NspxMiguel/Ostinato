@@ -25,11 +25,14 @@ import { vivos } from '../../../nucleo/sync/registro.ts'
 import { apagarMateria, oQueVaiJunto } from '../apagarMateria.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { Deslizar } from './Deslizar.tsx'
 
 export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   const t = usarT()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   const base = usarLoja((e) => e.base)
   const removerVarios = usarLoja((e) => e.removerVarios)
   const materias = vivos(base.materias)
@@ -97,7 +100,8 @@ export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
   )
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   // Opaco de propósito: é o conteúdo que desliza por cima do painel vermelho.
   linha: {
     flexDirection: 'row',
@@ -115,4 +119,5 @@ const e = StyleSheet.create({
   // clareando — que é o que o iOS faz numa lista.
   pressionada: { backgroundColor: cores.fundoElevado },
   ponto: { width: 8, height: 8, borderRadius: 4 },
-})
+  })
+}

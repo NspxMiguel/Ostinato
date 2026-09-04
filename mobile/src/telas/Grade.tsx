@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import type { Aula, DiaSemana, Materia, SemanaAlternada } from '../../../nucleo/modelo.ts'
 import { LOCALE_DO_IDIOMA } from '../../../nucleo/modelo.ts'
-import { CORES_DE_MATERIA, cores, espaco, fonte, raio } from '../tema.ts'
+import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarIdioma, usarT } from '../i18n.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
@@ -61,6 +61,9 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   const t = usarT()
   const ajustes = usarLoja((s) => s.ajustes)
   const idioma = usarIdioma()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   const base = usarLoja((e) => e.base)
   const guardar = usarLoja((e) => e.guardar)
   const remover = usarLoja((e) => e.remover)
@@ -1103,7 +1106,8 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
   )
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   fundoDaConfirmacao: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -1136,4 +1140,5 @@ const e = StyleSheet.create({
   linhaCores: { flexDirection: 'row', gap: espaco.s, paddingVertical: espaco.xs },
   circuloCor: { width: 32, height: 32, borderRadius: 16 },
   circuloCorSelecionado: { borderWidth: 3, borderColor: cores.texto },
-})
+  })
+}

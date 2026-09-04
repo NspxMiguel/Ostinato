@@ -17,7 +17,7 @@ import type {
   Vencimento,
 } from '../../../nucleo/modelo.ts'
 import { LOCALE_DO_IDIOMA, TIPOS_COMPROMISSO, avisosDe } from '../../../nucleo/modelo.ts'
-import { cores, espaco, fonte, raio } from '../tema.ts'
+import { criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { SeletorDeData } from '../componentes/SeletorDeData.tsx'
 import { momentoPorExtenso, rotuloDeRegra } from '../formato.ts'
 import { usarLoja } from '../estado/loja.ts'
@@ -70,6 +70,9 @@ export function NovoCompromisso({
   aoMudarPendencia?: (pendente: boolean) => void
 }) {
   const t = usarT()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const e = criarEstilo(cores)
   const idioma = usarIdioma()
   const base = usarLoja((e) => e.base)
   const ajustes = usarLoja((e) => e.ajustes)
@@ -503,7 +506,8 @@ export function NovoCompromisso({
   )
 }
 
-const e = StyleSheet.create({
+function criarEstilo(cores: Paleta) {
+  return StyleSheet.create({
   campo: { gap: espaco.xs },
   input: {
     backgroundColor: cores.cartao,
@@ -516,4 +520,5 @@ const e = StyleSheet.create({
   },
   inputMultilinha: { height: 80, textAlignVertical: 'top' },
   listaPilulas: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.s },
-})
+  })
+}
