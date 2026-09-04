@@ -31,6 +31,16 @@ test('tarefa curta demais nao vale resgate', () => {
   assert.equal(precisaDeResgateDeTarefa({ confianca: 0.2, texto: 'prova de biologia' }), true)
 })
 
+test('confianca alta do Vision NAO pula a IA na foto de tarefa', () => {
+  // Achado em 04/09/2026: foto de um portal escolar inteiro ("Sala de Aula",
+  // várias tarefas, nome do aluno, professor, tudo junto) tem confiança ALTA
+  // — cada letra foi lida certo — mas a foto não é uma anotação de tarefa só.
+  // Sem IA, o texto cru inteiro ia direto pro campo, viravam um bloco só, e o
+  // "Salvar" não tinha o que resolver. Diferente da grade, aqui não existe
+  // algoritmo fazendo de juiz, então confiança alta não pode mais pular a IA.
+  assert.equal(precisaDeResgateDeTarefa({ confianca: 0.95, texto: 'prova de biologia sexta' }), true)
+})
+
 test('cerca de codigo e preambulo saem da resposta', () => {
   const bruto = '```\nSeg\t08:00\t09:00\tMAT\n```'
   assert.equal(limparResposta(bruto), 'Seg\t08:00\t09:00\tMAT')
