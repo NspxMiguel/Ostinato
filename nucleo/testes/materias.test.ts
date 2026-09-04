@@ -109,3 +109,35 @@ test('dicionário não atropela ambiguidade genérica: "geo" com Geografia e Geo
   const geom = materia('Geometria')
   assert.equal(resolverMateria('geo', base({ materias: [geo, geom] })).tipo, 'perguntar')
 })
+
+test('dicionário: os outros três idiomas também têm o de matéria', () => {
+  // Pedido em 04/09/2026, no mesmo dia: "faz dicionario de pelo menos umas
+  // 20 linguas ai... na vdd so as q tem nosso app ne" — só os quatro que o
+  // app fala, não vinte. Um caso por idioma, cobrindo sigla que não é
+  // prefixo nem iniciais do nome cadastrado.
+  reiniciarIds()
+
+  const pe = materia('PE')
+  const en = resolverMateria('physical education', base({ materias: [pe] }), 'en')
+  assert.equal(en.tipo, 'achou')
+  if (en.tipo === 'achou') assert.equal(en.materia.nome, 'PE')
+
+  const lc = materia('LC')
+  const es = resolverMateria('lengua castellana', base({ materias: [lc] }), 'es')
+  assert.equal(es.tipo, 'achou')
+  if (es.tipo === 'achou') assert.equal(es.materia.nome, 'LC')
+
+  const svt = materia('SVT')
+  const fr = resolverMateria('biologie', base({ materias: [svt] }), 'fr')
+  assert.equal(fr.tipo, 'achou')
+  if (fr.tipo === 'achou') assert.equal(fr.materia.nome, 'SVT')
+})
+
+test('dicionário de um idioma não vaza para outro', () => {
+  // "svt" é sigla francesa de biologia. Sem o idioma certo, ela não pode
+  // casar uma matéria em português.
+  reiniciarIds()
+  const bio = materia('Biologia')
+  const r = resolverMateria('svt', base({ materias: [bio] }), 'pt')
+  assert.equal(r.tipo, 'nova')
+})

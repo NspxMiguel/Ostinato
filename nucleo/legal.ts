@@ -19,9 +19,10 @@ export type TipoLegal = 'privacidade' | 'termos'
 export type Secao = { titulo: string; paragrafos: string[] }
 export type DocumentoLegal = { atualizadoEm: string; introducao: string; secoes: Secao[] }
 
-/** O e-mail de suporte e o responsável perante a Apple — a mesma conta que
- * assina o app, pela regra de identidade pública dos apps Apple. */
-export const EMAIL_SUPORTE = 'miguel@keepok.com.br'
+/** O e-mail de suporte visível no app — contato público dele, pedido em
+ * 04/09/2026. O controlador legal continua sendo a Keepok (ver `CONTROLADOR`
+ * abaixo); este é só o endereço que responde dúvida de quem usa o app. */
+export const EMAIL_SUPORTE = 'miguel@nspx.dev'
 
 /** Controlador dos dados (LGPD art. 9). App de loja é sempre Keepok, nunca
  * pessoa física — é a mesma regra do CLAUDE.md, e o motivo é o mesmo: um
