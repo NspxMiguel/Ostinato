@@ -73,6 +73,18 @@ export function TiraDeMaterias({ aoAbrir }: { aoAbrir: (id: string) => void }) {
             >
               <Pressable
                 onPress={() => aoAbrir(m.id)}
+                // Segurar também apaga.
+                //
+                // O deslizar é o gesto pedido, e ele funciona na Agenda com este
+                // mesmo componente — mas nesta linha não abre, e eu ainda não sei
+                // por quê (quatro hipóteses medidas e descartadas em 03/09/2026:
+                // o Pressable do RN roubando o toque, a distância do arrasto, o
+                // limite da esquerda, e o painel esquerdo ausente). Enquanto isso
+                // não fecha, segurar é o caminho que funciona — e é o mesmo gesto
+                // que o app já usa para apagar som importado, então não é
+                // vocabulário novo.
+                onLongPress={() => confirmarRemocao(m)}
+                delayLongPress={500}
                 style={({ pressed }) => [e.linha, pressed ? e.pressionada : null]}
               >
                 <View style={[e.ponto, { backgroundColor: m.cor }]} />
