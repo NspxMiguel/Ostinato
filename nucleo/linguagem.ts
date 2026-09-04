@@ -157,7 +157,12 @@ function reconhecerTipo(texto: string, idioma: Idioma): TipoEncontrado | undefin
     regras = [
       { expressao: /\b(?:prova|teste|avaliacao|avaliacoes)\b/, tipo: 'prova' },
       { expressao: /\b(?:trabalho|seminario|apresentacao)\b/, tipo: 'trabalho' },
-      { expressao: /\b(?:tarefa|exercicio|exercicios|licao|dever)\b/, tipo: 'tarefa' },
+      // "questão/questões" é exercício, não leitura — "responder as questões
+      // da página 14" tem "pagina" (leitura) e "questoes" (tarefa) na mesma
+      // frase, e sem "questoes" aqui só sobrava "pagina" pra decidir. Achado
+      // em 04/09/2026: "Biologia — todas as questões nas 14 a 19" saiu como
+      // Leitura.
+      { expressao: /\b(?:tarefa|exercicio|exercicios|licao|dever|questao|questoes)\b/, tipo: 'tarefa' },
       { expressao: /\b(?:ler|leitura|livro|capitulo|paginas)\b/, tipo: 'leitura' },
       { expressao: /\b(?:entregar|entrega|enviar)\b/, tipo: 'entrega' },
     ]
