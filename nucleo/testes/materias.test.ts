@@ -86,3 +86,26 @@ test('matéria apagada não casa', () => {
   const mat = materia('Matemática', { removido: true })
   assert.equal(casarMateria('matematica', [mat]).length, 0)
 })
+
+test('dicionário: "português" casa com a matéria cadastrada como "LPO"', () => {
+  // Pedido em 04/09/2026: ele cadastra as matérias com a sigla que a escola
+  // usa ("LPO"), e quer falar "português" na captura sem precisar decorar a
+  // sigla. "lpo" não é prefixo, iniciais nem pedaço de "portugues" — só um
+  // dicionário resolve.
+  reiniciarIds()
+  const lpo = materia('LPO')
+  const r = resolverMateria('português', base({ materias: [lpo] }))
+  assert.equal(r.tipo, 'achou')
+  if (r.tipo === 'achou') assert.equal(r.materia.nome, 'LPO')
+})
+
+test('dicionário não atropela ambiguidade genérica: "geo" com Geografia e Geometria continua perguntando', () => {
+  // Regressão que o próprio dicionário quase causou: "geo" já casa as duas
+  // por prefixo com confiança igual (0.75), e é assim que a tela sabe
+  // perguntar em vez de escolher sozinha. O dicionário não pode ganhar dessa
+  // confiança para uma sigla que o algoritmo genérico já resolve.
+  reiniciarIds()
+  const geo = materia('Geografia')
+  const geom = materia('Geometria')
+  assert.equal(resolverMateria('geo', base({ materias: [geo, geom] })).tipo, 'perguntar')
+})

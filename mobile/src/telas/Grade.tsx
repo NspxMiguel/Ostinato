@@ -36,6 +36,7 @@ import { analisarGrade } from '../resgatar.ts'
 import { tabelaComoTexto } from '../../../nucleo/resgate.ts'
 import { NOTA_MINIMA, qualidadeDaGrade } from '../../../nucleo/qualidadeDaGrade.ts'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
+import { comApelido, normalizar, resolverMateria } from '../../../nucleo/materias.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import {
   faixasDeAulas,
@@ -601,7 +602,43 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     )
   }
 
-  const confirmarImportacao = () => {
+  // Sigla curta que a resolução não achou candidato nenhum: "ALE" chegando de
+  // um horário novo, sem parecido registrado. Pedido em 04/09/2026: em vez de
+  // criar a matéria com esse nome cru, perguntar o que ela significa — e não
+  // deixar a resposta ser a própria sigla ("ALE" pra "o que é ALE?" não vale).
+  function pareceAbreviacaoDesconhecida(nome: string): boolean {
+    const n = nome.trim()
+    return n.length > 0 && n.length <= 4 && !/\s/.test(n)
+  }
+
+  function perguntarSignificado(abrev: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      const pedir = () => {
+        Alert.prompt(
+          t('grade.pergunta_abreviacao_titulo', { abrev }),
+          t('grade.pergunta_abreviacao_texto'),
+          [
+            { text: t('acao.pular'), style: 'cancel', onPress: () => resolve(null) },
+            {
+              text: t('acao.confirmar'),
+              onPress: (resposta?: string) => {
+                const limpo = (resposta ?? '').trim()
+                if (!limpo || normalizar(limpo) === normalizar(abrev)) {
+                  pedir()
+                  return
+                }
+                resolve(limpo)
+              },
+            },
+          ],
+          'plain-text',
+        )
+      }
+      pedir()
+    })
+  }
+
+  const confirmarImportacao = async () => {
     // O período letivo NÃO entra na condição.
     //
     // Ele é opcional desde que a grade virou opcional, e este `return` mudo era
@@ -610,22 +647,47 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
     // é o pior tipo, porque a pessoa conclui que o app está quebrado.
     if (!previaImportacao) return
 
+    // Antes de criar qualquer matéria nova, pergunta pelas siglas curtas que
+    // não bateram com nada — cadastrada OU do dicionário de gírias.
+    const traducoes: Record<string, string> = {}
+    for (const nomeMat of previaMateriasNomes) {
+      if (!pareceAbreviacaoDesconhecida(nomeMat)) continue
+      if (resolverMateria(nomeMat, base).tipo !== 'nova') continue
+      const nomeReal = await perguntarSignificado(nomeMat)
+      if (nomeReal) traducoes[nomeMat] = nomeReal
+    }
+
     // Lê de `previaAulas`/`previaMateriasNomes` — o que a pessoa CORRIGIU na
     // planilha — e não do resultado cru de `previaImportacao`.
+    //
+    // A resolução usa `resolverMateria`: nome exato, apelido, abreviação por
+    // pedaços/iniciais E o dicionário de gírias ("português" ↔ "LPO") — não
+    // mais comparação de string crua, que criava matéria duplicada toda vez
+    // que a sigla do horário não batia letra por letra com o nome cadastrado.
     const mapaNomesParaId: Record<string, string> = {}
     let corIndice = 0
 
     for (const nomeMat of previaMateriasNomes) {
-      const normalizado = nomeMat.trim().toLowerCase()
-      const existente = materiasVivas.find((m: Materia) => m.nome.trim().toLowerCase() === normalizado)
-      if (existente) {
-        mapaNomesParaId[nomeMat] = existente.id
+      const nomeFinal = traducoes[nomeMat] ?? nomeMat
+      const resolucao = resolverMateria(nomeFinal, base)
+      if (resolucao.tipo === 'achou') {
+        mapaNomesParaId[nomeMat] = resolucao.materia.id
+        // Aprende com o uso, sem sair do aparelho: casou por dicionário ou
+        // abreviação (não pelo nome exato) — guarda a sigla crua como apelido,
+        // pra da próxima vez casar na hora, sem precisar do dicionário nem
+        // perguntar de novo. É a "telemetria" que ele pediu em 04/09/2026,
+        // do jeito que não contraria a política de privacidade: aprendizado
+        // local, nada enviado a lugar nenhum.
+        if (normalizar(resolucao.materia.nome) !== normalizar(nomeMat)) {
+          const atualizada = comApelido(resolucao.materia, nomeMat)
+          if (atualizada !== resolucao.materia) guardar('materias', atualizada)
+        }
       } else {
         const cor = CORES_DE_MATERIA[corIndice % CORES_DE_MATERIA.length] ?? CORES_DE_MATERIA[0]
         corIndice++
         const novaId = guardar('materias', {
           periodoId: periodo?.id ?? '',
-          nome: nomeMat.trim(),
+          nome: nomeFinal.trim(),
           cor,
           limiteFaltasPct: 25,
         })

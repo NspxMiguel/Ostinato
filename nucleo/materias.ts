@@ -7,6 +7,7 @@
 
 import type { Materia } from './modelo.ts'
 import { vivos } from './sync/registro.ts'
+import { mesmoGrupoDeMateria } from './abreviacoesMaterias.ts'
 
 /** Minúsculas, sem acento, sem pontuação. É a forma que se compara. */
 export function normalizar(nome: string): string {
@@ -64,6 +65,9 @@ function forca(
   ehApelido: boolean,
 ): { v: number; por: Casamento['por'] } {
   if (forma === alvo) return { v: ehApelido ? 0.9 : 1, por: ehApelido ? 'apelido' : 'nome' }
+  // "português" e "lpo" não são a mesma palavra abreviada — são duas siglas
+  // diferentes para a mesma matéria. Isso só o dicionário resolve.
+  if (mesmoGrupoDeMateria(alvo, forma)) return { v: 0.85, por: 'apelido' }
   if (casaPorPedacos(alvo, forma)) return { v: 0.8, por: 'abreviacao' }
   const semEspaco = alvo.replace(/ /g, '')
   if (semEspaco.length >= 2 && iniciaisDe(forma) === semEspaco) {
