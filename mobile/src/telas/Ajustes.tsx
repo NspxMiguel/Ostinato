@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native'
+import { Alert, Modal, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import {
   IDIOMAS,
@@ -466,7 +466,38 @@ export function Ajustes({ aoEscanearHorario }: {
   }, [])
   const [sons, setSons] = useState<string[]>(() => sonsImportados())
   const [importandoSom, setImportandoSom] = useState(false)
-  const [confirmandoTudo, setConfirmandoTudo] = useState(false)
+  /**
+   * Confirma e apaga tudo.
+   *
+   * É `Alert`, e NÃO um `Modal`. O modal de confirmação era irmão do modal da
+   * categoria, e no iOS um modal irmão não sobe por cima de outro que já está
+   * apresentado: tocar em "apagar tudo" não fazia absolutamente nada, e foi
+   * assim que ele recebeu o app. `Alert` é apresentado pelo sistema, então
+   * aparece sobre qualquer folha — e é o que o iOS usa para destrutivo.
+   */
+  function confirmarApagarTudo() {
+    Alert.alert(
+      t('ajustes.apagar_tudo_titulo'),
+      `${t('ajustes.apagar_tudo_texto', { n: quantosRegistros })}\n\n${t('ajustes.apagar_tudo_aviso')}`,
+      [
+        { text: t('acao.cancelar'), style: 'cancel' },
+        {
+          text: t('ajustes.apagar_tudo'),
+          style: 'destructive',
+          onPress: () => {
+            // Remoção lógica em TODAS as coleções, para o apagar viajar no
+            // sync. Limpar o armazenamento aqui faria tudo voltar do outro
+            // aparelho na próxima sincronização — o oposto do que a pessoa
+            // acabou de pedir.
+            for (const tabela of TABELAS) {
+              for (const r of vivosDe(base, tabela)) remover(tabela, r.id)
+            }
+            setCategoria(null)
+          },
+        },
+      ],
+    )
+  }
   const estadoIa = estadoDoModelo()
   /** Qual categoria está aberta na raiz — é o que troca a coluna única pelas
       telas do padrão "Ajustes do iPhone". */
@@ -758,6 +789,67 @@ export function Ajustes({ aoEscanearHorario }: {
           </Grupo>
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
         </Tela>
+        <Modal
+          visible={tipoAberto !== null}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setTipoAberto(null)}
+        >
+          {tipoAberto ? (
+            <Tela titulo={t(`compromisso.tipo.singular.${tipoAberto}` as ChaveI18n)}>
+              {/* Três escolhas nomeadas pelo RESULTADO, e o editor cru atrás de
+                  "personalizar". Montar regra por regra — dias, hora, modo,
+                  repetição — vezes seis tipos é trabalho que ninguém faz: a pessoa
+                  olha, cansa, e sai com o padrão. */}
+              <Secao titulo={t('ajustes.avisos')}>
+                <Fileira>
+                  {NIVEIS.map((n) => (
+                    <Pilula
+                      key={n}
+                      texto={t(`ajustes.nivel.${n}` as ChaveI18n)}
+                      ativa={intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? []) === n}
+                      aoTocar={() =>
+                        mudarAjustes({
+                          padroesAviso: {
+                            ...ajustes.padroesAviso,
+                            [tipoAberto]: avisosPorIntensidade(tipoAberto, n),
+                          },
+                        })
+                      }
+                    />
+                  ))}
+                </Fileira>
+                <Apoio>
+                  {t(
+                    `ajustes.nivel.expl.${intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? [])}` as ChaveI18n,
+                  )}
+                </Apoio>
+              </Secao>
+
+              <Secao titulo={t('ajustes.personalizar')}>
+                {(ajustes.padroesAviso[tipoAberto] ?? []).length === 0 ? (
+                  <Vazio texto={t('ajustes.sem_regras')} />
+                ) : (
+                  (ajustes.padroesAviso[tipoAberto] ?? []).map((regra) => (
+                    <RegraLinha
+                      key={regra.id}
+                      regra={regra}
+                      aoMudar={(r) => mudarModoRegra(tipoAberto, regra.id, r)}
+                      aoRemover={() => removerRegra(tipoAberto, regra.id)}
+                    />
+                  ))
+                )}
+                <Botao
+                  texto={t('ajustes.adicionar_regra')}
+                  variante="vazado"
+                  aoTocar={() => adicionarRegra(tipoAberto)}
+                />
+              </Secao>
+
+              <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setTipoAberto(null)} />
+            </Tela>
+          ) : null}
+        </Modal>
       </Modal>
 
       {/* ————— Alarme ————— */}
@@ -924,6 +1016,45 @@ export function Ajustes({ aoEscanearHorario }: {
           </Grupo>
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
         </Tela>
+        <Modal
+          visible={periodoAberto}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setPeriodoAberto(false)}
+        >
+          <Tela titulo={t('ajustes.periodo_letivo')}>
+            {periodo ? (
+              <PeriodoEditor
+                key={periodo.id}
+                nome={periodo.nome}
+                inicio={periodo.inicio}
+                fim={periodo.fim}
+                feriados={periodo.feriados}
+                aoSalvar={(parcial) => guardar('periodos', { id: periodo.id, ...parcial })}
+                aoAdicionarFeriado={(data) =>
+                  guardar('periodos', { id: periodo.id, feriados: [...periodo.feriados, data] })
+                }
+                aoRemoverFeriado={(data) =>
+                  guardar('periodos', {
+                    id: periodo.id,
+                    feriados: periodo.feriados.filter((f) => f !== data),
+                  })
+                }
+              />
+            ) : (
+              <Vazio texto={t('ajustes.sem_periodo')} />
+            )}
+            <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
+          </Tela>
+        </Modal>
+        <Modal
+          visible={importando}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setImportando(false)}
+        >
+          <ImportarCalendario aoFechar={() => setImportando(false)} />
+        </Modal>
       </Modal>
 
       {/* ————— Sobre ————— */}
@@ -999,7 +1130,7 @@ export function Ajustes({ aoEscanearHorario }: {
               <Botao
                 texto={t('ajustes.apagar_tudo')}
                 variante="destrutivo"
-                aoTocar={() => setConfirmandoTudo(true)}
+                aoTocar={confirmarApagarTudo}
               />
             </View>
           </Grupo>
@@ -1007,142 +1138,6 @@ export function Ajustes({ aoEscanearHorario }: {
         </Tela>
       </Modal>
 
-      <Modal
-        visible={confirmandoTudo}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setConfirmandoTudo(false)}
-      >
-        <Pressable style={estilo.fundoDaConfirmacao} onPress={() => setConfirmandoTudo(false)}>
-          <View style={estilo.caixaDaConfirmacao}>
-            <Titulo>{t('ajustes.apagar_tudo_titulo')}</Titulo>
-            <Apoio>{t('ajustes.apagar_tudo_texto', { n: quantosRegistros })}</Apoio>
-            <Apoio cor={cores.aviso}>{t('ajustes.apagar_tudo_aviso')}</Apoio>
-            <Botao
-              texto={t('ajustes.apagar_tudo')}
-              aoTocar={() => {
-                // Remoção lógica em TODAS as coleções, para o apagar viajar no
-                // sync. Limpar o armazenamento aqui faria tudo voltar do outro
-                // aparelho na próxima sincronização — o oposto do que a pessoa
-                // acabou de pedir.
-                for (const tabela of TABELAS) {
-                  for (const r of vivosDe(base, tabela)) remover(tabela, r.id)
-                }
-                setConfirmandoTudo(false)
-                setCategoria(null)
-              }}
-            />
-            <Botao
-              texto={t('acao.cancelar')}
-              variante="vazado"
-              aoTocar={() => setConfirmandoTudo(false)}
-            />
-          </View>
-        </Pressable>
-      </Modal>
-
-      <Modal
-        visible={tipoAberto !== null}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setTipoAberto(null)}
-      >
-        {tipoAberto ? (
-          <Tela titulo={t(`compromisso.tipo.singular.${tipoAberto}` as ChaveI18n)}>
-            {/* Três escolhas nomeadas pelo RESULTADO, e o editor cru atrás de
-                "personalizar". Montar regra por regra — dias, hora, modo,
-                repetição — vezes seis tipos é trabalho que ninguém faz: a pessoa
-                olha, cansa, e sai com o padrão. */}
-            <Secao titulo={t('ajustes.avisos')}>
-              <Fileira>
-                {NIVEIS.map((n) => (
-                  <Pilula
-                    key={n}
-                    texto={t(`ajustes.nivel.${n}` as ChaveI18n)}
-                    ativa={intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? []) === n}
-                    aoTocar={() =>
-                      mudarAjustes({
-                        padroesAviso: {
-                          ...ajustes.padroesAviso,
-                          [tipoAberto]: avisosPorIntensidade(tipoAberto, n),
-                        },
-                      })
-                    }
-                  />
-                ))}
-              </Fileira>
-              <Apoio>
-                {t(
-                  `ajustes.nivel.expl.${intensidadeDe(tipoAberto, ajustes.padroesAviso[tipoAberto] ?? [])}` as ChaveI18n,
-                )}
-              </Apoio>
-            </Secao>
-
-            <Secao titulo={t('ajustes.personalizar')}>
-              {(ajustes.padroesAviso[tipoAberto] ?? []).length === 0 ? (
-                <Vazio texto={t('ajustes.sem_regras')} />
-              ) : (
-                (ajustes.padroesAviso[tipoAberto] ?? []).map((regra) => (
-                  <RegraLinha
-                    key={regra.id}
-                    regra={regra}
-                    aoMudar={(r) => mudarModoRegra(tipoAberto, regra.id, r)}
-                    aoRemover={() => removerRegra(tipoAberto, regra.id)}
-                  />
-                ))
-              )}
-              <Botao
-                texto={t('ajustes.adicionar_regra')}
-                variante="vazado"
-                aoTocar={() => adicionarRegra(tipoAberto)}
-              />
-            </Secao>
-
-            <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setTipoAberto(null)} />
-          </Tela>
-        ) : null}
-      </Modal>
-
-      <Modal
-        visible={periodoAberto}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setPeriodoAberto(false)}
-      >
-        <Tela titulo={t('ajustes.periodo_letivo')}>
-          {periodo ? (
-            <PeriodoEditor
-              key={periodo.id}
-              nome={periodo.nome}
-              inicio={periodo.inicio}
-              fim={periodo.fim}
-              feriados={periodo.feriados}
-              aoSalvar={(parcial) => guardar('periodos', { id: periodo.id, ...parcial })}
-              aoAdicionarFeriado={(data) =>
-                guardar('periodos', { id: periodo.id, feriados: [...periodo.feriados, data] })
-              }
-              aoRemoverFeriado={(data) =>
-                guardar('periodos', {
-                  id: periodo.id,
-                  feriados: periodo.feriados.filter((f) => f !== data),
-                })
-              }
-            />
-          ) : (
-            <Vazio texto={t('ajustes.sem_periodo')} />
-          )}
-          <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
-        </Tela>
-      </Modal>
-
-      <Modal
-        visible={importando}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setImportando(false)}
-      >
-        <ImportarCalendario aoFechar={() => setImportando(false)} />
-      </Modal>
     </Tela>
   )
 }
