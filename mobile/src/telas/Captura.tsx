@@ -338,6 +338,14 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
             titulo: lido?.titulo ?? texto,
             tipo: (lido?.tipo ?? 'tarefa') as TipoCompromisso,
             ...(materiaId ? { materiaId } : {}),
+            // `vencimento` por aula só é uma referência válida com a matéria
+            // dentro dele — a forma que `lido` devolve antes de a matéria ser
+            // escolhida não é. `vencimento` (calculado acima) já resolve isso.
+            ...(vencimento?.tipo === 'data'
+              ? { vencimento }
+              : vencimento?.tipo === 'aula' && materiaId
+                ? { vencimento: { tipo: 'aula' as const, materiaId, ocorrencia: vencimento.ocorrencia } }
+                : {}),
           })
         }
       />

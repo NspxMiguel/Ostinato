@@ -8,6 +8,7 @@ import { Alert, Animated, AppState, Modal, Pressable, StyleSheet, Text, View } f
 import * as Notifications from 'expo-notifications'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Tabs } from 'react-native-screens'
+import type { Compromisso } from '../../nucleo/modelo.ts'
 import { dataDe } from '../../nucleo/tempo.ts'
 import { periodoAtivo } from '../../nucleo/grade.ts'
 import { usarLoja } from './estado/loja.ts'
@@ -85,6 +86,16 @@ export function Raiz() {
    * uma informação que ninguém desenha.
    */
   const formularioPendente = useRef(false)
+  /**
+   * O que a captura por texto/foto/voz já entendeu, para "Adjust in the form"
+   * abrir a folha preenchida em vez de vazia.
+   *
+   * Vive fora do `Captura`, porque a folha do formulário é montada aqui, não
+   * lá — a `Captura` só desmonta e entrega o que leu.
+   */
+  const [rascunhoDoFormulario, setRascunhoDoFormulario] = useState<Partial<Compromisso> | null>(
+    null,
+  )
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null)
   const [alarmeDe, setAlarmeDe] = useState<string | null>(null)
 
@@ -136,6 +147,7 @@ export function Raiz() {
       formularioPendente.current = false
       setCriando(false)
       setCompromissoAberto(null)
+      setRascunhoDoFormulario(null)
     }
     if (!formularioPendente.current) {
       sair()
@@ -341,9 +353,10 @@ export function Raiz() {
             setCapturando(false)
             setTextoDeFora(undefined)
           }}
-          aoAjustar={() => {
+          aoAjustar={(rascunho) => {
             setCapturando(false)
             setTextoDeFora(undefined)
+            setRascunhoDoFormulario(rascunho)
             setCriando(true)
           }}
         />
@@ -360,6 +373,7 @@ export function Raiz() {
       >
         <NovoCompromisso
           id={compromissoAberto ?? undefined}
+          rascunho={rascunhoDoFormulario ?? undefined}
           aoMudarPendencia={(p) => {
             formularioPendente.current = p
           }}
@@ -367,6 +381,7 @@ export function Raiz() {
             formularioPendente.current = false
             setCriando(false)
             setCompromissoAberto(null)
+            setRascunhoDoFormulario(null)
           }}
         />
       </Modal>

@@ -43,10 +43,22 @@ import {
 
 export function NovoCompromisso({
   id,
+  rascunho,
   aoFechar,
   aoMudarPendencia,
 }: {
   id?: string
+  /**
+   * O que a captura por texto/foto/voz já entendeu, para a folha nascer
+   * preenchida em vez de em branco.
+   *
+   * Existe porque "Adjust in the form" jogava tudo fora: a pessoa escrevia
+   * "math exam today 11:56pm", via a prévia acertar tipo e data, tocava para
+   * ajustar um detalhe — e a folha abria vazia, pedindo para escrever tudo de
+   * novo. Ignorado quando `id` está presente: editar um compromisso existente
+   * usa o dado salvo, não um rascunho de fora.
+   */
+  rascunho?: Partial<Compromisso>
   aoFechar: () => void
   /**
    * Avisa quem apresenta a folha de que existe coisa preenchida e não salva.
@@ -67,16 +79,21 @@ export function NovoCompromisso({
   const periodo = periodoAtivo(base)
   const compromissoExistente = id ? base.compromissos[id] : undefined
 
+  // O que semeia os campos: o compromisso salvo ao editar, o rascunho da
+  // captura por texto/foto/voz ao ajustar, ou nada ao criar do zero. Os dois
+  // primeiros nunca coexistem — `rascunho` só chega quando não há `id`.
+  const partida = compromissoExistente ?? rascunho
+
   // O criadoEm deve ser preservado ao editar para ancorar 'próxima aula'
   const [criadoEm] = useState<number>(compromissoExistente?.criadoEm ?? Date.now())
-  const [tipo, setTipo] = useState<TipoCompromisso>(compromissoExistente?.tipo ?? 'tarefa')
-  const [titulo, setTitulo] = useState(compromissoExistente?.titulo ?? '')
-  const [detalhe, setDetalhe] = useState(compromissoExistente?.detalhe ?? '')
-  const [materiaId, setMateriaId] = useState<string>(compromissoExistente?.materiaId ?? '')
+  const [tipo, setTipo] = useState<TipoCompromisso>(partida?.tipo ?? 'tarefa')
+  const [titulo, setTitulo] = useState(partida?.titulo ?? '')
+  const [detalhe, setDetalhe] = useState(partida?.detalhe ?? '')
+  const [materiaId, setMateriaId] = useState<string>(partida?.materiaId ?? '')
   const [vencimento, setVencimento] = useState<Vencimento>(
-    compromissoExistente?.vencimento ?? { tipo: 'data', data: dataDe(new Date()), hora: '23:59' },
+    partida?.vencimento ?? { tipo: 'data', data: dataDe(new Date()), hora: '23:59' },
   )
-  const [avisos, setAvisos] = useState<RegraAviso[] | null>(compromissoExistente?.avisos ?? null)
+  const [avisos, setAvisos] = useState<RegraAviso[] | null>(partida?.avisos ?? null)
 
   // O que conta como "tem coisa aqui dentro".
   //
