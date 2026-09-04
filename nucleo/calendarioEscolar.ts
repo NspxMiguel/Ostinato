@@ -32,6 +32,14 @@ export type EfeitoNoDia =
   | 'presenca'
   /** Acontece na escola e é aberto: festa, palestra, feira. */
   | 'evento'
+  /** Primeiro dia de aula do ano ou do segmento. Marco, não vira feriado. */
+  | 'inicioAula'
+  /** Último dia de aula do ano ou do segmento. */
+  | 'fimAula'
+  /** Começa um trimestre, bimestre ou semestre. */
+  | 'inicioPeriodoLetivo'
+  /** Termina um trimestre, bimestre ou semestre. */
+  | 'fimPeriodoLetivo'
   /** Assunto de quem trabalha lá. Não entra, mas continua visível na lista. */
   | 'interno'
 
@@ -80,10 +88,24 @@ const FECHA_A_ESCOLA = [
   'ponto facultativo',
   'suspensao de aula',
   'nao havera aula',
+  'nao tem aula',
 ]
 
 const AVALIACAO = ['prova', 'simulado', 'avaliacao', 'recuperacao', 'exame', 'vestibular', 'enem']
 const PRESENCA = ['reuniao de pais', 'entrega de boletim', 'conselho de classe com pais']
+
+/**
+ * Início e fim de aula, e de trimestre/bimestre/semestre.
+ *
+ * Vêm ANTES do teste de cargo por um motivo: "Início das aulas da 3ª série do
+ * Ensino Médio" não cita cargo nenhum, mas sem esta lista caía em
+ * "sem sinal" — e sumia da agenda de todo mundo, inclusive do próprio marco
+ * que um aluno mais quer saber: quando começam as aulas dele.
+ */
+const INICIO_AULA = /inicio (?:d[aoe]s? )?aulas|inicio do ano letivo|retorno (?:as|para as) aulas|volta (?:as|às) aulas|primeiro dia de aula/
+const FIM_AULA = /ultimo dia (?:de aula|letivo|d[oa] (?:ei|f1|f2|em|infantil|fundamental))/
+const INICIO_PERIODO = /inicio (?:do|da) \d\s*[ºªo]?\s*(?:trimestre|bimestre|semestre)/
+const FIM_PERIODO = /(?:fim|termino|encerramento) (?:do|da) \d\s*[ºªo]?\s*(?:trimestre|bimestre|semestre)/
 /**
  * O que acontece na escola e o aluno quer saber.
  *
@@ -134,7 +156,13 @@ export function seriesCitadas(texto: string): string[] {
   //
   // Sem `\b` no fim de propósito: `º` já é caractere de não-palavra, então não
   // existe fronteira entre ele e o espaço seguinte, e a âncora nunca casaria.
-  for (const m of t.matchAll(/(?:^|[^\d])(\d)\s*[ºª](?![\wº])/g)) achadas.add(`${m[1]}a serie`)
+  // Negativo em "trimestre/bimestre/semestre": "2º trimestre" não é a 2ª
+  // série, é um recorte de tempo do ano letivo — sem esta exceção "Início do
+  // 2º trimestre" virava um evento só da 2ª série e sumia da agenda de todo
+  // mundo mais.
+  for (const m of t.matchAll(/(?:^|[^\d])(\d)\s*[ºª](?![\wº])(?!\s*(?:trimestre|bimestre|semestre))/g)) {
+    achadas.add(`${m[1]}a serie`)
+  }
   if (/ensino medio|\bem\b/.test(t)) achadas.add('ensino medio')
   if (/educacao infantil|infantil/.test(t)) achadas.add('educacao infantil')
   if (/fundamental/.test(t)) achadas.add('fundamental')
@@ -170,6 +198,22 @@ export function classificar(texto: string): LinhaClassificada {
 
   if (PRESENCA.some((p) => t.includes(p))) {
     return { texto, efeito: 'presenca', series, para: 'responsavel', porque: 'presenca-de-responsavel' }
+  }
+
+  // Marco de calendário — vem antes do teste de cargo: nenhum destes cita
+  // função de funcionário, mas também não têm palavra de evento aberto, e sem
+  // este bloco caíam direto em "sem sinal".
+  if (INICIO_AULA.test(t)) {
+    return { texto, efeito: 'inicioAula', series, para: 'escola', porque: 'inicio-de-aula' }
+  }
+  if (FIM_AULA.test(t)) {
+    return { texto, efeito: 'fimAula', series, para: 'escola', porque: 'fim-de-aula' }
+  }
+  if (INICIO_PERIODO.test(t)) {
+    return { texto, efeito: 'inicioPeriodoLetivo', series, para: 'escola', porque: 'inicio-de-periodo-letivo' }
+  }
+  if (FIM_PERIODO.test(t)) {
+    return { texto, efeito: 'fimPeriodoLetivo', series, para: 'escola', porque: 'fim-de-periodo-letivo' }
   }
 
   if (CARGOS.some((p) => t.includes(p)) || /formacao (com|para|de) professores|reuniao de planejamento|formacao pedagogica/.test(t)) {
