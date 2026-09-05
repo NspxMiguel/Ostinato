@@ -38,6 +38,7 @@ import { usarIdioma, usarT } from '../i18n.ts'
 import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { resgatarFrase, resgatarTarefa } from '../resgatar.ts'
+import { partesDaLinhaDeIa } from '../../../nucleo/resgate.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
 export function Captura({ textoInicial, aoFechar, aoAjustar }: {
@@ -82,6 +83,68 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   const materiaId =
     materiaEscolhida ?? (materiaLida?.tipo === 'achou' ? materiaLida.materia.id : undefined)
 
+  // Uma foto de portal escolar traz VÁRIAS tarefas — a IA já devolve uma por
+  // linha (ver instrucoesDeTarefa em nucleo/resgate.ts). Antes disto, o texto
+  // inteiro virava UMA interpretação só, e a segunda tarefa (a de verdade,
+  // não moldura da tela) sumia dentro do título da primeira. Achado em
+  // 04/09/2026, com a foto que tinha "Eureka Capítulo 10" grudado em outra
+  // tarefa.
+  //
+  // Só entra em modo "várias" quando a IA de fato escreveu mais de uma linha
+  // — texto digitado à mão com quebra de linha continua sendo UMA tarefa,
+  // porque não há sinal nenhum de que sejam tarefas diferentes.
+  const linhasMultiplas = usouIa ? texto.split('\n').map((l) => l.trim()).filter((l) => l !== '') : []
+  const multiplas = linhasMultiplas.length > 1
+
+  const itensMultiplos = multiplas
+    ? linhasMultiplas.map((linha) => {
+        let li: Interpretacao | null = null
+        try {
+          const partes = partesDaLinhaDeIa(linha)
+          if (partes) {
+            // A matéria vem CONFIADA da IA (parte 1) em vez de recuperada por
+            // regex — "de/da/do" dentro do próprio "o que fazer" ("da página
+            // 22") vencia a corrida contra a matéria de verdade quando a
+            // linha inteira passava pelo interpretador de frase natural.
+            // Título fica LITERAL (parte 2): interpretar de novo só para
+            // cortar "tipo" e "matéria" de um texto que já não tem nenhum
+            // dos dois embutido só truncava — "Eureka Capítulo 10" virava
+            // "Eureka 10". Tipo e data continuam vindo do interpretador,
+            // cada um isolado no seu próprio pedaço, onde ele acerta.
+            const doFeito = interpretarMelhor(partes.feito, agora, idioma)
+            const vencimentoLinha =
+              partes.quando.trim() === '' ? undefined : interpretarMelhor(partes.quando, agora, idioma).vencimento
+            li = {
+              tipo: doFeito.tipo,
+              titulo: partes.feito,
+              materiaNome: partes.materia,
+              vencimento: vencimentoLinha,
+              confianca: 1,
+              marcas: [],
+              faltando: vencimentoLinha ? [] : ['data'],
+            }
+          } else {
+            li = interpretarMelhor(linha, agora, idioma)
+          }
+        } catch {
+          li = null
+        }
+        const materiaLidaLinha = li?.materiaNome ? resolverMateria(li.materiaNome, base, idioma) : null
+        const mid = materiaLidaLinha?.tipo === 'achou' ? materiaLidaLinha.materia.id : undefined
+        const temAulaLinha = !!mid && vivos(base.aulas).some((a: Aula) => a.materiaId === mid)
+        const vencLinha =
+          li?.vencimento ??
+          (temAulaLinha && mid ? ({ tipo: 'aula', materiaId: mid, ocorrencia: 1 } as const) : undefined)
+        const quandoLinha =
+          vencLinha?.tipo === 'data'
+            ? instante(vencLinha.data, vencLinha.hora ?? '23:59')
+            : vencLinha?.tipo === 'aula' && mid
+              ? (previaDeVencimento(mid, vencLinha.ocorrencia, base, periodo, agora)?.quando ?? null)
+              : null
+        return { linha, lido: li, materiaNome: li?.materiaNome ?? null, materiaId: mid, vencimento: vencLinha, quando: quandoLinha }
+      })
+    : []
+
   useEffect(() => {
     // Trocou a frase, esquece a escolha anterior: ela era sobre outro nome.
     setMateriaEscolhida(null)
@@ -118,7 +181,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         ? (previaDeVencimento(materiaId, vencimento.ocorrencia, base, periodo, agora)?.quando ?? null)
         : null
 
-  const podeSalvar = lido !== null && quando !== null
+  const podeSalvar = multiplas ? itensMultiplos.some((i) => i.lido !== null) : lido !== null && quando !== null
 
   /** Cria a matéria com o nome que a pessoa usou e a primeira cor livre. */
   const criarMateria = useCallback(
@@ -137,6 +200,37 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   )
 
   const salvar = useCallback(() => {
+    if (multiplas) {
+      // Cada linha vira o SEU compromisso. Linha que a IA escreveu mas o
+      // interpretador não entendeu (li === null) é descartada em silêncio —
+      // melhor perder uma linha ruim do que travar as outras vinte e nove.
+      for (const item of itensMultiplos) {
+        if (!item.lido || !item.vencimento) continue
+        let idFinal = item.materiaId
+        const materiaLidaLinha = item.materiaNome ? resolverMateria(item.materiaNome, base, idioma) : null
+        if (!idFinal && item.materiaNome && materiaLidaLinha?.tipo === 'nova' && pareceNomeDeMateria(item.materiaNome)) {
+          idFinal = criarMateria(item.materiaNome)
+        }
+        guardar('compromissos', {
+          criadoEm: Date.now(),
+          tipo: item.lido.tipo ?? 'tarefa',
+          titulo: item.lido.titulo,
+          ...(idFinal ? { materiaId: idFinal } : {}),
+          vencimento:
+            item.vencimento.tipo === 'data'
+              ? {
+                  tipo: 'data',
+                  data: item.vencimento.data,
+                  ...(item.vencimento.hora ? { hora: item.vencimento.hora } : {}),
+                }
+              : { tipo: 'aula', materiaId: idFinal ?? '', ocorrencia: item.vencimento.ocorrencia },
+          avisos: null,
+          concluido: false,
+        })
+      }
+      aoFechar()
+      return
+    }
     if (!lido || !vencimento) return
     let idFinal = materiaId
     if (!idFinal && lido.materiaNome && materiaLida?.tipo === 'nova' && pareceNomeDeMateria(lido.materiaNome)) {
@@ -155,7 +249,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       concluido: false,
     })
     aoFechar()
-  }, [lido, vencimento, materiaId, materiaLida, guardar, criarMateria, aoFechar])
+  }, [multiplas, itensMultiplos, base, idioma, lido, vencimento, materiaId, materiaLida, guardar, criarMateria, aoFechar])
 
   const comecarDitado = useCallback(async () => {
     if (!temVoz(idioma)) {
@@ -299,7 +393,34 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       {temLeitura() ? <Apoio>{t('papel.aviso_erro')}</Apoio> : null}
       {avisoDeVoz ? <Apoio cor={cores.aviso}>{avisoDeVoz}</Apoio> : null}
 
-      {texto.trim() === '' ? null : erroDeLeitura || !lido ? (
+      {texto.trim() === '' ? null : multiplas ? (
+        <Secao titulo={t('captura.varias', { n: String(itensMultiplos.filter((i) => i.lido).length) })}>
+          {itensMultiplos.map((item, i) => (
+            <Cartao key={i} faixa={item.materiaId ? base.materias[item.materiaId]?.cor : undefined}>
+              {item.lido ? (
+                <>
+                  <Linha>
+                    <Etiqueta texto={t(`compromisso.tipo.singular.${item.lido.tipo ?? 'tarefa'}` as never)} />
+                    {item.materiaId ? (
+                      <Apoio>{base.materias[item.materiaId]?.nome}</Apoio>
+                    ) : item.materiaNome ? (
+                      <Apoio>{item.materiaNome}</Apoio>
+                    ) : null}
+                  </Linha>
+                  <Titulo>{item.lido.titulo}</Titulo>
+                  {item.quando ? (
+                    <Apoio>{momentoPorExtenso(item.quando, idioma)}</Apoio>
+                  ) : (
+                    <Apoio cor={cores.aviso}>{t('captura.falta_data')}</Apoio>
+                  )}
+                </>
+              ) : (
+                <Apoio cor={cores.aviso}>{item.linha}</Apoio>
+              )}
+            </Cartao>
+          ))}
+        </Secao>
+      ) : erroDeLeitura || !lido ? (
         <Vazio texto={t('captura.nao_entendi')} />
       ) : (
         <Secao titulo={t('captura.entendi')}>
@@ -333,6 +454,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       )}
 
       <Botao texto={t('acao.salvar')} aoTocar={salvar} variante={podeSalvar ? 'cheio' : 'vazado'} />
+      {multiplas ? null : (
       <Botao
         texto={t('captura.ajustar')}
         variante="discreto"
@@ -352,6 +474,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
           })
         }
       />
+      )}
     </Tela>
   )
 }

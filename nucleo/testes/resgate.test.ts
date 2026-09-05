@@ -2,11 +2,13 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   limparResposta,
+  partesDaLinhaDeIa,
   precisaDeResgateDeFrase,
   precisaDeResgateDeGrade,
   precisaDeResgateDeTarefa,
   vale,
 } from '../resgate.ts'
+import { interpretarMelhor } from '../linguagem.ts'
 
 // O caso que ele nomeou: print de computador NAO chama o modelo.
 test('print bem lido nao aciona a IA, mesmo com tabela pequena', () => {
@@ -107,6 +109,49 @@ test('hora tem que ser HH:MM de 24h', () => {
 })
 
 import { tabelaComoTexto } from '../resgate.ts'
+
+// A tela (mobile/src/telas/Captura.tsx) recebe a resposta da IA — uma linha
+// por tarefa, "matéria — o que fazer — quando" — e usa partesDaLinhaDeIa para
+// separar. Achado em 04/09/2026: uma foto com "Eureka Capítulo 10" (Sistema
+// SAS) virava UMA tarefa só junto com a matéria seguinte, e o interpretador
+// de frase natural (feito para "prova de biologia sexta", não para o formato
+// de três partes) lia a matéria errada quando a linha inteira passava por ele
+// de uma vez — "da página 22" grudava antes da matéria de verdade.
+test('partesDaLinhaDeIa separa matéria, o que fazer e quando', () => {
+  assert.deepEqual(partesDaLinhaDeIa('Sistema SAS — Eureka Capítulo 10 — sexta'), {
+    materia: 'Sistema SAS',
+    feito: 'Eureka Capítulo 10',
+    quando: 'sexta',
+  })
+})
+
+test('duas partes (sem quando) ainda conta — a IA nem sempre acha uma data', () => {
+  assert.deepEqual(partesDaLinhaDeIa('Ciências — trazer o material de desenho'), {
+    materia: 'Ciências',
+    feito: 'trazer o material de desenho',
+    quando: '',
+  })
+})
+
+test('linha fora do formato de três partes devolve null, sem lançar', () => {
+  assert.equal(partesDaLinhaDeIa('só uma frase solta sem travessão nenhum'), null)
+  assert.equal(partesDaLinhaDeIa(''), null)
+  assert.equal(partesDaLinhaDeIa('a — b — c — d — e'), null)
+})
+
+test('o título fica LITERAL — não passa pelo interpretador de frase de novo', () => {
+  // A tentativa anterior interpretava a linha inteira de novo depois de
+  // reordenada, e "Eureka Capítulo 10" perdia o "Capítulo" — a palavra bate
+  // no dicionário de tipo "leitura" (capitulo|paginas|...) e some do título.
+  // Confiar no "o que fazer" da IA sem reprocessar evita essa perda.
+  const partes = partesDaLinhaDeIa('Sistema SAS — Eureka Capítulo 10 — sexta')!
+  assert.equal(partes.feito, 'Eureka Capítulo 10')
+})
+
+test('data isolada ("sexta") ainda resolve certo fora da frase original', () => {
+  const r = interpretarMelhor('sexta', new Date('2026-09-04T20:00:00'), 'pt')
+  assert.equal(r.vencimento?.tipo, 'data')
+})
 
 test('celula vazia vira "-" para as colunas nao desalinharem', () => {
   // O erro mais caro possivel num horario e a aula certa no dia errado. Uma
