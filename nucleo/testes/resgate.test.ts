@@ -109,31 +109,6 @@ test('hora tem que ser HH:MM de 24h', () => {
 })
 
 import { tabelaComoTexto } from '../resgate.ts'
-import { precisaDeResgateDeCalendario } from '../resgate.ts'
-
-// Achado em 05/09/2026, com o calendário real que ele mandou: um PDF de
-// duas colunas (quadrinho do mês | lista de eventos), copiado como texto,
-// sai achatado — os números do quadrinho grudam no evento seguinte, e
-// `lerCalendario` (que espera UM evento por linha) acha só um punhado de
-// eventos gigantes e ilegíveis em vez de dezenas de eventos curtos.
-test('calendário achatado (pouco evento, texto gigante) aciona o resgate', () => {
-  // 1654 caracteres, 5 eventos — o caso real medido.
-  const texto = 'x'.repeat(1654)
-  assert.equal(precisaDeResgateDeCalendario({ texto, eventos: 5 }), true)
-})
-
-test('calendário bem lido (evento curto, um por linha) não aciona', () => {
-  const texto = '1 Dia Mundial da Paz\n7 Retorno zeladores\n19 a 26 Recesso Escolar'
-  assert.equal(precisaDeResgateDeCalendario({ texto, eventos: 3 }), false)
-})
-
-test('nada lido, com texto de verdade, aciona mesmo sem comparação possível', () => {
-  assert.equal(precisaDeResgateDeCalendario({ texto: 'Setembro sem formato nenhum de dia', eventos: 0 }), true)
-})
-
-test('texto curto demais (colando ainda) não aciona', () => {
-  assert.equal(precisaDeResgateDeCalendario({ texto: 'Se', eventos: 0 }), false)
-})
 
 // A tela (mobile/src/telas/Captura.tsx) recebe a resposta da IA — uma linha
 // por tarefa, "matéria — o que fazer — quando" — e usa partesDaLinhaDeIa para

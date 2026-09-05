@@ -13,21 +13,18 @@ import {
   type AulaCrua,
   type ResultadoImportacao,
 } from '../../nucleo/importarGrade.ts'
-import { lerCalendario } from '../../nucleo/importarCalendario.ts'
 import type { Idioma } from '../../nucleo/i18n.ts'
 import { interpretarMelhor, type Interpretacao } from '../../nucleo/linguagem.ts'
 import {
   diaDoModeloParaApp,
   diaValido,
   horaValida,
-  instrucoesDeCalendario,
   instrucoesDeFrase,
   tabelaComoTexto,
   tabelaDoTexto,
   instrucoesDeGrade,
   instrucoesDeTarefa,
   limparResposta,
-  precisaDeResgateDeCalendario,
   precisaDeResgateDeFrase,
   precisaDeResgateDeGrade,
   precisaDeResgateDeTarefa,
@@ -226,30 +223,6 @@ export async function resgatarTarefa(
 
   const limpo = limparResposta(bruto)
   if (limpo.length < 4 || limpo.length > texto.length * 2) return { texto, usou: false }
-  return { texto: limpo, usou: true }
-}
-
-/**
- * Idem para o calendário escolar colado ou fotografado — a coluna de
- * eventos grudada no quadrinho do mês (ver `precisaDeResgateDeCalendario`).
- *
- * O juiz é o próprio `lerCalendario`: a versão reescrita só vence se, lida
- * de novo pelo MESMO parser, encontrar MAIS eventos que o texto cru — nunca
- * troca de resultado por trocar, como em `analisarGrade`.
- */
-export async function resgatarCalendario(texto: string, ano: number): Promise<{ texto: string; usou: boolean }> {
-  const doAlgoritmo = lerCalendario(texto, ano)
-  if (!precisaDeResgateDeCalendario({ texto, eventos: doAlgoritmo.length }) || !temModelo()) {
-    return { texto, usou: false }
-  }
-  const bruto = await perguntar(instrucoesDeCalendario(), texto)
-  if (!bruto) return { texto, usou: false }
-
-  const limpo = limparResposta(bruto)
-  if (limpo.length < 4) return { texto, usou: false }
-
-  const doModelo = lerCalendario(limpo, ano)
-  if (!vale({ aulas: doAlgoritmo.length }, { aulas: doModelo.length })) return { texto, usou: false }
   return { texto: limpo, usou: true }
 }
 

@@ -71,8 +71,8 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
         {
           titulo: 'Ajudar a melhorar a leitura (opcional, desligado por padrão)',
           paragrafos: [
-            'Em Ajustes, existe um interruptor chamado "Ajudar a melhorar a leitura", desligado por padrão. Quando você o LIGA, e só a partir daí: se você corrigir um evento de calendário que a leitura entendeu errado, ou escolher a matéria certa numa grade que a abreviação não reconheceu, essa correção — o texto do evento, ou o nome que você usou e o nome real da matéria — é enviada ao servidor do desenvolvedor.',
-            'Isso serve só para melhorar o reconhecimento de calendários e horários nas próximas versões do app, e não fica ligado a você: não vai identificador de aparelho junto, não vai nome de aluno nem de escola a menos que a própria correção mencione isso no texto. Você pode desligar a qualquer momento.',
+            'Em Ajustes, existe um interruptor chamado "Ajudar a melhorar a leitura", desligado por padrão. Quando você o LIGA, e só a partir daí: se você escolher a matéria certa numa grade que a abreviação não reconheceu, essa correção — o nome que você usou e o nome real da matéria — é enviada ao servidor do desenvolvedor.',
+            'Isso serve só para melhorar o reconhecimento de horários nas próximas versões do app, e não fica ligado a você: não vai identificador de aparelho junto, não vai nome de aluno nem de escola a menos que a própria correção mencione isso no texto. Você pode desligar a qualquer momento.',
           ],
         },
         {
@@ -166,8 +166,8 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
         {
           titulo: 'Help improve recognition (optional, off by default)',
           paragrafos: [
-            'Settings has a switch called "Help improve recognition", off by default. When you TURN IT ON, and only from then on: if you correct a calendar event the reading got wrong, or pick the right subject in a timetable an abbreviation didn\'t recognize, that correction — the event text, or the name you used and the subject\'s real name — is sent to the developer\'s server.',
-            "This is only used to improve calendar and timetable recognition in future versions of the app, and isn't linked to you: no device identifier goes with it, and no student or school name goes with it unless the correction text itself mentions one. You can turn it off at any time.",
+            'Settings has a switch called "Help improve recognition", off by default. When you TURN IT ON, and only from then on: if you pick the right subject in a timetable an abbreviation didn\'t recognize, that correction — the name you used and the subject\'s real name — is sent to the developer\'s server.',
+            "This is only used to improve timetable recognition in future versions of the app, and isn't linked to you: no device identifier goes with it, and no student or school name goes with it unless the correction text itself mentions one. You can turn it off at any time.",
           ],
         },
         {
