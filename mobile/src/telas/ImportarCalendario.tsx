@@ -19,6 +19,7 @@ import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { Apoio, Botao, Cartao, Fileira, Linha, Pilula, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { resgatarCalendario } from '../resgatar.ts'
+import { enviarCorrecao } from '../treinar.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { criarFonte, espaco, usarCores } from '../tema.ts'
@@ -249,6 +250,7 @@ export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
                       key={i}
                       evento={e}
                       aoSalvar={(v) => {
+                        if (v.texto !== e.texto) enviarCorrecao('calendario', e.texto, v.texto)
                         setEditados((m) => ({ ...m, [i]: v }))
                         setEditando(null)
                       }}
@@ -270,7 +272,13 @@ export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
                             <Pilula
                               key={outro}
                               texto={t(rotulo[outro])}
-                              aoTocar={() => setMovidos((m) => ({ ...m, [i]: outro }))}
+                              aoTocar={() => {
+                                // O sinal que vale ensinar é justamente este: a
+                                // leitura tinha decidido uma coisa (ou não tinha
+                                // decidido nada, em "fora") e a pessoa corrigiu.
+                                if (g === 'fora') enviarCorrecao('calendario', e.texto, outro)
+                                setMovidos((m) => ({ ...m, [i]: outro }))
+                              }}
                             />
                           ))}
                         <Pilula texto={t('importar.editar')} aoTocar={() => setEditando(i)} />

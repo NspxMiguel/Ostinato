@@ -780,6 +780,20 @@ export function Ajustes({ aoEscanearHorario }: {
                 </Linha>
               </View>
             ) : null}
+            <View style={estilo.bloco}>
+              <Linha entre>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Apoio>{t('ajustes.ajudar_treinar')}</Apoio>
+                  <Apoio cor={cores.texto3}>{t('ajustes.ajudar_treinar_desc')}</Apoio>
+                </View>
+                <Switch
+                  value={ajustes.ajudarATreinar}
+                  onValueChange={(v) => mudarAjustes({ ajudarATreinar: v })}
+                  trackColor={{ false: cores.borda, true: cores.destaque }}
+                  thumbColor={cores.texto}
+                />
+              </Linha>
+            </View>
           </Grupo>
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
         </Tela>
