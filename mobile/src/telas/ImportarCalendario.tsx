@@ -8,7 +8,7 @@
 // Por isso o grupo "de fora" nunca vem vazio nem escondido: cada linha
 // descartada carrega o motivo ao lado.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-native'
 import type { DataISO } from '../../../nucleo/modelo.ts'
 import { ehParaMim } from '../../../nucleo/calendarioEscolar.ts'
@@ -18,6 +18,7 @@ import { dataDe } from '../../../nucleo/tempo.ts'
 import type { ChaveI18n } from '../../../nucleo/i18n.ts'
 import { Apoio, Botao, Cartao, Fileira, Linha, Pilula, Secao, Tela, Titulo, Toque, Vazio } from '../componentes/ui.tsx'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
+import { resgatarCalendario } from '../resgatar.ts'
 import { usarLoja } from '../estado/loja.ts'
 import { usarT } from '../i18n.ts'
 import { criarFonte, espaco, usarCores } from '../tema.ts'
@@ -30,6 +31,72 @@ function grupoDe(e: EventoLido, papel: 'aluno' | 'responsavel', series: string[]
   return ehParaMim(e, papel, series) ? 'agenda' : 'fora'
 }
 
+/**
+ * Corrige à mão uma linha que a leitura entendeu errado — a data, o texto,
+ * ou os dois. Fica dentro do próprio cartão, no lugar dos botões de mover,
+ * para não abrir uma tela nova por cima de uma lista que a pessoa já está
+ * revisando.
+ */
+function EditorDeEvento({
+  evento,
+  aoSalvar,
+  aoCancelar,
+}: {
+  evento: EventoLido
+  aoSalvar: (v: { texto: string; inicio: string; fim: string }) => void
+  aoCancelar: () => void
+}) {
+  const t = usarT()
+  const cores = usarCores()
+  const fonte = criarFonte(cores)
+  const [texto, setTexto] = useState(evento.texto)
+  const [inicio, setInicio] = useState(evento.inicio)
+  const [fim, setFim] = useState(evento.fim)
+
+  return (
+    <Cartao>
+      <View style={{ gap: espaco.xs }}>
+        <Apoio>{t('importar.texto_do_evento')}</Apoio>
+        <TextInput
+          style={[fonte.corpo, { borderWidth: 1, borderColor: cores.borda, borderRadius: 8, padding: espaco.s }]}
+          value={texto}
+          onChangeText={setTexto}
+          autoCorrect={false}
+        />
+      </View>
+      <Linha>
+        <View style={{ gap: espaco.xs, flex: 1 }}>
+          <Apoio>{t('importar.data_inicio')}</Apoio>
+          <TextInput
+            style={[fonte.corpo, { borderWidth: 1, borderColor: cores.borda, borderRadius: 8, padding: espaco.s }]}
+            value={inicio}
+            onChangeText={setInicio}
+            placeholder="2026-09-07"
+            autoCorrect={false}
+          />
+        </View>
+        <View style={{ gap: espaco.xs, flex: 1 }}>
+          <Apoio>{t('importar.data_fim')}</Apoio>
+          <TextInput
+            style={[fonte.corpo, { borderWidth: 1, borderColor: cores.borda, borderRadius: 8, padding: espaco.s }]}
+            value={fim}
+            onChangeText={setFim}
+            placeholder="2026-09-07"
+            autoCorrect={false}
+          />
+        </View>
+      </Linha>
+      <Fileira>
+        <Pilula
+          texto={t('acao.salvar')}
+          aoTocar={() => aoSalvar({ texto: texto.trim() || evento.texto, inicio: inicio.trim(), fim: fim.trim() || inicio.trim() })}
+        />
+        <Pilula texto={t('acao.cancelar')} aoTocar={aoCancelar} />
+      </Fileira>
+    </Cartao>
+  )
+}
+
 export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
   const t = usarT()
   const cores = usarCores()
@@ -40,20 +107,65 @@ export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
 
   const [texto, setTexto] = useState('')
   const [lendo, setLendo] = useState(false)
+  const [usouIa, setUsouIa] = useState(false)
+  /** Texto já mandado pro resgate — não manda de novo sozinho, só quando
+      a pessoa mexe no campo outra vez (cola algo diferente). */
+  const resgatado = useRef<string | null>(null)
   /** Ids que a pessoa moveu à mão. A chave é o índice na leitura. */
   const [movidos, setMovidos] = useState<Record<number, Grupo>>({})
+  /** Linha que o OCR/IA leu errado — some da lista, não entra em grupo nenhum. */
+  const [removidos, setRemovidos] = useState<Set<number>>(new Set())
+  /** Texto/data corrigidos à mão, por índice — sobrescreve o que foi lido. */
+  const [editados, setEditados] = useState<Record<number, { texto: string; inicio: string; fim: string }>>({})
+  /** Índice com o formulário de edição aberto, ou nada. */
+  const [editando, setEditando] = useState<number | null>(null)
 
   const ano = Number(dataDe(new Date()).slice(0, 4))
-  const eventos = useMemo(() => lerCalendario(texto, ano), [texto, ano])
+  const lidos = useMemo(() => lerCalendario(texto, ano), [texto, ano])
+  // Correção da pessoa por cima do que foi lido — mesmo objeto, campos trocados.
+  const eventos = useMemo(
+    () => lidos.map((e, i) => (editados[i] ? { ...e, ...editados[i] } as EventoLido : e)),
+    [lidos, editados],
+  )
+
+  // Roda sozinho quando o texto muda: colar um PDF de duas colunas achatado
+  // não pede pra pessoa apertar nada, porque ela não tem como saber que a
+  // leitura ficou ruim antes de olhar a lista de eventos. Com debounce: sem
+  // isso, cada tecla de quem está DIGITANDO o calendário à mão dispararia
+  // uma chamada ao modelo no meio da frase.
+  useEffect(() => {
+    if (!texto.trim() || resgatado.current === texto) return
+    let vale = true
+    const timer = setTimeout(() => {
+      resgatado.current = texto
+      setLendo(true)
+      void resgatarCalendario(texto, ano).then(({ texto: bom, usou }) => {
+        if (!vale) return
+        if (usou && bom !== texto) {
+          resgatado.current = bom
+          setTexto(bom)
+          setUsouIa(true)
+        }
+        setLendo(false)
+      })
+    }, 900)
+    return () => {
+      vale = false
+      clearTimeout(timer)
+    }
+  }, [texto, ano])
 
   const grupoAtual = (e: EventoLido, i: number): Grupo =>
     movidos[i] ?? grupoDe(e, ajustes.papel, ajustes.minhasSeries)
 
   const porGrupo = useMemo(() => {
     const m: Record<Grupo, { e: EventoLido; i: number }[]> = { semAula: [], agenda: [], fora: [] }
-    eventos.forEach((e, i) => m[grupoAtual(e, i)].push({ e, i }))
+    eventos.forEach((e, i) => {
+      if (removidos.has(i)) return
+      m[grupoAtual(e, i)].push({ e, i })
+    })
     return m
-  }, [eventos, movidos, ajustes.papel, ajustes.minhasSeries])
+  }, [eventos, movidos, removidos, ajustes.papel, ajustes.minhasSeries])
 
   async function fotografar() {
     setLendo(true)
@@ -103,6 +215,7 @@ export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
       {eventos.length === 0 ? (
         <>
           <Apoio>{t('importar.dica')}</Apoio>
+          {usouIa ? <Apoio cor={cores.destaque}>{t('resgate.usou')}</Apoio> : null}
           <Cartao>
             <TextInput
               style={[fonte.corpo, { minHeight: 160, textAlignVertical: 'top' }]}
@@ -124,33 +237,48 @@ export function ImportarCalendario({ aoFechar }: { aoFechar: () => void }) {
         </>
       ) : (
         <>
+          {usouIa ? <Apoio cor={cores.destaque}>{t('resgate.usou')}</Apoio> : null}
           {(['semAula', 'agenda', 'fora'] as const).map((g) => (
             <Secao key={g} titulo={`${t(rotulo[g])} (${porGrupo[g].length})`}>
               {porGrupo[g].length === 0 ? (
                 <Vazio texto={t('importar.grupo_vazio')} />
               ) : (
-                porGrupo[g].map(({ e, i }) => (
-                  <Cartao key={i}>
-                    <Titulo>{e.texto}</Titulo>
-                    <Apoio>
-                      {e.inicio === e.fim ? e.inicio : `${e.inicio} — ${e.fim}`}
-                      {/* O porquê ao lado: filtro sem explicação é magia, e
-                          magia é o que faz a pessoa desconfiar do resultado. */}
-                      {g === 'fora' ? ` · ${t(`importar.porque.${e.porque}` as ChaveI18n)}` : ''}
-                    </Apoio>
-                    <Fileira>
-                      {(['semAula', 'agenda', 'fora'] as const)
-                        .filter((outro) => outro !== g)
-                        .map((outro) => (
-                          <Pilula
-                            key={outro}
-                            texto={t(rotulo[outro])}
-                            aoTocar={() => setMovidos((m) => ({ ...m, [i]: outro }))}
-                          />
-                        ))}
-                    </Fileira>
-                  </Cartao>
-                ))
+                porGrupo[g].map(({ e, i }) =>
+                  editando === i ? (
+                    <EditorDeEvento
+                      key={i}
+                      evento={e}
+                      aoSalvar={(v) => {
+                        setEditados((m) => ({ ...m, [i]: v }))
+                        setEditando(null)
+                      }}
+                      aoCancelar={() => setEditando(null)}
+                    />
+                  ) : (
+                    <Cartao key={i}>
+                      <Titulo>{e.texto}</Titulo>
+                      <Apoio>
+                        {e.inicio === e.fim ? e.inicio : `${e.inicio} — ${e.fim}`}
+                        {/* O porquê ao lado: filtro sem explicação é magia, e
+                            magia é o que faz a pessoa desconfiar do resultado. */}
+                        {g === 'fora' ? ` · ${t(`importar.porque.${e.porque}` as ChaveI18n)}` : ''}
+                      </Apoio>
+                      <Fileira>
+                        {(['semAula', 'agenda', 'fora'] as const)
+                          .filter((outro) => outro !== g)
+                          .map((outro) => (
+                            <Pilula
+                              key={outro}
+                              texto={t(rotulo[outro])}
+                              aoTocar={() => setMovidos((m) => ({ ...m, [i]: outro }))}
+                            />
+                          ))}
+                        <Pilula texto={t('importar.editar')} aoTocar={() => setEditando(i)} />
+                        <Pilula texto={t('acao.apagar')} aoTocar={() => setRemovidos((r) => new Set(r).add(i))} />
+                      </Fileira>
+                    </Cartao>
+                  ),
+                )
               )}
             </Secao>
           ))}
