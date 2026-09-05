@@ -153,6 +153,26 @@ export function limparResposta(bruto: string): string {
 }
 
 /**
+ * Separa uma linha "matéria — o que fazer — quando" (o formato que
+ * `instrucoesDeTarefa` pede) nas três partes, ou `null` quando a linha não
+ * bate nesse formato — texto digitado à mão, por exemplo, que não tem por
+ * que respeitar o contrato da IA.
+ *
+ * Duas partes também conta — "matéria — o que fazer", sem data — porque a IA
+ * às vezes não acha um "quando" na foto, e a linha continua sendo uma tarefa
+ * de verdade, só sem prazo explícito.
+ */
+export function partesDaLinhaDeIa(linha: string): { materia: string; feito: string; quando: string } | null {
+  const partes = linha
+    .split(/\s+—\s+/)
+    .map((p) => p.trim())
+    .filter((p) => p !== '')
+  if (partes.length === 3) return { materia: partes[0]!, feito: partes[1]!, quando: partes[2]! }
+  if (partes.length === 2) return { materia: partes[0]!, feito: partes[1]!, quando: '' }
+  return null
+}
+
+/**
  * O resgate melhorou de verdade?
  *
  * O modelo só vence quando lê MAIS aula que o algoritmo sozinho. Empate fica
