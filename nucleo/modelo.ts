@@ -229,6 +229,18 @@ export type Ajustes = {
   /** Escola com semana A/B: qual semana do ano conta como "par". */
   inverterSemanaAlternada: boolean
   /**
+   * Manda a correção que a própria pessoa fez — quando ela reclassifica uma
+   * linha de calendário que a leitura errou, ou escolhe a matéria certa numa
+   * grade que a IA não reconheceu — pro servidor do desenvolvedor, pra
+   * melhorar o reconhecimento de todo mundo nas próximas versões.
+   *
+   * Desligado por padrão, de propósito: diferente do relatório de erro (que
+   * nunca leva o que foi digitado), isto manda texto de verdade — nome de
+   * evento do calendário, nome de matéria. `nucleo/legal.ts` explica exatamente
+   * o que sai quando isto está ligado.
+   */
+  ajudarATreinar: boolean
+  /**
    * Quem usa o app. Só o filtro do calendário da escola olha para isto — mas ele
    * não funciona sem: reunião de pais é do responsável, e prova do 1º ano não é
    * de quem está no 3º.
@@ -351,6 +363,7 @@ export function ajustesPadrao(): Ajustes {
     limiteFaltasPadrao: 25,
     syncLigado: false,
     inverterSemanaAlternada: false,
+    ajudarATreinar: false,
   }
 }
 

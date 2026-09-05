@@ -37,6 +37,7 @@ import { tabelaComoTexto } from '../../../nucleo/resgate.ts'
 import { NOTA_MINIMA, qualidadeDaGrade } from '../../../nucleo/qualidadeDaGrade.ts'
 import { estadoDoModelo } from '../../modules/modelo/src/index.ts'
 import { comApelido, normalizar, resolverMateria } from '../../../nucleo/materias.ts'
+import { enviarCorrecao } from '../treinar.ts'
 import { SeletorDeHora } from '../componentes/SeletorDeHora.tsx'
 import {
   faixasDeAulas,
@@ -684,6 +685,11 @@ export function Grade({ aoAbrirMateria }: { aoAbrirMateria: (id: string) => void
         if (normalizar(resolucao.materia.nome) !== normalizar(nomeMat)) {
           const atualizada = comApelido(resolucao.materia, nomeMat)
           if (atualizada !== resolucao.materia) guardar('materias', atualizada)
+          // A parte que SAI do aparelho é opt-in (Ajustes > ajudarATreinar) —
+          // essa sigla → nome, se a pessoa topar, ajuda o dicionário de
+          // `abreviacoesMaterias.ts` a crescer nas próximas versões. Sem o
+          // toque, `enviarCorrecao` nem chega a montar a chamada de rede.
+          enviarCorrecao('grade', nomeMat, resolucao.materia.nome)
         }
       } else {
         const cor = CORES_DE_MATERIA[corIndice % CORES_DE_MATERIA.length] ?? CORES_DE_MATERIA[0]

@@ -69,9 +69,16 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
           ],
         },
         {
+          titulo: 'Ajudar a melhorar a leitura (opcional, desligado por padrão)',
+          paragrafos: [
+            'Em Ajustes, existe um interruptor chamado "Ajudar a melhorar a leitura", desligado por padrão. Quando você o LIGA, e só a partir daí: se você corrigir um evento de calendário que a leitura entendeu errado, ou escolher a matéria certa numa grade que a abreviação não reconheceu, essa correção — o texto do evento, ou o nome que você usou e o nome real da matéria — é enviada ao servidor do desenvolvedor.',
+            'Isso serve só para melhorar o reconhecimento de calendários e horários nas próximas versões do app, e não fica ligado a você: não vai identificador de aparelho junto, não vai nome de aluno nem de escola a menos que a própria correção mencione isso no texto. Você pode desligar a qualquer momento.',
+          ],
+        },
+        {
           titulo: 'O que o app NÃO faz',
           paragrafos: [
-            'O Ostinato não coleta identificadores de publicidade, não tem analytics de terceiros, não vende nem compartilha dado nenhum com ninguém, e não rastreia você entre outros apps ou sites. O relatório de erro acima é a única coisa que sai do aparelho.',
+            'O Ostinato não coleta identificadores de publicidade, não tem analytics de terceiros, não vende nem compartilha dado nenhum com ninguém, e não rastreia você entre outros apps ou sites. O relatório de erro e o interruptor opcional acima são as duas únicas coisas que podem sair do aparelho — e a segunda só existe quando você a liga.',
           ],
         },
         {
@@ -157,9 +164,16 @@ const DOCS: Record<'pt' | 'en', Record<TipoLegal, DocumentoLegal>> = {
           ],
         },
         {
+          titulo: 'Help improve recognition (optional, off by default)',
+          paragrafos: [
+            'Settings has a switch called "Help improve recognition", off by default. When you TURN IT ON, and only from then on: if you correct a calendar event the reading got wrong, or pick the right subject in a timetable an abbreviation didn\'t recognize, that correction — the event text, or the name you used and the subject\'s real name — is sent to the developer\'s server.',
+            "This is only used to improve calendar and timetable recognition in future versions of the app, and isn't linked to you: no device identifier goes with it, and no student or school name goes with it unless the correction text itself mentions one. You can turn it off at any time.",
+          ],
+        },
+        {
           titulo: "What the app does NOT do",
           paragrafos: [
-            "Ostinato does not collect advertising identifiers, has no third-party analytics, does not sell or share any data with anyone, and does not track you across other apps or websites. The error report above is the only thing that leaves the device.",
+            "Ostinato does not collect advertising identifiers, has no third-party analytics, does not sell or share any data with anyone, and does not track you across other apps or websites. The error report and the optional switch above are the only two things that can leave the device — and the second only exists once you turn it on.",
           ],
         },
         {
