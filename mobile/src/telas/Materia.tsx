@@ -243,6 +243,22 @@ export function Materia({ id, aoFechar }: { id: string; aoFechar: () => void }) 
             />
           ) : (
             <>
+              {/* Faltas sem carga horária cadastrada: `situacaoDeFaltas` devolve
+                  null porque não dá pra calcular risco/percentual sem o total de
+                  aulas do período — mas a falta em si já foi salva. Achado
+                  05/09/2026 testando: registrar uma falta aqui não mostrava
+                  NADA, e a tela continuava oferecendo "Registrar falta" como se
+                  nada tivesse sido guardado — dado salvo, sem confirmação
+                  nenhuma pra quem registrou. */}
+              {faltas.length > 0 ? (
+                <Apoio>
+                  {t('materia.perdeu', {
+                    n: numero(faltas.filter((f) => !f.justificada).reduce((soma, f) => soma + f.aulas, 0)),
+                  })}
+                </Apoio>
+              ) : (
+                <Apoio>{t('materia.sem_faltas')}</Apoio>
+              )}
               <Vazio texto={t('materia.informe_carga')} />
               <Botao texto={t('materia.salvar')} variante="vazado" aoTocar={() => setMostrarCarga(true)} />
             </>
