@@ -142,58 +142,6 @@ export function instrucoesDeTarefa(): string {
 }
 
 /**
- * Vale chamar o modelo para este calendário escolar colado ou fotografado?
- *
- * `lerCalendario` espera UMA linha por evento, começando pelo dia, com o mês
- * como cabeçalho separado. Isso é verdade quando alguém digita à mão — e é
- * FALSO quando o texto vem de copiar um PDF de duas colunas (o quadrinho do
- * mês numa coluna, a lista de eventos noutra) ou de um app que devolve tudo
- * achatado: os números do quadrinho grudam no texto do evento seguinte, e
- * cinco linhas boas viram uma linha ilegível de mil caracteres.
- *
- * Não há confiança do Vision aqui — o problema não é a LETRA, é a ESTRUTURA
- * que já estava destruída antes do texto chegar. O juiz é o próprio
- * algoritmo: poucos eventos para a quantidade de texto é o sinal de que a
- * coluna grudou. Achado em 05/09/2026 testando com o calendário real que ele
- * mandou: 1654 caracteres, o algoritmo sozinho achou só 5 eventos (330
- * caracteres cada, quando um evento de verdade tem uns 40).
- */
-export function precisaDeResgateDeCalendario(sinais: { texto: string; eventos: number }): boolean {
-  const chars = sinais.texto.trim().length
-  if (chars < 20) return false
-  if (sinais.eventos === 0) return true
-  return chars / sinais.eventos > 200
-}
-
-/**
- * Devolve o texto reformatado no MESMO formato que `lerCalendario` já sabe
- * ler — mês como cabeçalho, um evento por linha começando pelo dia — para
- * não duplicar a lógica de "isso é feriado, isso é prova" dentro do prompt.
- * O modelo só desembaralha a estrutura; quem decide o que cada linha
- * significa continua sendo `calendarioEscolar.ts`, como sempre.
- */
-export function instrucoesDeCalendario(): string {
-  return [
-    'Você desembaralha o texto de um calendário escolar — pode vir de copiar um',
-    'PDF de duas colunas (quadrinho do mês numa coluna, lista de eventos',
-    'noutra) e sair tudo achatado, com números do calendário grudados no meio',
-    'do texto de um evento.',
-    'Devolva no formato:',
-    'NomeDoMês',
-    'dia descrição do evento',
-    'dia a dia descrição do evento',
-    'Regras absolutas:',
-    '- um evento por linha, o dia (ou "dia a dia") sempre primeiro;',
-    '- tire os números soltos do quadrinho do calendário (dias da semana',
-    '  contando 1 a 31) que não têm descrição — eles não são evento;',
-    '- não invente evento, dia nem mês que não esteja no texto;',
-    '- mantenha o mês em português se o texto original estiver em português;',
-    '- trecho que você não entender, apague em vez de chutar;',
-    '- não escreva explicação, comentário nem marcação de código.',
-  ].join('\n')
-}
-
-/**
  * Limpa o que o modelo devolveu.
  *
  * Modelo instruído a não escrever marcação escreve marcação assim mesmo, e uma

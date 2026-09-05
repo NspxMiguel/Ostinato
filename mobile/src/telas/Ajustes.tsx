@@ -30,7 +30,6 @@ import {
   Vazio,
 } from '../componentes/ui.tsx'
 import { isLiquidGlassAvailable } from 'expo-glass-effect'
-import { ImportarCalendario } from './ImportarCalendario.tsx'
 import { rotuloDeRegra } from '../formato.ts'
 import { criarPeriodoPadrao } from '../periodoPadrao.ts'
 import { usarLoja } from '../estado/loja.ts'
@@ -526,7 +525,6 @@ export function Ajustes({ aoEscanearHorario }: {
   /** O editor de período letivo abre em folha, dentro da categoria Escola: ele
       é uma tela inteira. */
   const [periodoAberto, setPeriodoAberto] = useState(false)
-  const [importando, setImportando] = useState(false)
   useEffect(() => {
     let vivo = true
     void Promise.all([estadoDaNuvem(), motivoDaNuvem()]).then(([r, motivo]) => {
@@ -1022,10 +1020,6 @@ export function Ajustes({ aoEscanearHorario }: {
         <Tela titulo={t('ajustes.escola')}>
           <Grupo>
             <LinhaDeMenu
-              titulo={t('ajustes.importar_calendario')}
-              aoTocar={() => setImportando(true)}
-            />
-            <LinhaDeMenu
               titulo={t('ajustes.periodo_letivo')}
               valor={periodo ? periodo.nome : t('ajustes.sem_periodo')}
               aoTocar={() => setPeriodoAberto(true)}
@@ -1047,6 +1041,14 @@ export function Ajustes({ aoEscanearHorario }: {
               </Linha>
             </View>
           </Grupo>
+          {/* Pedido em 05/09/2026, depois de testar com o calendário real dele:
+              *"se nao vai funcioanr bem o calendario escolar completo,
+              simplesmente apaga"*. A importação automática (colar/fotografar
+              o calendário inteiro) saiu — feriados e período agora só se
+              cadastram à mão, no bloco acima. Este aviso fica aqui embaixo,
+              não escondido: quem procurar o botão antigo merece saber por quê
+              ele sumiu, não achar que é bug. */}
+          <Apoio cor={cores.texto3}>{t('ajustes.importar_removido')}</Apoio>
           <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setCategoria(null)} />
         </Tela>
         <Modal
@@ -1090,14 +1092,6 @@ export function Ajustes({ aoEscanearHorario }: {
             )}
             <Botao texto={t('acao.fechar')} variante="cheio" aoTocar={() => setPeriodoAberto(false)} />
           </Tela>
-        </Modal>
-        <Modal
-          visible={importando}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setImportando(false)}
-        >
-          <ImportarCalendario aoFechar={() => setImportando(false)} />
         </Modal>
       </Modal>
 
