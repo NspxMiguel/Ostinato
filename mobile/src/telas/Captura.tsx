@@ -38,6 +38,7 @@ import { usarIdioma, usarT } from '../i18n.ts'
 import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } from '../tema.ts'
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { resgatarFrase, resgatarTarefa } from '../resgatar.ts'
+import { registrarErro } from '../telemetria.ts'
 import { partesDaLinhaDeIa } from '../../../nucleo/resgate.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
@@ -270,7 +271,14 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         setOuvindo(false)
       },
       aoFalhar: (motivo) => {
-        setAvisoDeVoz(motivo)
+        // `motivo` aqui é `error.localizedDescription` do reconhecedor nativo
+        // (Swift) — em inglês, sempre, não importa o idioma do app. Achado
+        // 05/09/2026 testando no simulador: "Failed to initialize recognizer"
+        // aparecia cru na tela mesmo com o app em português. A pessoa só
+        // precisa saber que o ditado não deu, não a razão técnica exata —
+        // essa vai pro relatório de erro, pra eu poder investigar de verdade.
+        registrarErro('voz:aoFalhar', motivo)
+        setAvisoDeVoz(t('captura.sem_voz'))
         setOuvindo(false)
       },
     })
