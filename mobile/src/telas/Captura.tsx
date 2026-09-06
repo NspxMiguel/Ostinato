@@ -113,16 +113,26 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
             // "Eureka 10". Tipo e data continuam vindo do interpretador,
             // cada um isolado no seu próprio pedaço, onde ele acerta.
             const doFeito = interpretarMelhor(partes.feito, agora, idioma)
-            const vencimentoLinha =
-              partes.quando.trim() === '' ? undefined : interpretarMelhor(partes.quando, agora, idioma).vencimento
+            const doQuando = partes.quando.trim() === '' ? null : interpretarMelhor(partes.quando, agora, idioma)
+            // A IA às vezes espreme conteúdo de verdade dentro do próprio
+            // "quando" — "04/09/2026: Páginas 14 a 19 - todas as questões"
+            // — em vez de deixar só a data. Achado 05/09/2026, no iPhone
+            // dele: sem isto, "Páginas 14 a 19 - todas as questões" sumia
+            // da tarefa salva, silenciosamente — só a data sobrevivia.
+            // `interpretarMelhor` isolado no fragmento devolve exatamente o
+            // que sobrou depois de tirar a data; título GENÉRICO quer dizer
+            // "não sobrou nada", e aí não há o que anexar.
+            const genericos = ['Compromisso', 'Compromiso', 'Tâche', 'Task']
+            const sobraDoQuando =
+              doQuando && !genericos.includes(doQuando.titulo) ? doQuando.titulo.trim() : ''
             li = {
               tipo: doFeito.tipo,
-              titulo: partes.feito,
+              titulo: sobraDoQuando ? `${partes.feito} — ${sobraDoQuando}` : partes.feito,
               materiaNome: partes.materia,
-              vencimento: vencimentoLinha,
+              vencimento: doQuando?.vencimento,
               confianca: 1,
               marcas: [],
-              faltando: vencimentoLinha ? [] : ['data'],
+              faltando: doQuando?.vencimento ? [] : ['data'],
             }
           } else {
             li = interpretarMelhor(linha, agora, idioma)
