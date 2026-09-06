@@ -125,6 +125,21 @@ test('partesDaLinhaDeIa separa matéria, o que fazer e quando', () => {
   })
 })
 
+// Achado em 05/09/2026, no iPhone físico dele: a IA escreveu QUATRO partes
+// numa linha só ("Ciências — Tarefa de Biologia — hoje: Página 8... — para
+// 17/09."), porque usou o mesmo travessão dentro do "o que fazer". Com o
+// corte rígido em três, a linha inteira caía no interpretador de frase
+// natural, que lia "hoje" como a data (perdendo o 17/09 de verdade) e
+// deixava travessão solto no título salvo ("Ciências — — : Página 8...").
+test('quatro partes (travessão sobrando no meio) ainda separa certo', () => {
+  const linha = 'Ciências — Tarefa de Biologia — hoje: Página 8 - 1 a 3; Páginas 14 a 19 - todas as questões — para 17/09.'
+  assert.deepEqual(partesDaLinhaDeIa(linha), {
+    materia: 'Ciências',
+    feito: 'Tarefa de Biologia — hoje: Página 8 - 1 a 3; Páginas 14 a 19 - todas as questões',
+    quando: 'para 17/09.',
+  })
+})
+
 test('duas partes (sem quando) ainda conta — a IA nem sempre acha uma data', () => {
   assert.deepEqual(partesDaLinhaDeIa('Ciências — trazer o material de desenho'), {
     materia: 'Ciências',
@@ -133,10 +148,9 @@ test('duas partes (sem quando) ainda conta — a IA nem sempre acha uma data', (
   })
 })
 
-test('linha fora do formato de três partes devolve null, sem lançar', () => {
+test('linha sem nenhum travessão devolve null, sem lançar', () => {
   assert.equal(partesDaLinhaDeIa('só uma frase solta sem travessão nenhum'), null)
   assert.equal(partesDaLinhaDeIa(''), null)
-  assert.equal(partesDaLinhaDeIa('a — b — c — d — e'), null)
 })
 
 test('o título fica LITERAL — não passa pelo interpretador de frase de novo', () => {

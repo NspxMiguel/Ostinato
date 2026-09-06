@@ -173,7 +173,20 @@ export function partesDaLinhaDeIa(linha: string): { materia: string; feito: stri
     .split(/\s+—\s+/)
     .map((p) => p.trim())
     .filter((p) => p !== '')
-  if (partes.length === 3) return { materia: partes[0]!, feito: partes[1]!, quando: partes[2]! }
+  // O contrato pede exatamente três partes, mas o modelo às vezes usa o
+  // mesmo travessão DENTRO do "o que fazer" ou do "quando" — achado em
+  // 05/09/2026, no iPhone dele: "Ciências — Tarefa de Biologia — hoje:
+  // Página 8 - 1 a 3; Páginas 14 a 19 - todas as questões — para 17/09."
+  // saiu com QUATRO partes, e a divisão rígida em três jogava a linha
+  // inteira pro interpretador de frase natural — que lia "hoje" como a
+  // data (perdendo o "17/09" de verdade) e deixava travessões soltos no
+  // título ("Ciências — — : Página 8..."). A matéria é sempre a PRIMEIRA
+  // parte e o "quando" é sempre a ÚLTIMA — isso o prompt garante — então
+  // sobra juntar o meio de volta em "o que fazer", travessão e tudo, em vez
+  // de desistir e cair no caminho que já provou dar errado.
+  if (partes.length >= 3) {
+    return { materia: partes[0]!, feito: partes.slice(1, -1).join(' — '), quando: partes[partes.length - 1]! }
+  }
   if (partes.length === 2) return { materia: partes[0]!, feito: partes[1]!, quando: '' }
   return null
 }
