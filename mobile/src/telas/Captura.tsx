@@ -39,7 +39,7 @@ import { CORES_DE_MATERIA, criarFonte, espaco, raio, usarCores, type Paleta } fr
 import { lerPapel, temLeitura } from '../lerPapel.ts'
 import { resgatarFrase, resgatarTarefa } from '../resgatar.ts'
 import { registrarErro } from '../telemetria.ts'
-import { partesDaLinhaDeIa } from '../../../nucleo/resgate.ts'
+import { candidatosDeData, partesDaLinhaDeIa } from '../../../nucleo/resgate.ts'
 import { ouvir, pedirPermissaoDeVoz, temVoz } from '../../modules/voz/src/index.ts'
 
 export function Captura({ textoInicial, aoFechar, aoAjustar }: {
@@ -97,9 +97,14 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
   const linhasMultiplas = usouIa ? texto.split('\n').map((l) => l.trim()).filter((l) => l !== '') : []
   const multiplas = linhasMultiplas.length > 1
 
+  // Data candidata escolhida à mão, por índice — só existe quando a linha
+  // tinha mais de uma data possível e a pessoa resolveu qual é a certa.
+  const [datasEscolhidas, setDatasEscolhidas] = useState<Record<number, string>>({})
+
   const itensMultiplos = multiplas
-    ? linhasMultiplas.map((linha) => {
+    ? linhasMultiplas.map((linha, i) => {
         let li: Interpretacao | null = null
+        let ambiguo: string[] | null = null
         try {
           const partes = partesDaLinhaDeIa(linha)
           if (partes) {
@@ -113,7 +118,15 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
             // "Eureka 10". Tipo e data continuam vindo do interpretador,
             // cada um isolado no seu próprio pedaço, onde ele acerta.
             const doFeito = interpretarMelhor(partes.feito, agora, idioma)
-            const doQuando = partes.quando.trim() === '' ? null : interpretarMelhor(partes.quando, agora, idioma)
+            const escolhida = datasEscolhidas[i]
+            // Duas ou mais datas possíveis no mesmo "quando", e ninguém
+            // escolheu ainda: não adivinha. Pedido dele em 05/09/2026,
+            // depois de ver o app aceitar uma data sem perguntar nada:
+            // *"ele devia perguntar se n tem ctz, uma data ou outra"*.
+            const candidatas = escolhida ? [] : candidatosDeData(partes.quando)
+            if (candidatas.length >= 2) ambiguo = candidatas
+            const fragmentoQuando = escolhida ?? (ambiguo ? '' : partes.quando)
+            const doQuando = fragmentoQuando.trim() === '' ? null : interpretarMelhor(fragmentoQuando, agora, idioma)
             // A IA às vezes espreme conteúdo de verdade dentro do próprio
             // "quando" — "04/09/2026: Páginas 14 a 19 - todas as questões"
             // — em vez de deixar só a data. Achado 05/09/2026, no iPhone
@@ -143,16 +156,26 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
         const materiaLidaLinha = li?.materiaNome ? resolverMateria(li.materiaNome, base, idioma) : null
         const mid = materiaLidaLinha?.tipo === 'achou' ? materiaLidaLinha.materia.id : undefined
         const temAulaLinha = !!mid && vivos(base.aulas).some((a: Aula) => a.materiaId === mid)
+        // Com data ambígua, não cai pra "próxima aula" — isso escolheria uma
+        // terceira data sem a pessoa nunca ver as duas que o texto sugeria.
         const vencLinha =
           li?.vencimento ??
-          (temAulaLinha && mid ? ({ tipo: 'aula', materiaId: mid, ocorrencia: 1 } as const) : undefined)
+          (!ambiguo && temAulaLinha && mid ? ({ tipo: 'aula', materiaId: mid, ocorrencia: 1 } as const) : undefined)
         const quandoLinha =
           vencLinha?.tipo === 'data'
             ? instante(vencLinha.data, vencLinha.hora ?? '23:59')
             : vencLinha?.tipo === 'aula' && mid
               ? (previaDeVencimento(mid, vencLinha.ocorrencia, base, periodo, agora)?.quando ?? null)
               : null
-        return { linha, lido: li, materiaNome: li?.materiaNome ?? null, materiaId: mid, vencimento: vencLinha, quando: quandoLinha }
+        return {
+          linha,
+          lido: li,
+          materiaNome: li?.materiaNome ?? null,
+          materiaId: mid,
+          vencimento: vencLinha,
+          quando: quandoLinha,
+          ambiguo,
+        }
       })
     : []
 
@@ -428,6 +451,19 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
                   <Titulo>{item.lido.titulo}</Titulo>
                   {item.quando ? (
                     <Apoio>{momentoPorExtenso(item.quando, idioma)}</Apoio>
+                  ) : item.ambiguo ? (
+                    <View style={{ gap: espaco.xs }}>
+                      <Apoio cor={cores.aviso}>{t('captura.qual_data')}</Apoio>
+                      <Fileira>
+                        {item.ambiguo.map((candidata) => (
+                          <Pilula
+                            key={candidata}
+                            texto={candidata}
+                            aoTocar={() => setDatasEscolhidas((d) => ({ ...d, [i]: candidata }))}
+                          />
+                        ))}
+                      </Fileira>
+                    </View>
                   ) : (
                     <Apoio cor={cores.aviso}>{t('captura.falta_data')}</Apoio>
                   )}

@@ -109,6 +109,29 @@ test('hora tem que ser HH:MM de 24h', () => {
 })
 
 import { tabelaComoTexto } from '../resgate.ts'
+import { candidatosDeData } from '../resgate.ts'
+
+// Pedido dele em 05/09/2026, depois de ver o app aceitar uma data sem
+// perguntar nada: *"ele devia perguntar se n tem ctz, uma data ou outra"*.
+test('duas datas no mesmo texto contam como ambíguo', () => {
+  assert.deepEqual(candidatosDeData('entregar dia 5 ou até sexta'), ['dia 5', 'sexta'])
+  assert.deepEqual(candidatosDeData('terminar até 12/09, ou no máximo dia 15'), ['12/09', 'dia 15'])
+})
+
+test('uma data só, mesmo com números soltos ao lado, não é ambíguo', () => {
+  // "14 a 19" é intervalo de página, não uma segunda data — não pode
+  // disparar a pergunta à toa. Caso real, do iPhone dele.
+  assert.deepEqual(candidatosDeData('04/09/2026: Páginas 14 a 19 - todas as questões'), ['04/09/2026'])
+  assert.deepEqual(candidatosDeData('Até 27/08.'), ['27/08'])
+})
+
+test('a mesma data repetida não conta duas vezes', () => {
+  assert.deepEqual(candidatosDeData('sexta, confirmado: sexta mesmo'), ['sexta'])
+})
+
+test('nenhuma data reconhecível devolve lista vazia', () => {
+  assert.deepEqual(candidatosDeData('sem data nenhuma aqui'), [])
+})
 
 // A tela (mobile/src/telas/Captura.tsx) recebe a resposta da IA — uma linha
 // por tarefa, "matéria — o que fazer — quando" — e usa partesDaLinhaDeIa para

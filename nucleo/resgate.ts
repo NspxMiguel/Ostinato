@@ -202,6 +202,35 @@ export function vale(antes: { aulas: number }, depois: { aulas: number }): boole
   return depois.aulas > antes.aulas
 }
 
+/**
+ * Achou mais de uma data possível no "quando" de uma linha da IA?
+ *
+ * Pedido dele em 05/09/2026, depois de ver o app aceitar uma data sem
+ * perguntar nada: *"ele devia perguntar se n tem ctz, uma data ou outra"*.
+ * `interpretarMelhor` sempre resolve UMA data — pega a primeira que casar e
+ * segue — e nunca conta pra quem chama que havia outra igualmente válida no
+ * mesmo texto. Isto varre o fragmento com um regex deliberadamente ESTRITO
+ * (barra de data, "dia N", ou nome de dia da semana) — não basta um número
+ * solto tipo "14 a 19" (que é só o intervalo de página) — e devolve cada
+ * achado distinto. Um só, ou nenhum: sem ambiguidade, decide sozinho como já
+ * fazia. Dois ou mais: quem decide passa a ser a pessoa.
+ */
+const PADRAO_DE_DATA =
+  /\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b|\bdia\s+\d{1,2}\b|\b(?:segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo)(?:-feira)?\b|\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b|\b(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b|\b(?:lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b/gi
+
+export function candidatosDeData(texto: string): string[] {
+  const achados = texto.match(PADRAO_DE_DATA) ?? []
+  const vistos = new Set<string>()
+  const unicos: string[] = []
+  for (const a of achados) {
+    const chave = a.toLowerCase().trim()
+    if (vistos.has(chave)) continue
+    vistos.add(chave)
+    unicos.push(a.trim())
+  }
+  return unicos
+}
+
 // ---------------------------------------------------------------------------
 // A frase da captura — ditada ou digitada.
 //
