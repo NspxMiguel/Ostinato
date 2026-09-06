@@ -431,7 +431,7 @@ export function Captura({ textoInicial, aoFechar, aoAjustar }: {
       {/* A ressalva fica sob o botão que ela descreve, não no README. Ler papel
           erra — e quem acabou de tocar em "Foto" é exatamente quem precisa saber
           que o caminho manual existe. */}
-      {temLeitura() ? <Apoio>{t('papel.aviso_erro')}</Apoio> : null}
+      {temLeitura() ? <Apoio cor={cores.aviso}>{t('papel.aviso_erro')}</Apoio> : null}
       {avisoDeVoz ? <Apoio cor={cores.aviso}>{avisoDeVoz}</Apoio> : null}
 
       {texto.trim() === '' ? null : multiplas ? (
