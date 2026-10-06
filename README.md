@@ -1,7 +1,28 @@
-# Ostinato
+<p align="center">
+  <img src="mobile/assets/icone.png" alt="Ostinato app icon" width="120">
+</p>
 
-A student planner that warns you **before** the deadline, and keeps insisting
-until you answer.
+<h1 align="center">Ostinato</h1>
+
+<p align="center">
+  <b>A student planner that warns you before the deadline, and keeps insisting until you answer.</b>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue"></a>
+  <img alt="Platform: iOS" src="https://img.shields.io/badge/platform-iOS-black?logo=apple&logoColor=white">
+  <img alt="Expo 57 / React Native 0.86" src="https://img.shields.io/badge/Expo-57%20%C2%B7%20RN%200.86-1f2937?logo=expo&logoColor=white">
+  <a href="https://github.com/NspxMiguel/Ostinato/actions/workflows/testes.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/NspxMiguel/Ostinato/testes.yml?branch=main&label=tests"></a>
+</p>
+
+<p align="center">
+  <a href="#what-it-does">Features</a> ·
+  <a href="#reminder-modes-and-their-honest-limits">Reminder modes</a> ·
+  <a href="#why-the-reminder-engine-is-the-hard-part">Engine</a> ·
+  <a href="#storage-and-sync">Sync</a> ·
+  <a href="#running-it">Running it</a> ·
+  <a href="docs/INDEX.md">Docs</a>
+</p>
 
 In music, an *ostinato* is a figure that repeats in the low end, over and over,
 until you cannot help but notice it. That is the reminder engine: it does not
@@ -9,7 +30,7 @@ tell you once and give up.
 
 Register your class schedule once. Then, instead of opening a calendar and hunting
 for the date of the next math class, you write the task down as *"due next math
-class"* and the app resolves the date — and every reminder along with it.
+class"* and the app resolves the date, and every reminder along with it.
 
 iOS first. The logic is plain TypeScript, so Android is a port and not a rewrite;
 Swift is used only where iOS is genuinely better at something.
@@ -33,21 +54,26 @@ Swift is used only where iOS is genuinely better at something.
   going to your agenda, and everything left out — each with the reason beside it,
   and a tap to move anything between groups.
 
-  Lines are judged by what they change rather than what they are about, because
-  the subject does not separate them: a parents' meeting matters and a planning
-  meeting does not, and both are meetings. Teacher recess is a staff event that
-  still cancels your classes, so "closes the school" is decided before "concerns
-  staff". Audience comes from two facts asked once — student or guardian, and
-  which years — which is what resolves an exam belonging to another year.
+<details>
+<summary>How the school calendar is filtered</summary>
 
-  Days with no class become holidays on the academic term, which is the part that
-  changes everything else: without it, "next maths class" resolves to a Tuesday
-  when the school is shut.
+Lines are judged by what they change rather than what they are about, because
+the subject does not separate them: a parents' meeting matters and a planning
+meeting does not, and both are meetings. Teacher recess is a staff event that
+still cancels your classes, so "closes the school" is decided before "concerns
+staff". Audience comes from two facts asked once — student or guardian, and
+which years — which is what resolves an exam belonging to another year.
 
-  Measured against a real published calendar of 148 entries: a third-year student
-  sees 17 non-teaching days and 22 events, and 109 lines stay out.
+Days with no class become holidays on the academic term, which is the part that
+changes everything else: without it, "next maths class" resolves to a Tuesday
+when the school is shut.
 
-## You choose what you use
+Measured against a real published calendar of 148 entries: a third-year student
+sees 17 non-teaching days and 22 events, and 109 lines stay out.
+
+</details>
+
+### You choose what you use
 
 Nobody should have to register a school timetable to note down an exam. The
 timetable and the grades tracker are features you switch on or off in settings:
@@ -70,6 +96,9 @@ silently with the first subject, and can be adjusted afterwards.
 | Normal | A regular notification with the default sound. |
 | Insistent | A custom sound and a burst that repeats until you answer. Actions on the notification itself: **Done** and **Snooze 10 min**. |
 | Alarm | The iPhone's own alarm, through AlarmKit: loud, full screen, with the app closed, on silent and with a Focus on. Needs the alarm permission, which lives in Settings. Below iOS 26.1 it falls back to insistent. |
+
+<details>
+<summary>Focus, quiet window and the last-chance alarm</summary>
 
 Reminders do **not** claim Time Sensitive. That level is the badge that punches
 through Focus, Do Not Disturb and Sleep, and using it would override the rules
@@ -102,6 +131,8 @@ An exam does not get it. There is no doing the exam before leaving the house, an
 an exam **completes itself** once its day has passed — nobody marks "I sat the
 test". Tasks and submissions stay: those can be forgotten, and the app has no way
 to know they were handed in.
+
+</details>
 
 ## Why the reminder engine is the hard part
 
@@ -153,7 +184,8 @@ npm run teste        # core test suite, no simulator required
 npm run teste:i18n   # fails the build on any untranslated string
 ```
 
-## What it uses from the iPhone
+<details>
+<summary>What it uses from the iPhone</summary>
 
 The system tab bar (`UITabBarController`), so Liquid Glass, the sliding
 selection and the shrink-on-scroll come from UIKit rather than from an imitation
@@ -170,7 +202,10 @@ armed · and a URL scheme for Siri and Shortcuts.
 Nothing here calls a server. Speech and text recognition run on the device, and
 the app makes no network request at all.
 
-## Siri and Shortcuts
+</details>
+
+<details>
+<summary>Siri and Shortcuts</summary>
 
 The app answers a URL:
 
@@ -190,6 +225,8 @@ Anything the app does not recognise exactly is discarded. This is input from
 outside the app, so it is parsed in `nucleo/atalhos.ts`, where it is testable,
 and never turned into a nearby-looking command.
 
+</details>
+
 ## Language
 
 The interface speaks Portuguese, English, Spanish and French. The system language
@@ -204,14 +241,10 @@ historia sexta que vem"* is still understood, and so is *"contrôle de maths
 vendredi"* on a Portuguese one. Adding a fifth language means writing its date and
 type words in `nucleo/linguagem.ts`.
 
+## Documentation
+
+Full index in [`docs/INDEX.md`](docs/INDEX.md).
+
 ## License
 
-MIT
-
----
-
-## Documentação
-
-Índice completo em [`docs/INDEX.md`](docs/INDEX.md).
-
-_Hub multi-repo: `~/Documents/Documentacao-Repos/INDEX.md` (atualizado 2026-08-31)._
+MIT, see [LICENSE](LICENSE).
